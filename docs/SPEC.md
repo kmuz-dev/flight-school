@@ -1,0 +1,136 @@
+# Flight School - Product Spec (V1)
+
+Technical companion to [PRD.md](PRD.md).
+This spec constrains architecture and interfaces; implementation detail beyond it is the builder's call.
+Where this spec references the anatomy repo, it means [thebuggeddev/anatomy](https://github.com/thebuggeddev/anatomy), the architectural reference.
+
+## 1. Stack
+
+- **Framework**: Next.js 16, App Router, TypeScript (strict), `output: 'export'` full static export.
+- **Styling**: Tailwind CSS 4.
+- **3D**: Three.js (plain, no react-three-fiber requirement; the anatomy repo drives Three.js imperatively from a React shell and that pattern is proven for this shape of app).
+- **Animation**: GSAP for fold timelines and UI transitions.
+- **State**: React state + localStorage. No global state library.
+- **Backend**: none. No API routes, no database, no auth. The static export must contain the entire product.
+
+## 2. Deployment
+
+- **Primary**: Cloudflare Pages, free tier. Build command produces the static export directory; Pages serves it. PR preview deployments enabled.
+- **Fallback**: GitHub Pages via Actions. Must work with a `basePath` when served from a project subpath; keep all asset references basePath-safe from day one.
+- **CI**: GitHub Actions runs typecheck, lint, tests, translation audit, and build on every PR.
+
+## 3. Architecture overview
+
+The anatomy repo's shape, carried over:
+
+```
+app/
+  [locale]/
+    page.tsx                 ← catalog (home)
+    plane/[planeId]/page.tsx ← tutorial
+  components/                ← React shell + UI
+  engine/                    ← the fold engine (pure TS + Three.js, no React)
+  content/                   ← content-as-code: plane structures + fold sequences
+  i18n/                      ← dictionaries: ui/ + planes/ per locale
+  lib/                       ← storage, utils
+scripts/
+  i18n-audit.mjs             ← every key present in every locale
+tests/
+```
+
+Two hard boundaries:
+
+1. **Engine is React-free.** `app/engine/` is pure TypeScript + Three.js with a small imperative API; React components own DOM and call into it. This mirrors the anatomy repo's `lib/three/` split and keeps the hardest code testable headlessly.
+2. **Structure and prose never mix.** Geometry, ids, ratings, paper specs live in `app/content/` (locale-independent). All human-readable text lives in `app/i18n/` dictionaries keyed by stable ids. The translation audit enforces the split.
+
+## 4. The fold engine
+
+The single renderer for every visual in the product: step animations, the finished-plane viewer, and catalog thumbnails.
+
+### 4.1 Model
+
+- Paper is a planar polygon in 2D paper coordinates (millimeters), subdivided progressively by creases into a set of **facets** (convex polygons).
+- The engine maintains a **fold state**: for each facet, a 3D transform and a layer index.
+- A **flat fold** rotates the facets on one side of a crease line 180 degrees about that line, updating layer indices (folded facets stack above or below per fold direction).
+- A **partial fold** (wings, elevons) rotates by an arbitrary angle and leaves the region non-planar; state after a partial fold still supports further folds on unaffected regions.
+- Layers get a small z-offset (paper thickness) to prevent z-fighting and to give the model a realistic layered look at the nose.
+
+### 4.2 Step data (declarative)
+
+Fold sequences are data, not code. Indicative shape (builder may refine, ids and separations are binding):
+
+```ts
+type FoldStep = {
+  id: string;                       // stable, used as i18n key: "dart.step-04"
+  action:
+    | { type: "fold"; crease: [Vec2, Vec2]; side: "left" | "right"; angle: number; direction: "valley" | "mountain" }
+    | { type: "unfold"; toStep: string }      // crease-and-unfold reference marks
+    | { type: "flip" }                        // turn the model over
+    | { type: "rotate"; degrees: number }     // reorient on the table
+    | { type: "cut"; line: [Vec2, Vec2] };    // Paper Prep only
+  camera?: CameraHint;              // optional per-step framing
+  hasWhy: boolean;                  // whether a why-line exists in dictionaries
+};
+
+type PlaneStructure = {
+  id: PlaneId;
+  tier: "easy" | "medium" | "advanced";
+  paper: { format: "letter-a4" | "square"; prep: Record<SourcePaper, FoldStep[]> };
+  ratings: { speed: 1|2|3|4|5; distance: 1|2|3|4|5; airtime: 1|2|3|4|5; ease: 1|2|3|4|5 };
+  steps: FoldStep[];
+  accent: string;                   // per-plane accent color, anatomy-style
+};
+```
+
+All instruction text, why-lines, flight descriptions, and throw tips live in `i18n/planes/<locale>.ts` keyed by step and plane ids.
+
+### 4.3 Animation and interaction
+
+- Each step's fold animates via a GSAP timeline driving the rotation about the crease axis; auto-plays once on step entry.
+- Controls per step: replay, scrub (timeline slider bound to the GSAP timeline), orbit/zoom (OrbitControls), next/back.
+- Stepping backward restores the previous fold state exactly; fold state at any step index must be deterministically computable from the sequence (pure function of steps 0..n), which is also what makes resume trivial.
+- Catalog thumbnails: render each plane's final fold state to an offscreen canvas at build or first load and reuse; do not run 6 live WebGL contexts on the catalog page.
+- WebGL unavailable: render a static image of the final state and per-step instruction text; the tutorial must remain completable.
+
+### 4.4 Authoring tooling (internal, ships hidden)
+
+Hand-writing crease coordinates blind is impractical.
+Build a dev-only route (excluded from production nav, e.g. `/dev/fold-editor` gated to development builds) that renders a fold sequence live from data with: step scrubbing, crease-line overlay in 2D paper coordinates, facet/layer inspection, and hot reload of content files.
+This tool is how all 6 planes' sequences get authored and verified; budget it as real scope, not an afterthought.
+
+## 5. i18n
+
+- Anatomy-repo pattern: `i18n/ui/<locale>.ts` (chrome, buttons, labels) and `i18n/planes/<locale>.ts` (instructional prose), merged over English so missing keys fall back rather than crash, plus an audit script that fails CI listing missing keys per locale.
+- 12 locales: en, es, fr, de, pt, ru, hi, id, ja, ko, zh, ar. `ar` requires RTL layout (`dir="rtl"`), and fold-direction words (left/right) must be handled in prose, not mirrored geometry; the 3D model is never mirrored.
+- Locale routing: `/[locale]/...` static-generated for all locales; root redirects using browser language with `en` fallback (client-side redirect, since the export is static).
+
+## 6. Client state
+
+```ts
+// localStorage key: "flightschool.v1"
+type Stored = {
+  progress: Partial<Record<PlaneId, { step: number; updatedAt: string }>>;
+  completed: Partial<Record<PlaneId, { at: string }>>;
+  locale?: string;
+  paperChoice?: Partial<Record<PlaneId, SourcePaper>>;
+};
+```
+
+Versioned single key; unknown or corrupt data is discarded silently.
+All reads guarded for SSR/export (no `window` at module scope).
+
+## 7. Testing
+
+- **Fold math unit tests** (highest value): reflection of points across crease lines, facet splitting, layer ordering, and determinism of state at step n. Pure TS, no WebGL needed.
+- **Content validation test**: every plane's sequence type-checks, every step id has instruction text in English, every `hasWhy` step has a why-line, every prep table covers all three source papers or declares pass-through.
+- **i18n audit** in CI (anatomy repo has this exact script shape).
+- **Build test**: static export succeeds and key routes exist for every locale (anatomy's rendered-html test pattern).
+- No browser-automation suite required for V1; the acceptance bar in the PRD (fold every plane from the site with real paper) is a manual gate.
+
+## 8. Build order (milestones)
+
+1. **M1 - Vertical slice**: engine core + step UI + The Dart end-to-end in English. Proves ADR 0001 before anything fans out. Exit: a person folds a flying Dart from the site.
+2. **M2 - Catalog fan-out**: remaining 5 planes authored via the fold editor; catalog page, flight profiles, Paper Prep including the Square Cruiser cutting flow, localStorage resume/completion.
+3. **M3 - Locales and hardening**: 11 translated dictionaries, RTL pass, WebGL fallback, thumbnail pipeline, CI, Cloudflare Pages deploy.
+
+M1 is the risk gate: if the engine proves unworkable at full quality, fall back to static SVG step diagrams behind the same step UI and data model (the `FoldStep` schema still drives diagram generation), without renegotiating the rest of the product.
