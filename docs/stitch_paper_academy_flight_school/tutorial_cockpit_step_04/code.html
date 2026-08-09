@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Tutorial Step View - The Dart</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:ital,wght@0,400..700;1,400..700&amp;family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&amp;family=Instrument+Sans:ital,wght@0,400..700;1,400..700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error-container": "#ffdad6",
+                        "on-secondary-container": "#650008",
+                        "secondary-fixed-dim": "#ffb3ad",
+                        "primary": "#031634",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed": "#cae6ff",
+                        "surface-dim": "#dddad0",
+                        "secondary-fixed": "#ffdad6",
+                        "secondary": "#b12a2a",
+                        "surface-container": "#f1eee4",
+                        "on-tertiary-container": "#6e97b7",
+                        "primary-fixed-dim": "#b6c6ee",
+                        "surface-container-low": "#f7f3e9",
+                        "on-secondary-fixed": "#410003",
+                        "background": "#fdf9ef",
+                        "on-primary": "#ffffff",
+                        "on-primary-fixed-variant": "#364767",
+                        "inverse-primary": "#b6c6ee",
+                        "tertiary": "#001928",
+                        "on-background": "#1c1c16",
+                        "secondary-container": "#fe625b",
+                        "surface-bright": "#fdf9ef",
+                        "surface-container-highest": "#e6e2d8",
+                        "on-tertiary-fixed-variant": "#1e4b67",
+                        "inverse-surface": "#31312a",
+                        "surface-tint": "#4e5e80",
+                        "primary-fixed": "#d8e2ff",
+                        "error": "#ba1a1a",
+                        "primary-container": "#1a2b4a",
+                        "on-secondary-fixed-variant": "#8f0e16",
+                        "tertiary-container": "#002e47",
+                        "on-surface-variant": "#44474e",
+                        "tertiary-fixed-dim": "#a2cbee",
+                        "surface-container-lowest": "#ffffff",
+                        "surface": "#fdf9ef",
+                        "outline": "#75777e",
+                        "surface-container-high": "#ece8de",
+                        "on-surface": "#1c1c16",
+                        "surface-variant": "#e6e2d8",
+                        "inverse-on-surface": "#f4f0e6",
+                        "on-primary-container": "#8293b7",
+                        "on-tertiary-fixed": "#001e30",
+                        "outline-variant": "#c5c6cf",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed": "#081b39"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "unit": "4px",
+                        "margin": "32px",
+                        "stack-sm": "8px",
+                        "stack-md": "16px",
+                        "stack-lg": "40px",
+                        "card-padding": "20px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Instrument Sans"],
+                        "body-lg": ["Instrument Sans"],
+                        "headline-sm": ["Archivo Narrow"],
+                        "display-lg": ["Archivo Narrow"],
+                        "display-md": ["Archivo Narrow"],
+                        "data-mono": ["IBM Plex Mono"],
+                        "label-caps": ["IBM Plex Mono"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-sm": ["24px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "800" }],
+                        "display-md": ["32px", { "lineHeight": "1.1", "letterSpacing": "-0.01em", "fontWeight": "800" }],
+                        "data-mono": ["14px", { "lineHeight": "1.4", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "label-caps": ["12px", { "lineHeight": "1.2", "fontWeight": "700" }]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .paper-texture {
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+        }
+        .airmail-border-top {
+            border-top: 4px solid transparent;
+            border-image: repeating-linear-gradient(45deg, #b12a2a, #b12a2a 10px, #031634 10px, #031634 20px) 1;
+        }
+        .dotted-path {
+            background-image: linear-gradient(to right, #031634 33%, rgba(255,255,255,0) 0%);
+            background-position: bottom;
+            background-size: 6px 1px;
+            background-repeat: repeat-x;
+        }
+        .stamped-icon {
+            opacity: 0.2;
+            transform: rotate(-15deg);
+            mix-blend-mode: multiply;
+        }
+    </style>
+</head>
+<body class="h-full bg-background paper-texture text-on-background flex flex-col font-body-md overflow-hidden">
+<!-- Top Navigation (Reduced for tutorial focus) -->
+<header class="flex justify-between items-center w-full px-margin py-4 max-w-[1200px] mx-auto border-b border-primary relative z-10 shrink-0 bg-background/90 backdrop-blur-sm">
+<div class="flex items-center gap-stack-sm text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">flight_takeoff</span>
+<h1 class="font-display-md text-display-md font-extrabold uppercase tracking-tighter">THE DART - MANIFEST</h1>
+</div>
+<div class="flex items-center gap-stack-md">
+<div class="font-data-mono text-data-mono uppercase text-secondary font-bold">
+                STEP 04 / 12
+            </div>
+<button class="text-on-surface-variant hover:text-primary transition-colors p-2 hover:bg-primary-container/10 rounded-DEFAULT flex items-center justify-center">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+</header>
+<main class="flex-grow flex w-full max-w-[1200px] mx-auto overflow-hidden">
+<!-- Left: Side Navigation (From JSON, modified to fit tutorial context as "Steps" or "Chapters") -->
+<nav class="hidden md:flex flex-col h-full w-64 p-gutter gap-stack-md bg-surface-container border-r border-primary shrink-0 overflow-y-auto">
+<div class="mb-stack-md">
+<h2 class="font-headline-sm text-headline-sm uppercase text-primary mb-1">TUTORIAL STEPS</h2>
+<div class="font-data-mono text-data-mono uppercase text-secondary">THE DART</div>
+</div>
+<ul class="flex flex-col gap-unit">
+<!-- Inactive previous steps -->
+<li>
+<a class="flex items-center gap-stack-sm p-3 text-on-surface-variant hover:bg-surface-container-highest transition-colors rounded-sm group relative" href="#">
+<div class="w-6 flex justify-center">
+<span class="material-symbols-outlined text-sm opacity-50">check</span>
+</div>
+<span class="font-data-mono text-data-mono uppercase">01: PREP</span>
+<div class="absolute left-4 top-full bottom-[-16px] w-[1px] bg-primary/20 group-last:hidden"></div>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-stack-sm p-3 text-on-surface-variant hover:bg-surface-container-highest transition-colors rounded-sm group relative" href="#">
+<div class="w-6 flex justify-center">
+<span class="material-symbols-outlined text-sm opacity-50">check</span>
+</div>
+<span class="font-data-mono text-data-mono uppercase">02: CENTER CREASE</span>
+<div class="absolute left-4 top-full bottom-[-16px] w-[1px] bg-primary/20 group-last:hidden"></div>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-stack-sm p-3 text-on-surface-variant hover:bg-surface-container-highest transition-colors rounded-sm group relative" href="#">
+<div class="w-6 flex justify-center">
+<span class="material-symbols-outlined text-sm opacity-50">check</span>
+</div>
+<span class="font-data-mono text-data-mono uppercase">03: CORNERS</span>
+<div class="absolute left-4 top-full bottom-[-16px] w-[1px] bg-primary/20 group-last:hidden"></div>
+</a>
+</li>
+<!-- Active Step -->
+<li>
+<a class="flex items-center gap-stack-sm p-3 bg-primary text-on-primary rounded-sm shadow-[2px_2px_0px_0px_rgba(3,22,52,0.2)] translate-x-1 transition-all group relative" href="#">
+<div class="w-6 flex justify-center font-data-mono text-data-mono font-bold text-secondary-fixed">
+                            04
+                        </div>
+<span class="font-data-mono text-data-mono uppercase font-bold text-secondary-fixed">THE VALLEY FOLD</span>
+<div class="absolute left-4 top-full bottom-[-16px] w-[1px] bg-primary/20 group-last:hidden"></div>
+</a>
+</li>
+<!-- Inactive future steps -->
+<li>
+<a class="flex items-center gap-stack-sm p-3 text-on-surface-variant hover:bg-surface-container-highest transition-colors rounded-sm group relative" href="#">
+<div class="w-6 flex justify-center font-data-mono text-data-mono opacity-50">
+                            05
+                         </div>
+<span class="font-data-mono text-data-mono uppercase">NOSE CONE</span>
+<div class="absolute left-4 top-full bottom-[-16px] w-[1px] bg-primary/20 group-last:hidden"></div>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-stack-sm p-3 text-on-surface-variant hover:bg-surface-container-highest transition-colors rounded-sm group relative" href="#">
+<div class="w-6 flex justify-center font-data-mono text-data-mono opacity-50">
+                            ...
+                         </div>
+<span class="font-data-mono text-data-mono uppercase">CONTINUE</span>
+</a>
+</li>
+</ul>
+<!-- Stamped Motif -->
+<div class="mt-auto pt-stack-lg flex justify-center">
+<span class="material-symbols-outlined text-[64px] text-primary stamped-icon">local_shipping</span>
+</div>
+</nav>
+<!-- Center: 3D Stage (Cockpit) -->
+<section class="flex-grow flex flex-col relative border-r border-primary bg-surface-container-low">
+<!-- Stage Area -->
+<div class="flex-grow relative overflow-hidden flex items-center justify-center p-gutter">
+<!-- Animation Placeholder -->
+<div class="absolute inset-4 border border-primary/20 rounded-DEFAULT bg-background/50 flex items-center justify-center">
+<!-- STITCH_THREEJS_START:ANIMATION_4 class="absolute inset-0 w-full h-full opacity-90" -->
+<div class="absolute inset-0 w-full h-full opacity-90" style="display:block;">
+<script src="https://ajax.googleapis.com/ajax/libs/threejs/r125/three.min.js"></script>
+<div id="threejs-container-ANIMATION_4" style="width:100%;height:100%"></div>
+<script>
+(function() {
+  const container = document.getElementById('threejs-container-ANIMATION_4');
+  const devicePixelRatio = window.devicePixelRatio || 1;
+  <threejs-scene>
+  const scene = new THREE.Scene();
+  const width = container.clientWidth || window.innerWidth;
+  const height = container.clientHeight || window.innerHeight;
+  const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+  renderer.setSize(width, height);
+  container.appendChild(renderer.domElement);
+
+  // Animated folding paper simulation
+  const geometry = new THREE.PlaneGeometry(2, 2, 10, 10);
+  const material = new THREE.MeshPhongMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+  const paper = new THREE.Mesh(geometry, material);
+  scene.add(paper);
+
+  const light = new THREE.DirectionalLight(0xffffff, 1);
+  light.position.set(2, 2, 5);
+  scene.add(light);
+  scene.add(new THREE.AmbientLight(0x404040));
+
+  camera.position.z = 3;
+
+  function animate(time) {
+    requestAnimationFrame(animate);
+    // Simple vertical fold animation
+    paper.rotation.y = Math.sin(time * 0.002) * 0.5;
+    renderer.render(scene, camera);
+  }
+  animate(0);
+
+  window.addEventListener('resize', () => {
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  });
+</threejs-scene>
+})();
+</script>
+</div>
+<!-- STITCH_THREEJS_END:ANIMATION_4 -->
+<!-- Overlay Grid/Tactical lines -->
+<div class="absolute inset-0 pointer-events-none opacity-10" style="background-image: radial-gradient(#031634 1px, transparent 1px); background-size: 20px 20px;"></div>
+<!-- Center reticle -->
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 border border-primary/30 rounded-full pointer-events-none flex items-center justify-center">
+<div class="w-1 h-1 bg-primary/50 rounded-full"></div>
+</div>
+</div>
+<!-- Stamp on stage -->
+<div class="absolute top-8 right-8 pointer-events-none">
+<span class="font-label-caps text-label-caps text-secondary uppercase stamped-icon rotate-[15deg]">CONFIDENTIAL STAGE</span>
+</div>
+</div>
+<!-- Instrument Strip (Bottom) -->
+<div class="h-24 border-t border-primary bg-surface flex items-center px-gutter gap-stack-md shrink-0">
+<!-- Playback Controls -->
+<div class="flex items-center gap-stack-sm">
+<button class="w-12 h-12 flex items-center justify-center rounded-full border border-primary text-primary hover:bg-primary/5 transition-colors">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">replay</span>
+</button>
+<button class="w-12 h-12 flex items-center justify-center rounded-full bg-primary text-on-primary hover:bg-primary-container transition-colors shadow-[2px_2px_0px_0px_rgba(3,22,52,0.2)]">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+</div>
+<!-- Scrub Timeline -->
+<div class="flex-grow flex flex-col gap-unit px-stack-md">
+<div class="flex justify-between font-data-mono text-[10px] text-on-surface-variant uppercase">
+<span>0:00</span>
+<span>0:15</span>
+</div>
+<div class="h-2 w-full bg-surface-variant rounded-full relative cursor-pointer group">
+<div class="absolute top-0 left-0 h-full bg-secondary rounded-full w-1/3"></div>
+<div class="absolute top-1/2 left-1/3 w-4 h-4 bg-primary rounded-full -translate-x-1/2 -translate-y-1/2 border-2 border-surface opacity-0 group-hover:opacity-100 transition-opacity"></div>
+</div>
+</div>
+<!-- Step Nav -->
+<div class="flex items-center gap-stack-sm">
+<button class="px-4 py-2 border border-primary text-primary font-label-caps text-label-caps uppercase hover:bg-primary/5 transition-colors rounded-DEFAULT flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">arrow_back</span>
+                        PREV
+                    </button>
+<button class="px-4 py-2 bg-primary text-on-primary font-label-caps text-label-caps uppercase hover:bg-primary-container transition-colors rounded-DEFAULT shadow-[2px_2px_0px_0px_rgba(3,22,52,0.2)] flex items-center gap-2">
+                        NEXT
+                        <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Right: Instruction Rail -->
+<aside class="w-80 shrink-0 bg-background flex flex-col h-full overflow-y-auto">
+<!-- Airmail Header -->
+<div class="h-2 w-full airmail-border-top shrink-0"></div>
+<div class="p-card-padding flex flex-col gap-stack-lg">
+<!-- Instruction Header -->
+<div>
+<div class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-on-primary font-data-mono text-data-mono mb-stack-sm shadow-[2px_2px_0px_0px_rgba(177,42,42,1)]">
+                        04
+                    </div>
+<h2 class="font-display-md text-display-md font-extrabold uppercase text-primary tracking-tighter leading-none mb-2">THE VALLEY FOLD</h2>
+<div class="h-[1px] w-full dotted-path mt-4"></div>
+</div>
+<!-- Primary Instruction text -->
+<div class="bg-surface-container p-card-padding border border-primary rounded-DEFAULT shadow-[2px_2px_0px_0px_rgba(3,22,52,0.2)] relative">
+<!-- Pin accent -->
+<div class="absolute -top-2 -left-2 w-4 h-4 bg-secondary rounded-full border border-primary shadow-sm"></div>
+<p class="font-body-lg text-body-lg text-on-surface">
+                        Fold the top edge down to meet the bottom guideline precisely.
+                    </p>
+</div>
+<!-- The "Why" -->
+<div>
+<h3 class="font-label-caps text-label-caps uppercase text-secondary mb-unit flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">info</span>
+                        PURPOSE
+                    </h3>
+<p class="font-body-md text-body-md text-on-surface-variant pl-5 border-l-2 border-secondary/30">
+                        This creates the structural spine for the wings, ensuring stability during flight.
+                    </p>
+</div>
+<!-- Glossary Snippet -->
+<div class="mt-auto pt-stack-md border-t border-primary/20">
+<h3 class="font-label-caps text-label-caps uppercase text-on-surface-variant mb-unit flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">menu_book</span>
+                        GLOSSARY
+                    </h3>
+<div class="bg-surface-variant/50 p-3 rounded-sm border border-primary/10">
+<span class="font-data-mono text-data-mono font-bold text-primary block mb-1">Valley Fold</span>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">
+                            A fold where the crease sits at the bottom, resembling a river valley. The paper folds upward and inward.
+                        </p>
+</div>
+</div>
+</div>
+</aside>
+</main>
+</body></html>

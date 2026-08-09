@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@600;700;800&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#e6e1d4;font-family:'Instrument Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#D64541;text-decoration:none}a:hover{color:#1A2B4A}
+.dv-turn{padding:48px 52px 40px;border-bottom:1px solid rgba(26,43,74,.12)}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 26px}
+.dv-tid{font:600 10px 'IBM Plex Mono',monospace;padding:3px 7px;background:#1A2B4A;color:#F7F3E9;border-radius:4px;text-decoration:none}
+.dv-tname{font:600 13px/1.2 'Instrument Sans',sans-serif;color:#1A2B4A}
+.dv-opts{display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:10px}
+.dv-oid{font:600 10.5px 'IBM Plex Mono',monospace;padding:3px 7px;background:rgba(26,43,74,.1);color:#1A2B4A;border-radius:5px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 'Instrument Sans',sans-serif;color:rgba(26,43,74,.6)}
+.dv-card{background:#F7F3E9;border:1px solid rgba(26,43,74,.14);border-radius:8px;box-shadow:0 8px 28px rgba(26,43,74,.14);overflow:hidden}
+.dv-opt:target .dv-oid{background:#D64541;color:#fff}
+.dv-next{margin:26px 0 0;font:12px/1.6 'Instrument Sans',sans-serif;color:rgba(26,43,74,.55)}
+@keyframes fold{0%{transform:rotateY(0deg)}12%{transform:rotateY(0deg)}55%{transform:rotateY(-168deg)}70%{transform:rotateY(-168deg)}100%{transform:rotateY(-168deg)}}
+@keyframes foldshade{0%,12%{opacity:0}40%{opacity:.22}55%,100%{opacity:.10}}
+@keyframes dashflow{to{stroke-dashoffset:-40}}
+@keyframes blink{0%,60%{opacity:1}61%,100%{opacity:.25}}
+@keyframes stampin{0%{transform:rotate(-14deg) scale(2.4);opacity:0}60%{transform:rotate(-14deg) scale(.94);opacity:1}80%{transform:rotate(-14deg) scale(1.04)}100%{transform:rotate(-14deg) scale(1);opacity:1}}
+@keyframes hover3d{0%,100%{transform:rotateX(-16deg) rotateY(-24deg) translateY(0)}50%{transform:rotateX(-16deg) rotateY(-14deg) translateY(-8px)}}
+</style>
+</helmet>
+
+<section class="dv-turn" id="t1">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Flight School — five screens, one system</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="1a">
+<div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>The Hangar — catalog</div>
+<div class="dv-card" style="width:1360px">
+<div style="background:#F7F3E9;background-image:radial-gradient(rgba(26,43,74,.045) 1px,transparent 1px);background-size:3px 3px">
+
+<div style="height:8px;background:repeating-linear-gradient(45deg,#D64541 0 14px,#F7F3E9 14px 28px,#1A2B4A 28px 42px,#F7F3E9 42px 56px)"></div>
+
+<div style="display:flex;align-items:center;justify-content:space-between;padding:20px 40px;border-bottom:1px solid rgba(26,43,74,.18)">
+<div style="display:flex;align-items:center;gap:14px">
+<div style="width:26px;height:26px;background:#D64541;transform:rotate(45deg)"></div>
+<div style="font:400 20px 'Archivo Black',sans-serif;color:#1A2B4A;letter-spacing:-.02em">FLIGHT SCHOOL</div>
+</div>
+<div style="display:flex;align-items:center;gap:32px">
+<div style="font:500 14px 'Instrument Sans',sans-serif;color:#1A2B4A">The Hangar</div>
+<div style="font:500 14px 'Instrument Sans',sans-serif;color:rgba(26,43,74,.55)">Flight Log</div>
+<div style="font:500 14px 'Instrument Sans',sans-serif;color:rgba(26,43,74,.55)">Fold Terms</div>
+<div style="display:flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid rgba(26,43,74,.25);border-radius:4px">
+<div style="width:14px;height:14px;border:2px solid #4A7C59;border-radius:50%"></div>
+<div style="font:500 12px 'IBM Plex Mono',monospace;color:#1A2B4A">2 WINGS</div>
+</div>
+</div>
+</div>
+
+<div style="padding:44px 40px 16px;display:flex;align-items:flex-end;justify-content:space-between">
+<div style="max-width:640px">
+<div style="font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.18em;color:#D64541;margin-bottom:14px">EST. 2026 · TWELVE AIRCRAFT ON THE FLOOR</div>
+<div style="font:400 62px/.94 'Archivo Black',sans-serif;color:#1A2B4A;letter-spacing:-.035em">THE HANGAR</div>
+<div style="font:400 18px/1.55 'Instrument Sans',sans-serif;color:rgba(26,43,74,.72);margin-top:16px;text-wrap:pretty">Pick an aircraft. Every fold is shown in 3D, from flat paper to first flight. Start with a Beginner License and work your way up.</div>
+</div>
+<div style="display:flex;gap:8px;padding-bottom:6px">
+<div style="padding:9px 16px;background:#1A2B4A;color:#F7F3E9;border-radius:4px;font:600 12px 'IBM Plex Mono',monospace;letter-spacing:.08em">ALL</div>
+<div style="padding:9px 16px;border:1px solid rgba(26,43,74,.25);color:#1A2B4A;border-radius:4px;font:600 12px 'IBM Plex Mono',monospace;letter-spacing:.08em">BEGINNER</div>
+<div style="padding:9px 16px;border:1px solid rgba(26,43,74,.25);color:#1A2B4A;border-radius:4px;font:600 12px 'IBM Plex Mono',monospace;letter-spacing:.08em">PILOT</div>
+<div style="padding:9px 16px;border:1px solid rgba(26,43,74,.25);color:#1A2B4A;border-radius:4px;font:600 12px 'IBM Plex Mono',monospace;letter-spacing:.08em">ACE</div>
+</div>
+</div>
+
+<div style="padding:0 40px 12px">
+<div style="display:flex;align-items:center;gap:16px;margin:30px 0 20px">
+<div style="font:400 15px 'Archivo Black',sans-serif;color:#1A2B4A;letter-spacing:.02em">FLIGHT LICENSE: BEGINNER</div>
+<div style="flex:1;height:1px;background:repeating-linear-gradient(90deg,rgba(26,43,74,.4) 0 5px,transparent 5px 10px)"></div>
+<div style="font:500 11px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.55)">04 AIRCRAFT</div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px">
+
+<div style="position:relative;background:#fff;border:1px solid rgba(26,43,74,.14);border-radius:8px;box-shadow:0 6px 18px rgba(26,43,74,.09);overflow:hidden">
+<div style="position:absolute;left:0;right:0;top:200px;height:1px;background:repeating-linear-gradient(90deg,rgba(26,43,74,.35) 0 4px,transparent 4px 9px);z-index:2"></div>
+<div style="position:absolute;left:-7px;top:194px;width:14px;height:14px;border-radius:50%;background:#F7F3E9;z-index:3"></div>
+<div style="position:absolute;right:-7px;top:194px;width:14px;height:14px;border-radius:50%;background:#F7F3E9;z-index:3"></div>
+<div style="height:200px;background:#F7F3E9;background-image:repeating-linear-gradient(-45deg,rgba(26,43,74,.055) 0 6px,transparent 6px 12px);display:flex;align-items:center;justify-content:center;position:relative">
+<div style="width:150px;height:64px;background:rgba(26,43,74,.5);clip-path:polygon(0 0,100% 44%,0 100%,26% 50%)"></div>
+<div style="position:absolute;bottom:10px;left:12px;font:500 9.5px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.45);letter-spacing:.1em">3D RENDER — THE DART</div>
+<div style="position:absolute;top:12px;right:12px;padding:4px 8px;background:#D64541;color:#fff;font:600 9.5px 'IBM Plex Mono',monospace;letter-spacing:.12em">MOST FLOWN</div>
+</div>
+<div style="padding:20px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px">
+<div style="font:400 24px 'Archivo Black',sans-serif;color:#1A2B4A;letter-spacing:-.02em">THE DART</div>
+<div style="font:500 11px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.55)">12 STEPS</div>
+</div>
+<div style="font:400 14.5px/1.5 'Instrument Sans',sans-serif;color:rgba(26,43,74,.68);margin-bottom:16px">Fast, straight, and forgiving. The one every pilot folds first.</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px 18px;padding:14px 0;border-top:1px solid rgba(26,43,74,.14);border-bottom:1px solid rgba(26,43,74,.14)">
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.6);letter-spacing:.08em">SPEED</span><span style="display:flex;gap:3px"><i style="width:7px;height:11px;background:#D64541;display:block"></i><i style="width:7px;height:11px;background:#D64541;display:block"></i><i style="width:7px;height:11px;background:#D64541;display:block"></i><i style="width:7px;height:11px;background:#D64541;display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i></span></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.6);letter-spacing:.08em">DIST</span><span style="display:flex;gap:3px"><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i></span></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.6);letter-spacing:.08em">AIRTIME</span><span style="display:flex;gap:3px"><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i></span></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.6);letter-spacing:.08em">EASE</span><span style="display:flex;gap:3px"><i style="width:7px;height:11px;background:#4A7C59;display:block"></i><i style="width:7px;height:11px;background:#4A7C59;display:block"></i><i style="width:7px;height:11px;background:#4A7C59;display:block"></i><i style="width:7px;height:11px;background:#4A7C59;display:block"></i><i style="width:7px;height:11px;background:#4A7C59;display:block"></i></span></div>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px">
+<div style="font:500 10.5px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.55);letter-spacing:.08em">A4 · 1 SHEET · 4 MIN</div>
+<div style="padding:8px 16px;background:#D64541;color:#fff;border-radius:4px;font:600 12px 'Instrument Sans',sans-serif">Start folding</div>
+</div>
+</div>
+</div>
+
+<div style="position:relative;background:#fff;border:1px solid rgba(26,43,74,.14);border-radius:8px;box-shadow:0 6px 18px rgba(26,43,74,.09);overflow:hidden">
+<div style="position:absolute;left:0;right:0;top:200px;height:1px;background:repeating-linear-gradient(90deg,rgba(26,43,74,.35) 0 4px,transparent 4px 9px);z-index:2"></div>
+<div style="position:absolute;left:-7px;top:194px;width:14px;height:14px;border-radius:50%;background:#F7F3E9;z-index:3"></div>
+<div style="position:absolute;right:-7px;top:194px;width:14px;height:14px;border-radius:50%;background:#F7F3E9;z-index:3"></div>
+<div style="height:200px;background:#F7F3E9;background-image:repeating-linear-gradient(-45deg,rgba(26,43,74,.055) 0 6px,transparent 6px 12px);display:flex;align-items:center;justify-content:center;position:relative">
+<div style="width:154px;height:76px;background:rgba(26,43,74,.42);clip-path:polygon(0 12%,100% 50%,0 88%,32% 50%)"></div>
+<div style="position:absolute;bottom:10px;left:12px;font:500 9.5px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.45);letter-spacing:.1em">3D RENDER — THE GLIDER</div>
+</div>
+<div style="padding:20px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px">
+<div style="font:400 24px 'Archivo Black',sans-serif;color:#1A2B4A;letter-spacing:-.02em">THE GLIDER</div>
+<div style="font:500 11px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.55)">09 STEPS</div>
+</div>
+<div style="font:400 14.5px/1.5 'Instrument Sans',sans-serif;color:rgba(26,43,74,.68);margin-bottom:16px">Wide wings, slow hang. Best flown indoors with a gentle push.</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px 18px;padding:14px 0;border-top:1px solid rgba(26,43,74,.14);border-bottom:1px solid rgba(26,43,74,.14)">
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.6);letter-spacing:.08em">SPEED</span><span style="display:flex;gap:3px"><i style="width:7px;height:11px;background:#D64541;display:block"></i><i style="width:7px;height:11px;background:#D64541;display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i></span></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.6);letter-spacing:.08em">DIST</span><span style="display:flex;gap:3px"><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i></span></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.6);letter-spacing:.08em">AIRTIME</span><span style="display:flex;gap:3px"><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i></span></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.6);letter-spacing:.08em">EASE</span><span style="display:flex;gap:3px"><i style="width:7px;height:11px;background:#4A7C59;display:block"></i><i style="width:7px;height:11px;background:#4A7C59;display:block"></i><i style="width:7px;height:11px;background:#4A7C59;display:block"></i><i style="width:7px;height:11px;background:#4A7C59;display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i></span></div>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px">
+<div style="font:500 10.5px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.55);letter-spacing:.08em">A4 · 1 SHEET · 3 MIN</div>
+<div style="padding:8px 16px;background:#D64541;color:#fff;border-radius:4px;font:600 12px 'Instrument Sans',sans-serif">Start folding</div>
+</div>
+</div>
+</div>
+
+<div style="position:relative;background:#fff;border:1px solid rgba(74,124,89,.4);border-radius:8px;box-shadow:0 6px 18px rgba(26,43,74,.09);overflow:hidden">
+<div style="position:absolute;left:0;right:0;top:200px;height:1px;background:repeating-linear-gradient(90deg,rgba(26,43,74,.35) 0 4px,transparent 4px 9px);z-index:2"></div>
+<div style="position:absolute;left:-7px;top:194px;width:14px;height:14px;border-radius:50%;background:#F7F3E9;z-index:3"></div>
+<div style="position:absolute;right:-7px;top:194px;width:14px;height:14px;border-radius:50%;background:#F7F3E9;z-index:3"></div>
+<div style="height:200px;background:#F0F4EE;background-image:repeating-linear-gradient(-45deg,rgba(74,124,89,.07) 0 6px,transparent 6px 12px);display:flex;align-items:center;justify-content:center;position:relative">
+<div style="width:148px;height:70px;background:rgba(26,43,74,.45);clip-path:polygon(0 6%,100% 46%,0 94%,24% 50%)"></div>
+<div style="position:absolute;bottom:10px;left:12px;font:500 9.5px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.45);letter-spacing:.1em">3D RENDER — THE ARROWHEAD</div>
+<div style="position:absolute;top:12px;right:12px;display:flex;align-items:center;gap:6px;padding:5px 9px;border:1.5px solid #4A7C59;background:rgba(247,243,233,.9)">
+<div style="width:16px;height:8px;background:#4A7C59;clip-path:polygon(0 50%,28% 0,50% 50%,72% 0,100% 50%,50% 100%)"></div>
+<div style="font:600 9.5px 'IBM Plex Mono',monospace;color:#4A7C59;letter-spacing:.12em">WINGS EARNED</div>
+</div>
+</div>
+<div style="padding:20px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px">
+<div style="font:400 24px 'Archivo Black',sans-serif;color:#1A2B4A;letter-spacing:-.02em">THE ARROWHEAD</div>
+<div style="font:500 11px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.55)">11 STEPS</div>
+</div>
+<div style="font:400 14.5px/1.5 'Instrument Sans',sans-serif;color:rgba(26,43,74,.68);margin-bottom:16px">A blunt nose that survives crashes. Good for windy days outside.</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px 18px;padding:14px 0;border-top:1px solid rgba(26,43,74,.14);border-bottom:1px solid rgba(26,43,74,.14)">
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.6);letter-spacing:.08em">SPEED</span><span style="display:flex;gap:3px"><i style="width:7px;height:11px;background:#D64541;display:block"></i><i style="width:7px;height:11px;background:#D64541;display:block"></i><i style="width:7px;height:11px;background:#D64541;display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i></span></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.6);letter-spacing:.08em">DIST</span><span style="display:flex;gap:3px"><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i></span></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.6);letter-spacing:.08em">AIRTIME</span><span style="display:flex;gap:3px"><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i></span></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.6);letter-spacing:.08em">EASE</span><span style="display:flex;gap:3px"><i style="width:7px;height:11px;background:#4A7C59;display:block"></i><i style="width:7px;height:11px;background:#4A7C59;display:block"></i><i style="width:7px;height:11px;background:#4A7C59;display:block"></i><i style="width:7px;height:11px;background:#4A7C59;display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i></span></div>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px">
+<div style="font:500 10.5px 'IBM Plex Mono',monospace;color:#4A7C59;letter-spacing:.08em">CERTIFIED 04 AUG · SERIAL 0117</div>
+<div style="padding:8px 16px;border:1.5px solid #1A2B4A;color:#1A2B4A;border-radius:4px;font:600 12px 'Instrument Sans',sans-serif">Fold again</div>
+</div>
+</div>
+</div>
+
+</div>
+
+<div style="display:flex;align-items:center;gap:16px;margin:38px 0 20px">
+<div style="font:400 15px 'Archivo Black',sans-serif;color:#1A2B4A;letter-spacing:.02em">FLIGHT LICENSE: PILOT</div>
+<div style="flex:1;height:1px;background:repeating-linear-gradient(90deg,rgba(26,43,74,.4) 0 5px,transparent 5px 10px)"></div>
+<div style="font:500 11px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.55)">05 AIRCRAFT</div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px">
+
+<div style="position:relative;background:#fff;border:1px solid rgba(26,43,74,.14);border-radius:8px;box-shadow:0 6px 18px rgba(26,43,74,.09);overflow:hidden">
+<div style="position:absolute;left:0;right:0;top:200px;height:1px;background:repeating-linear-gradient(90deg,rgba(26,43,74,.35) 0 4px,transparent 4px 9px);z-index:2"></div>
+<div style="position:absolute;left:-7px;top:194px;width:14px;height:14px;border-radius:50%;background:#F7F3E9;z-index:3"></div>
+<div style="position:absolute;right:-7px;top:194px;width:14px;height:14px;border-radius:50%;background:#F7F3E9;z-index:3"></div>
+<div style="height:200px;background:#F7F3E9;background-image:repeating-linear-gradient(-45deg,rgba(26,43,74,.055) 0 6px,transparent 6px 12px);display:flex;align-items:center;justify-content:center;position:relative">
+<div style="width:158px;height:60px;background:rgba(26,43,74,.5);clip-path:polygon(0 20%,100% 48%,0 80%,30% 50%)"></div>
+<div style="position:absolute;bottom:10px;left:12px;font:500 9.5px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.45);letter-spacing:.1em">3D RENDER — THE HAMMERHEAD</div>
+</div>
+<div style="padding:20px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px">
+<div style="font:400 24px 'Archivo Black',sans-serif;color:#1A2B4A;letter-spacing:-.02em">THE HAMMERHEAD</div>
+<div style="font:500 11px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.55)">16 STEPS</div>
+</div>
+<div style="font:400 14.5px/1.5 'Instrument Sans',sans-serif;color:rgba(26,43,74,.68);margin-bottom:16px">Throw it hard and straight up. It turns over and comes back down flat.</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px 18px;padding:14px 0;border-top:1px solid rgba(26,43,74,.14);border-bottom:1px solid rgba(26,43,74,.14)">
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.6);letter-spacing:.08em">SPEED</span><span style="display:flex;gap:3px"><i style="width:7px;height:11px;background:#D64541;display:block"></i><i style="width:7px;height:11px;background:#D64541;display:block"></i><i style="width:7px;height:11px;background:#D64541;display:block"></i><i style="width:7px;height:11px;background:#D64541;display:block"></i><i style="width:7px;height:11px;background:#D64541;display:block"></i></span></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.6);letter-spacing:.08em">DIST</span><span style="display:flex;gap:3px"><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i></span></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.6);letter-spacing:.08em">AIRTIME</span><span style="display:flex;gap:3px"><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i></span></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.6);letter-spacing:.08em">EASE</span><span style="display:flex;gap:3px"><i style="width:7px;height:11px;background:#4A7C59;display:block"></i><i style="width:7px;height:11px;background:#4A7C59;display:block"></i><i style="width:7px;height:11px;background:#4A7C59;display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i></span></div>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px">
+<div style="font:500 10.5px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.55);letter-spacing:.08em">A4 · 1 SHEET · 7 MIN</div>
+<div style="padding:8px 16px;background:#D64541;color:#fff;border-radius:4px;font:600 12px 'Instrument Sans',sans-serif">Start folding</div>
+</div>
+</div>
+</div>
+
+<div style="position:relative;background:#fff;border:1px solid rgba(26,43,74,.14);border-radius:8px;box-shadow:0 6px 18px rgba(26,43,74,.09);overflow:hidden">
+<div style="position:absolute;left:0;right:0;top:200px;height:1px;background:repeating-linear-gradient(90deg,rgba(26,43,74,.35) 0 4px,transparent 4px 9px);z-index:2"></div>
+<div style="position:absolute;left:-7px;top:194px;width:14px;height:14px;border-radius:50%;background:#F7F3E9;z-index:3"></div>
+<div style="position:absolute;right:-7px;top:194px;width:14px;height:14px;border-radius:50%;background:#F7F3E9;z-index:3"></div>
+<div style="height:200px;background:#F7F3E9;background-image:repeating-linear-gradient(-45deg,rgba(26,43,74,.055) 0 6px,transparent 6px 12px);display:flex;align-items:center;justify-content:center;position:relative">
+<div style="width:146px;height:82px;background:rgba(26,43,74,.42);clip-path:polygon(0 0,100% 50%,0 100%,40% 50%)"></div>
+<div style="position:absolute;bottom:10px;left:12px;font:500 9.5px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.45);letter-spacing:.1em">3D RENDER — THE ALBATROSS</div>
+</div>
+<div style="padding:20px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px">
+<div style="font:400 24px 'Archivo Black',sans-serif;color:#1A2B4A;letter-spacing:-.02em">THE ALBATROSS</div>
+<div style="font:500 11px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.55)">14 STEPS</div>
+</div>
+<div style="font:400 14.5px/1.5 'Instrument Sans',sans-serif;color:rgba(26,43,74,.68);margin-bottom:16px">Long wings, long hang time. Needs a calm room and a soft release.</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px 18px;padding:14px 0;border-top:1px solid rgba(26,43,74,.14);border-bottom:1px solid rgba(26,43,74,.14)">
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.6);letter-spacing:.08em">SPEED</span><span style="display:flex;gap:3px"><i style="width:7px;height:11px;background:#D64541;display:block"></i><i style="width:7px;height:11px;background:#D64541;display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i></span></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.6);letter-spacing:.08em">DIST</span><span style="display:flex;gap:3px"><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i></span></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.6);letter-spacing:.08em">AIRTIME</span><span style="display:flex;gap:3px"><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i></span></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.6);letter-spacing:.08em">EASE</span><span style="display:flex;gap:3px"><i style="width:7px;height:11px;background:#4A7C59;display:block"></i><i style="width:7px;height:11px;background:#4A7C59;display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i></span></div>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px">
+<div style="font:500 10.5px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.55);letter-spacing:.08em">A4 · 1 SHEET · 6 MIN</div>
+<div style="padding:8px 16px;background:#D64541;color:#fff;border-radius:4px;font:600 12px 'Instrument Sans',sans-serif">Start folding</div>
+</div>
+</div>
+</div>
+
+<div style="position:relative;background:#fff;border:1px solid rgba(26,43,74,.14);border-radius:8px;box-shadow:0 6px 18px rgba(26,43,74,.09);overflow:hidden">
+<div style="position:absolute;left:0;right:0;top:200px;height:1px;background:repeating-linear-gradient(90deg,rgba(26,43,74,.35) 0 4px,transparent 4px 9px);z-index:2"></div>
+<div style="position:absolute;left:-7px;top:194px;width:14px;height:14px;border-radius:50%;background:#F7F3E9;z-index:3"></div>
+<div style="position:absolute;right:-7px;top:194px;width:14px;height:14px;border-radius:50%;background:#F7F3E9;z-index:3"></div>
+<div style="height:200px;background:#F7F3E9;background-image:repeating-linear-gradient(-45deg,rgba(26,43,74,.055) 0 6px,transparent 6px 12px);display:flex;align-items:center;justify-content:center;position:relative">
+<div style="width:160px;height:72px;background:rgba(26,43,74,.5);clip-path:polygon(0 8%,100% 50%,0 92%,18% 50%)"></div>
+<div style="position:absolute;bottom:10px;left:12px;font:500 9.5px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.45);letter-spacing:.1em">3D RENDER — THE COMET</div>
+<div style="position:absolute;top:12px;right:12px;padding:4px 8px;border:1.5px solid #1A2B4A;color:#1A2B4A;font:600 9.5px 'IBM Plex Mono',monospace;letter-spacing:.12em">ACE LICENSE</div>
+</div>
+<div style="padding:20px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px">
+<div style="font:400 24px 'Archivo Black',sans-serif;color:#1A2B4A;letter-spacing:-.02em">THE COMET</div>
+<div style="font:500 11px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.55)">23 STEPS</div>
+</div>
+<div style="font:400 14.5px/1.5 'Instrument Sans',sans-serif;color:rgba(26,43,74,.68);margin-bottom:16px">Twenty-three folds and a tuned nose weight. The record holder's plane.</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px 18px;padding:14px 0;border-top:1px solid rgba(26,43,74,.14);border-bottom:1px solid rgba(26,43,74,.14)">
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.6);letter-spacing:.08em">SPEED</span><span style="display:flex;gap:3px"><i style="width:7px;height:11px;background:#D64541;display:block"></i><i style="width:7px;height:11px;background:#D64541;display:block"></i><i style="width:7px;height:11px;background:#D64541;display:block"></i><i style="width:7px;height:11px;background:#D64541;display:block"></i><i style="width:7px;height:11px;background:#D64541;display:block"></i></span></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.6);letter-spacing:.08em">DIST</span><span style="display:flex;gap:3px"><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i></span></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.6);letter-spacing:.08em">AIRTIME</span><span style="display:flex;gap:3px"><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:#7FA8C9;display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i></span></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.6);letter-spacing:.08em">EASE</span><span style="display:flex;gap:3px"><i style="width:7px;height:11px;background:#4A7C59;display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i><i style="width:7px;height:11px;background:rgba(26,43,74,.15);display:block"></i></span></div>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px">
+<div style="font:500 10.5px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.55);letter-spacing:.08em">A4 · 1 SHEET · 12 MIN</div>
+<div style="padding:8px 16px;background:#D64541;color:#fff;border-radius:4px;font:600 12px 'Instrument Sans',sans-serif">Start folding</div>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+
+<div style="margin-top:44px;padding:26px 40px;border-top:1px solid rgba(26,43,74,.18);display:flex;align-items:center;justify-content:space-between">
+<div style="font:500 11px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.5);letter-spacing:.1em">FLIGHT SCHOOL · A FLIGHT ACADEMY FOR PAPER</div>
+<div style="display:flex;gap:6px"><div style="width:10px;height:10px;background:#D64541;transform:rotate(45deg)"></div><div style="width:10px;height:10px;background:#7FA8C9;transform:rotate(45deg)"></div><div style="width:10px;height:10px;background:#1A2B4A;transform:rotate(45deg)"></div></div>
+</div>
+
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1b">
+<div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>Tutorial — STEP 04 / 12, live 3D fold</div>
+<div class="dv-card" style="width:1360px">
+<div style="background:#F7F3E9;background-image:radial-gradient(rgba(26,43,74,.045) 1px,transparent 1px);background-size:3px 3px">
+
+<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 32px;border-bottom:1px solid rgba(26,43,74,.18)">
+<div style="display:flex;align-items:center;gap:16px">
+<div style="font:500 12px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.6)">← THE HANGAR</div>
+<div style="width:1px;height:18px;background:rgba(26,43,74,.2)"></div>
+<div style="font:400 17px 'Archivo Black',sans-serif;color:#1A2B4A;letter-spacing:-.01em">THE DART</div>
+<div style="padding:3px 8px;border:1px solid rgba(26,43,74,.3);font:600 10px 'IBM Plex Mono',monospace;color:#1A2B4A;letter-spacing:.1em">BEGINNER LICENSE</div>
+</div>
+<div style="display:flex;align-items:center;gap:14px">
+<div style="font:500 12px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.6)">04 / 12</div>
+<div style="width:200px;height:6px;background:rgba(26,43,74,.12);border-radius:3px;overflow:hidden"><div style="width:33%;height:100%;background:#7FA8C9"></div></div>
+<div style="padding:6px 12px;border:1px solid rgba(26,43,74,.25);border-radius:4px;font:600 11px 'IBM Plex Mono',monospace;color:#1A2B4A">EXIT</div>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 372px;gap:0;align-items:stretch">
+
+<div style="padding:28px 28px 24px 32px">
+<div style="height:520px;border:1px solid rgba(26,43,74,.16);border-radius:8px;background:linear-gradient(170deg,#FBF8F0,#EFE9DA);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center">
+<div style="position:absolute;inset:0;background-image:linear-gradient(rgba(26,43,74,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(26,43,74,.05) 1px,transparent 1px);background-size:40px 40px"></div>
+<div style="position:absolute;top:16px;left:16px;font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.45);letter-spacing:.12em">VIEW: 3⁄4 · DRAG TO ORBIT</div>
+<div style="position:absolute;top:16px;right:16px;display:flex;gap:6px">
+<div style="padding:5px 10px;background:rgba(26,43,74,.06);border:1px solid rgba(26,43,74,.18);font:600 10px 'IBM Plex Mono',monospace;color:#1A2B4A">FRONT</div>
+<div style="padding:5px 10px;background:#1A2B4A;color:#F7F3E9;font:600 10px 'IBM Plex Mono',monospace">3⁄4</div>
+<div style="padding:5px 10px;background:rgba(26,43,74,.06);border:1px solid rgba(26,43,74,.18);font:600 10px 'IBM Plex Mono',monospace;color:#1A2B4A">TOP</div>
+</div>
+
+<div style="perspective:1400px;width:520px;height:360px;display:flex;align-items:center;justify-content:center">
+<div style="transform-style:preserve-3d;animation:hover3d 9s ease-in-out infinite;position:relative;width:340px;height:250px">
+<div style="position:absolute;inset:0;transform-style:preserve-3d">
+<div style="position:absolute;left:0;top:0;width:170px;height:250px;background:linear-gradient(120deg,#fff,#F2ECDD);border:1px solid rgba(26,43,74,.22);box-shadow:-6px 8px 18px rgba(26,43,74,.14)"></div>
+<div style="position:absolute;left:170px;top:0;width:170px;height:250px;transform-origin:left center;transform-style:preserve-3d;animation:fold 5.5s cubic-bezier(.5,0,.2,1) infinite;background:linear-gradient(240deg,#fff,#EDE6D6);border:1px solid rgba(26,43,74,.22);box-shadow:6px 8px 20px rgba(26,43,74,.16)">
+<div style="position:absolute;inset:0;background:#1A2B4A;animation:foldshade 5.5s cubic-bezier(.5,0,.2,1) infinite"></div>
+</div>
+<div style="position:absolute;left:169px;top:0;width:2px;height:250px;background:repeating-linear-gradient(180deg,#D64541 0 7px,transparent 7px 14px)"></div>
+</div>
+<div style="position:absolute;left:56px;top:-34px;width:230px;height:26px;display:flex;align-items:center;justify-content:center;gap:8px">
+<div style="font:600 10px 'IBM Plex Mono',monospace;color:#D64541;letter-spacing:.14em">VALLEY FOLD · TO THE CENTER LINE</div>
+</div>
+</div>
+</div>
+
+<div style="position:absolute;bottom:16px;left:16px;display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(247,243,233,.92);border:1px solid rgba(26,43,74,.16);border-radius:4px">
+<div style="width:8px;height:8px;border-radius:50%;background:#D64541;animation:blink 1.4s steps(1,end) infinite"></div>
+<div style="font:500 10.5px 'IBM Plex Mono',monospace;color:#1A2B4A;letter-spacing:.08em">PLAYING FOLD 04</div>
+</div>
+<div style="position:absolute;bottom:16px;right:16px;font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.4);letter-spacing:.12em">A4 · 210 × 297 MM</div>
+</div>
+
+<div style="margin-top:16px;display:flex;align-items:center;gap:16px;padding:14px 18px;background:#fff;border:1px solid rgba(26,43,74,.16);border-radius:8px;box-shadow:0 4px 14px rgba(26,43,74,.07)">
+<div style="display:flex;gap:8px">
+<div style="width:40px;height:40px;border:1.5px solid rgba(26,43,74,.3);border-radius:4px;display:flex;align-items:center;justify-content:center"><div style="width:0;height:0;border-top:7px solid transparent;border-bottom:7px solid transparent;border-right:10px solid #1A2B4A"></div></div>
+<div style="width:40px;height:40px;background:#D64541;border-radius:4px;display:flex;align-items:center;justify-content:center;gap:3px"><div style="width:4px;height:14px;background:#fff"></div><div style="width:4px;height:14px;background:#fff"></div></div>
+<div style="width:40px;height:40px;border:1.5px solid rgba(26,43,74,.3);border-radius:4px;display:flex;align-items:center;justify-content:center"><div style="width:0;height:0;border-top:7px solid transparent;border-bottom:7px solid transparent;border-left:10px solid #1A2B4A"></div></div>
+</div>
+<div style="width:1px;height:32px;background:rgba(26,43,74,.15)"></div>
+<div style="flex:1">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+<div style="font:600 11px 'IBM Plex Mono',monospace;color:#1A2B4A;letter-spacing:.1em">STEP 04 / 12</div>
+<div style="font:500 10.5px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.5)">0:04 / 0:07 · SPEED 1.0×</div>
+</div>
+<div style="display:flex;gap:5px;align-items:center">
+<div style="flex:1;height:8px;background:#4A7C59;border-radius:2px"></div>
+<div style="flex:1;height:8px;background:#4A7C59;border-radius:2px"></div>
+<div style="flex:1;height:8px;background:#4A7C59;border-radius:2px"></div>
+<div style="flex:1;height:8px;background:#D64541;border-radius:2px"></div>
+<div style="flex:1;height:8px;background:rgba(26,43,74,.14);border-radius:2px"></div>
+<div style="flex:1;height:8px;background:rgba(26,43,74,.14);border-radius:2px"></div>
+<div style="flex:1;height:8px;background:rgba(26,43,74,.14);border-radius:2px"></div>
+<div style="flex:1;height:8px;background:rgba(26,43,74,.14);border-radius:2px"></div>
+<div style="flex:1;height:8px;background:rgba(26,43,74,.14);border-radius:2px"></div>
+<div style="flex:1;height:8px;background:rgba(26,43,74,.14);border-radius:2px"></div>
+<div style="flex:1;height:8px;background:rgba(26,43,74,.14);border-radius:2px"></div>
+<div style="flex:1;height:8px;background:rgba(26,43,74,.14);border-radius:2px"></div>
+</div>
+</div>
+<div style="width:1px;height:32px;background:rgba(26,43,74,.15)"></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+<div style="width:40px;height:40px;border:1.5px solid rgba(26,43,74,.3);border-radius:4px;display:flex;align-items:center;justify-content:center;font:600 13px 'IBM Plex Mono',monospace;color:#1A2B4A">↺</div>
+<div style="font:500 8.5px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.5);letter-spacing:.08em">REPLAY</div>
+</div>
+</div>
+</div>
+
+<div style="border-left:1px solid rgba(26,43,74,.18);background:#fff;padding:28px 32px;display:flex;flex-direction:column">
+<div style="font:600 11px 'IBM Plex Mono',monospace;color:#D64541;letter-spacing:.16em;margin-bottom:14px">STEP 04 / 12</div>
+<div style="font:400 30px/1.12 'Archivo Black',sans-serif;color:#1A2B4A;letter-spacing:-.025em;margin-bottom:18px">FOLD THE TOP CORNERS IN</div>
+<div style="font:400 18px/1.6 'Instrument Sans',sans-serif;color:#1A2B4A;margin-bottom:20px;text-wrap:pretty">Take the top right corner and bring it down so its edge lines up with the middle crease. Press it flat with your thumb. Do the same on the left.</div>
+
+<div style="padding:16px;background:#F7F3E9;border-left:3px solid #7FA8C9;border-radius:0 4px 4px 0;margin-bottom:22px">
+<div style="font:600 10px 'IBM Plex Mono',monospace;color:#7FA8C9;letter-spacing:.14em;margin-bottom:7px">WHY</div>
+<div style="font:400 16px/1.5 'Instrument Sans',sans-serif;color:rgba(26,43,74,.85)">These two folds put the weight at the nose, which is what keeps the plane pointed forward.</div>
+</div>
+
+<div style="margin-bottom:22px">
+<div style="font:600 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.5);letter-spacing:.14em;margin-bottom:10px">FOLD TERMS</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;gap:12px;align-items:flex-start;padding-bottom:10px;border-bottom:1px solid rgba(26,43,74,.1)">
+<div style="width:28px;height:20px;flex:none;margin-top:2px;background:repeating-linear-gradient(90deg,#D64541 0 4px,transparent 4px 8px);opacity:.8"></div>
+<div><div style="font:600 14px 'Instrument Sans',sans-serif;color:#1A2B4A">Valley fold</div><div style="font:400 14px/1.45 'Instrument Sans',sans-serif;color:rgba(26,43,74,.65)">The crease dips down, like a valley. The paper folds toward you.</div></div>
+</div>
+<div style="display:flex;gap:12px;align-items:flex-start">
+<div style="width:28px;height:20px;flex:none;margin-top:2px;background:repeating-linear-gradient(90deg,#1A2B4A 0 2px,transparent 2px 6px);opacity:.6"></div>
+<div><div style="font:600 14px 'Instrument Sans',sans-serif;color:#1A2B4A">Center line</div><div style="font:400 14px/1.45 'Instrument Sans',sans-serif;color:rgba(26,43,74,.65)">The crease down the middle you made in step 01.</div></div>
+</div>
+</div>
+</div>
+
+<div style="margin-top:auto;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:#F7F3E9;border:1px dashed rgba(26,43,74,.3);border-radius:4px">
+<div style="width:18px;height:18px;border:1.5px solid rgba(26,43,74,.4);border-radius:3px"></div>
+<div style="font:500 14px 'Instrument Sans',sans-serif;color:rgba(26,43,74,.75)">My paper looks like this</div>
+</div>
+<div style="display:flex;gap:10px">
+<div style="padding:14px 18px;border:1.5px solid #1A2B4A;color:#1A2B4A;border-radius:4px;font:600 14px 'Instrument Sans',sans-serif">Back</div>
+<div style="flex:1;padding:14px 18px;background:#D64541;color:#fff;border-radius:4px;font:600 15px 'Instrument Sans',sans-serif;text-align:center">Next fold →</div>
+</div>
+<div style="text-align:center;font:500 10.5px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.45);letter-spacing:.08em">8 FOLDS TO YOUR WINGS</div>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1c">
+<div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>Preflight — plane detail</div>
+<div class="dv-card" style="width:1360px">
+<div style="background:#F7F3E9;background-image:radial-gradient(rgba(26,43,74,.045) 1px,transparent 1px);background-size:3px 3px">
+<div style="height:8px;background:repeating-linear-gradient(45deg,#D64541 0 14px,#F7F3E9 14px 28px,#1A2B4A 28px 42px,#F7F3E9 42px 56px)"></div>
+<div style="display:flex;align-items:center;gap:14px;padding:16px 40px;border-bottom:1px solid rgba(26,43,74,.18)">
+<div style="font:500 12px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.6)">← THE HANGAR</div>
+<div style="width:1px;height:16px;background:rgba(26,43,74,.2)"></div>
+<div style="font:500 12px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.6);letter-spacing:.1em">PREFLIGHT</div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 500px;gap:48px;padding:44px 40px 48px">
+
+<div>
+<div style="height:520px;border:1px solid rgba(26,43,74,.16);border-radius:8px;background:linear-gradient(170deg,#FBF8F0,#EDE7D7);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden">
+<div style="position:absolute;inset:0;background-image:linear-gradient(rgba(26,43,74,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(26,43,74,.045) 1px,transparent 1px);background-size:44px 44px"></div>
+<svg width="100%" height="100%" viewBox="0 0 800 520" style="position:absolute;inset:0" preserveAspectRatio="none"><path d="M40 430 C 220 400, 380 300, 760 90" fill="none" stroke="#7FA8C9" stroke-width="2.5" stroke-dasharray="9 9" style="animation:dashflow 1.4s linear infinite"></path></svg>
+<div style="perspective:1500px;position:relative">
+<div style="width:330px;height:150px;background:linear-gradient(115deg,#fff 40%,#E9E2D1);clip-path:polygon(0 6%,100% 50%,0 94%,22% 50%);transform:rotateX(-16deg) rotateY(-24deg);animation:hover3d 8s ease-in-out infinite;box-shadow:0 26px 40px rgba(26,43,74,.18)"></div>
+<div style="position:absolute;left:30px;bottom:-42px;width:280px;height:22px;background:radial-gradient(ellipse,rgba(26,43,74,.16),transparent 70%)"></div>
+</div>
+<div style="position:absolute;bottom:18px;left:20px;font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.45);letter-spacing:.12em">3D RENDER PLACEHOLDER — FINISHED DART · DRAG TO ORBIT</div>
+<div style="position:absolute;top:18px;right:20px;display:flex;align-items:center;gap:8px;padding:6px 11px;background:rgba(255,255,255,.85);border:1px solid rgba(26,43,74,.18);border-radius:4px">
+<div style="width:9px;height:9px;border:1.5px solid #1A2B4A;border-radius:50%"></div>
+<div style="font:500 10px 'IBM Plex Mono',monospace;color:#1A2B4A;letter-spacing:.1em">ORBIT · ZOOM · RESET</div>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px">
+<div style="padding:14px;background:#fff;border:1px solid rgba(26,43,74,.14);border-radius:8px"><div style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.55);letter-spacing:.1em;margin-bottom:8px">SPEED</div><div style="font:400 26px 'Archivo Black',sans-serif;color:#D64541">4<span style="font:500 13px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.4)">/5</span></div></div>
+<div style="padding:14px;background:#fff;border:1px solid rgba(26,43,74,.14);border-radius:8px"><div style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.55);letter-spacing:.1em;margin-bottom:8px">DISTANCE</div><div style="font:400 26px 'Archivo Black',sans-serif;color:#1A2B4A">3<span style="font:500 13px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.4)">/5</span></div></div>
+<div style="padding:14px;background:#fff;border:1px solid rgba(26,43,74,.14);border-radius:8px"><div style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.55);letter-spacing:.1em;margin-bottom:8px">AIRTIME</div><div style="font:400 26px 'Archivo Black',sans-serif;color:#1A2B4A">2<span style="font:500 13px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.4)">/5</span></div></div>
+<div style="padding:14px;background:#fff;border:1px solid rgba(26,43,74,.14);border-radius:8px"><div style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.55);letter-spacing:.1em;margin-bottom:8px">EASE</div><div style="font:400 26px 'Archivo Black',sans-serif;color:#4A7C59">5<span style="font:500 13px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.4)">/5</span></div></div>
+</div>
+</div>
+
+<div>
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+<div style="padding:5px 10px;background:#1A2B4A;color:#F7F3E9;font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.12em">FLIGHT LICENSE: BEGINNER</div>
+<div style="font:500 11px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.55)">NO. 001</div>
+</div>
+<div style="font:400 64px/.92 'Archivo Black',sans-serif;color:#1A2B4A;letter-spacing:-.035em">THE DART</div>
+<div style="font:400 19px/1.55 'Instrument Sans',sans-serif;color:rgba(26,43,74,.78);margin:18px 0 28px;text-wrap:pretty">The classic. Twelve folds, a sharp nose, and a straight fast flight. If you have only folded one paper plane in your life, it was probably close to this one.</div>
+
+<div style="border:1px solid rgba(26,43,74,.18);border-radius:8px;background:#fff;overflow:hidden;margin-bottom:20px">
+<div style="padding:12px 18px;background:#F7F3E9;border-bottom:1px solid rgba(26,43,74,.14);font:600 10.5px 'IBM Plex Mono',monospace;color:#1A2B4A;letter-spacing:.14em">PREFLIGHT: GET YOUR PAPER</div>
+<div style="padding:18px">
+<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(26,43,74,.1)"><span style="font:400 16px 'Instrument Sans',sans-serif;color:rgba(26,43,74,.65)">Paper</span><span style="font:500 15px 'IBM Plex Mono',monospace;color:#1A2B4A">A4 or Letter, 1 sheet</span></div>
+<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(26,43,74,.1)"><span style="font:400 16px 'Instrument Sans',sans-serif;color:rgba(26,43,74,.65)">Weight</span><span style="font:500 15px 'IBM Plex Mono',monospace;color:#1A2B4A">80 GSM · printer paper</span></div>
+<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(26,43,74,.1)"><span style="font:400 16px 'Instrument Sans',sans-serif;color:rgba(26,43,74,.65)">Folds</span><span style="font:500 15px 'IBM Plex Mono',monospace;color:#1A2B4A">12 · all valley folds</span></div>
+<div style="display:flex;justify-content:space-between;padding:9px 0"><span style="font:400 16px 'Instrument Sans',sans-serif;color:rgba(26,43,74,.65)">Time</span><span style="font:500 15px 'IBM Plex Mono',monospace;color:#1A2B4A">About 4 minutes</span></div>
+</div>
+</div>
+
+<div style="display:flex;gap:14px;padding:18px;background:#fff;border:1px solid rgba(26,43,74,.18);border-radius:8px;margin-bottom:26px">
+<div style="width:4px;flex:none;background:#D64541"></div>
+<div>
+<div style="font:600 10.5px 'IBM Plex Mono',monospace;color:#D64541;letter-spacing:.14em;margin-bottom:8px">THROW TIP</div>
+<div style="font:400 17px/1.55 'Instrument Sans',sans-serif;color:#1A2B4A">Hold it under the body, near the nose. Point it slightly up and throw it fast and level. If it dives, bend the back edges of the wings up a little.</div>
+</div>
+</div>
+
+<div style="display:flex;gap:12px;align-items:center">
+<div style="flex:1;padding:18px;background:#D64541;color:#fff;border-radius:4px;font:600 17px 'Instrument Sans',sans-serif;text-align:center">Start folding</div>
+<div style="padding:18px 22px;border:1.5px solid #1A2B4A;color:#1A2B4A;border-radius:4px;font:600 15px 'Instrument Sans',sans-serif">Watch flight</div>
+</div>
+<div style="margin-top:14px;font:500 11px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.5);letter-spacing:.08em;text-align:center">FOLDED 4,318 TIMES THIS MONTH</div>
+</div>
+
+</div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1d">
+<div class="dv-olabel"><a class="dv-oid" href="#1d">1d</a>Completion — CERTIFIED</div>
+<div class="dv-card" style="width:1360px">
+<div style="background:#F7F3E9;background-image:radial-gradient(rgba(26,43,74,.045) 1px,transparent 1px);background-size:3px 3px;padding:56px 40px 52px">
+<div style="display:grid;grid-template-columns:1fr 440px;gap:52px;align-items:center">
+
+<div style="position:relative;height:520px;border:1px solid rgba(26,43,74,.16);border-radius:8px;background:linear-gradient(170deg,#FBF8F0,#EDE7D7);display:flex;align-items:center;justify-content:center;overflow:hidden">
+<div style="position:absolute;inset:0;background-image:linear-gradient(rgba(26,43,74,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(26,43,74,.045) 1px,transparent 1px);background-size:44px 44px"></div>
+<div style="perspective:1500px;position:relative">
+<div style="width:340px;height:155px;background:linear-gradient(115deg,#fff 40%,#E9E2D1);clip-path:polygon(0 6%,100% 50%,0 94%,22% 50%);transform:rotateX(-16deg) rotateY(-24deg);animation:hover3d 8s ease-in-out infinite;box-shadow:0 26px 40px rgba(26,43,74,.18)"></div>
+</div>
+<div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center">
+<div style="border:5px solid #4A7C59;border-radius:6px;padding:16px 30px;transform:rotate(-14deg);animation:stampin 1.1s cubic-bezier(.2,.8,.3,1) both;background:rgba(247,243,233,.34);box-shadow:0 0 0 3px rgba(74,124,89,.12) inset">
+<div style="font:400 54px/1 'Archivo Black',sans-serif;color:#4A7C59;letter-spacing:.02em;opacity:.92">CERTIFIED</div>
+<div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;gap:16px;border-top:2px solid rgba(74,124,89,.7);padding-top:7px">
+<div style="font:600 12px 'IBM Plex Mono',monospace;color:#4A7C59;letter-spacing:.16em">FLIGHT SCHOOL</div>
+<div style="font:600 12px 'IBM Plex Mono',monospace;color:#4A7C59;letter-spacing:.16em">09 AUG 2026</div>
+</div>
+</div>
+</div>
+<div style="position:absolute;bottom:18px;left:20px;font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.45);letter-spacing:.12em">FINISHED DART · DRAG TO ORBIT</div>
+</div>
+
+<div>
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+<div style="width:52px;height:26px;background:#D64541;clip-path:polygon(0 50%,26% 0,50% 52%,74% 0,100% 50%,50% 100%)"></div>
+<div style="font:600 11px 'IBM Plex Mono',monospace;color:#D64541;letter-spacing:.18em">WINGS NO. 0118</div>
+</div>
+<div style="font:400 58px/.94 'Archivo Black',sans-serif;color:#1A2B4A;letter-spacing:-.035em">YOU'VE EARNED<br>YOUR WINGS</div>
+<div style="font:400 19px/1.6 'Instrument Sans',sans-serif;color:rgba(26,43,74,.78);margin:20px 0 28px;text-wrap:pretty">Twelve folds, done. The Dart is yours now. Go find some open space, point it slightly up, and throw it level.</div>
+
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:26px">
+<div style="padding:16px 14px;background:#fff;border:1px solid rgba(26,43,74,.14);border-radius:8px"><div style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.55);letter-spacing:.1em;margin-bottom:8px">FOLD TIME</div><div style="font:400 24px 'Archivo Black',sans-serif;color:#1A2B4A">6:12</div></div>
+<div style="padding:16px 14px;background:#fff;border:1px solid rgba(26,43,74,.14);border-radius:8px"><div style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.55);letter-spacing:.1em;margin-bottom:8px">REPLAYS</div><div style="font:400 24px 'Archivo Black',sans-serif;color:#1A2B4A">03</div></div>
+<div style="padding:16px 14px;background:#fff;border:1px solid rgba(74,124,89,.45);border-radius:8px"><div style="font:500 10px 'IBM Plex Mono',monospace;color:#4A7C59;letter-spacing:.1em;margin-bottom:8px">WINGS</div><div style="font:400 24px 'Archivo Black',sans-serif;color:#4A7C59">03</div></div>
+</div>
+
+<div style="padding:18px;background:#fff;border:1px solid rgba(26,43,74,.18);border-radius:8px;margin-bottom:26px;display:flex;gap:14px;align-items:center">
+<div style="width:56px;height:56px;flex:none;background:#F7F3E9;border:1px solid rgba(26,43,74,.16);display:flex;align-items:center;justify-content:center"><div style="width:34px;height:16px;background:rgba(26,43,74,.45);clip-path:polygon(0 20%,100% 48%,0 80%,30% 50%)"></div></div>
+<div>
+<div style="font:600 10.5px 'IBM Plex Mono',monospace;color:rgba(26,43,74,.5);letter-spacing:.14em;margin-bottom:6px">NEXT IN THE HANGAR</div>
+<div style="font:400 20px 'Archivo Black',sans-serif;color:#1A2B4A;letter-spacing:-.02em">THE HAMMERHEAD</div>
+<div style="font:400 15px/1.4 'Instrument Sans',sans-serif;color:rgba(26,43,74,.65)">16 folds · Pilot License</div>
+</div>
+</div>
+
+<div style="display:flex;gap:12px">
+<div style="flex:1;padding:17px;background:#D64541;color:#fff;border-radius:4px;font:600 16px 'Instrument Sans',sans-serif;text-align:center">Fold the next plane</div>
+<div style="padding:17px 20px;border:1.5px solid #1A2B4A;color:#1A2B4A;border-radius:4px;font:600 15px 'Instrument Sans',sans-serif">Flight log</div>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1e">
+<div class="dv-olabel"><a class="dv-oid" href="#1e">1e</a>Night Flight — Hangar</div>
+<div class="dv-card" style="width:1000px;border-color:rgba(247,243,233,.2)">
+<div style="background:#0E1626;padding-bottom:8px">
+<div style="height:8px;background:repeating-linear-gradient(45deg,#E8615C 0 14px,#0E1626 14px 28px,#7FA8C9 28px 42px,#0E1626 42px 56px)"></div>
+<div style="display:flex;align-items:center;justify-content:space-between;padding:18px 32px;border-bottom:1px solid rgba(247,243,233,.14)">
+<div style="display:flex;align-items:center;gap:12px">
+<div style="width:22px;height:22px;background:#E8615C;transform:rotate(45deg)"></div>
+<div style="font:400 18px 'Archivo Black',sans-serif;color:#F7F3E9;letter-spacing:-.02em">FLIGHT SCHOOL</div>
+</div>
+<div style="display:flex;align-items:center;gap:10px;padding:6px 12px;border:1px solid rgba(247,243,233,.28);border-radius:4px">
+<div style="width:8px;height:8px;border-radius:50%;background:#7FA8C9"></div>
+<div style="font:500 11px 'IBM Plex Mono',monospace;color:#F7F3E9;letter-spacing:.1em">NIGHT FLIGHT</div>
+</div>
+</div>
+<div style="padding:34px 32px 10px">
+<div style="font:600 10.5px 'IBM Plex Mono',monospace;letter-spacing:.18em;color:#E8615C;margin-bottom:12px">EST. 2026 · TWELVE AIRCRAFT ON THE FLOOR</div>
+<div style="font:400 46px/.95 'Archivo Black',sans-serif;color:#F7F3E9;letter-spacing:-.035em">THE HANGAR</div>
+</div>
+<div style="padding:0 32px">
+<div style="display:flex;align-items:center;gap:14px;margin:26px 0 18px">
+<div style="font:400 13px 'Archivo Black',sans-serif;color:#F7F3E9">FLIGHT LICENSE: BEGINNER</div>
+<div style="flex:1;height:1px;background:repeating-linear-gradient(90deg,rgba(247,243,233,.35) 0 5px,transparent 5px 10px)"></div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px">
+
+<div style="position:relative;background:#16233A;border:1px solid rgba(247,243,233,.16);border-radius:8px;overflow:hidden">
+<div style="position:absolute;left:0;right:0;top:150px;height:1px;background:repeating-linear-gradient(90deg,rgba(247,243,233,.3) 0 4px,transparent 4px 9px);z-index:2"></div>
+<div style="position:absolute;left:-6px;top:145px;width:12px;height:12px;border-radius:50%;background:#0E1626;z-index:3"></div>
+<div style="position:absolute;right:-6px;top:145px;width:12px;height:12px;border-radius:50%;background:#0E1626;z-index:3"></div>
+<div style="height:150px;background:#111C2F;background-image:repeating-linear-gradient(-45deg,rgba(247,243,233,.045) 0 6px,transparent 6px 12px);display:flex;align-items:center;justify-content:center;position:relative">
+<div style="width:118px;height:50px;background:rgba(247,243,233,.5);clip-path:polygon(0 0,100% 44%,0 100%,26% 50%)"></div>
+<div style="position:absolute;top:10px;right:10px;padding:3px 7px;background:#E8615C;color:#0E1626;font:600 9px 'IBM Plex Mono',monospace;letter-spacing:.12em">MOST FLOWN</div>
+</div>
+<div style="padding:16px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px">
+<div style="font:400 19px 'Archivo Black',sans-serif;color:#F7F3E9;letter-spacing:-.02em">THE DART</div>
+<div style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(247,243,233,.55)">12 STEPS</div>
+</div>
+<div style="font:400 13.5px/1.45 'Instrument Sans',sans-serif;color:rgba(247,243,233,.68);margin-bottom:14px">Fast, straight, and forgiving.</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;padding:12px 0;border-top:1px solid rgba(247,243,233,.14);border-bottom:1px solid rgba(247,243,233,.14)">
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 9px 'IBM Plex Mono',monospace;color:rgba(247,243,233,.6);letter-spacing:.08em">SPEED</span><span style="display:flex;gap:2px"><i style="width:6px;height:10px;background:#E8615C;display:block"></i><i style="width:6px;height:10px;background:#E8615C;display:block"></i><i style="width:6px;height:10px;background:#E8615C;display:block"></i><i style="width:6px;height:10px;background:#E8615C;display:block"></i><i style="width:6px;height:10px;background:rgba(247,243,233,.18);display:block"></i></span></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 9px 'IBM Plex Mono',monospace;color:rgba(247,243,233,.6);letter-spacing:.08em">DIST</span><span style="display:flex;gap:2px"><i style="width:6px;height:10px;background:#7FA8C9;display:block"></i><i style="width:6px;height:10px;background:#7FA8C9;display:block"></i><i style="width:6px;height:10px;background:#7FA8C9;display:block"></i><i style="width:6px;height:10px;background:rgba(247,243,233,.18);display:block"></i><i style="width:6px;height:10px;background:rgba(247,243,233,.18);display:block"></i></span></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 9px 'IBM Plex Mono',monospace;color:rgba(247,243,233,.6);letter-spacing:.08em">AIRTIME</span><span style="display:flex;gap:2px"><i style="width:6px;height:10px;background:#7FA8C9;display:block"></i><i style="width:6px;height:10px;background:#7FA8C9;display:block"></i><i style="width:6px;height:10px;background:rgba(247,243,233,.18);display:block"></i><i style="width:6px;height:10px;background:rgba(247,243,233,.18);display:block"></i><i style="width:6px;height:10px;background:rgba(247,243,233,.18);display:block"></i></span></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 9px 'IBM Plex Mono',monospace;color:rgba(247,243,233,.6);letter-spacing:.08em">EASE</span><span style="display:flex;gap:2px"><i style="width:6px;height:10px;background:#6FA97F;display:block"></i><i style="width:6px;height:10px;background:#6FA97F;display:block"></i><i style="width:6px;height:10px;background:#6FA97F;display:block"></i><i style="width:6px;height:10px;background:#6FA97F;display:block"></i><i style="width:6px;height:10px;background:#6FA97F;display:block"></i></span></div>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px">
+<div style="font:500 9.5px 'IBM Plex Mono',monospace;color:rgba(247,243,233,.5);letter-spacing:.08em">A4 · 4 MIN</div>
+<div style="padding:7px 13px;background:#E8615C;color:#0E1626;border-radius:4px;font:600 11.5px 'Instrument Sans',sans-serif">Start folding</div>
+</div>
+</div>
+</div>
+
+<div style="position:relative;background:#16233A;border:1px solid rgba(247,243,233,.16);border-radius:8px;overflow:hidden">
+<div style="position:absolute;left:0;right:0;top:150px;height:1px;background:repeating-linear-gradient(90deg,rgba(247,243,233,.3) 0 4px,transparent 4px 9px);z-index:2"></div>
+<div style="position:absolute;left:-6px;top:145px;width:12px;height:12px;border-radius:50%;background:#0E1626;z-index:3"></div>
+<div style="position:absolute;right:-6px;top:145px;width:12px;height:12px;border-radius:50%;background:#0E1626;z-index:3"></div>
+<div style="height:150px;background:#111C2F;background-image:repeating-linear-gradient(-45deg,rgba(247,243,233,.045) 0 6px,transparent 6px 12px);display:flex;align-items:center;justify-content:center">
+<div style="width:120px;height:60px;background:rgba(247,243,233,.42);clip-path:polygon(0 12%,100% 50%,0 88%,32% 50%)"></div>
+</div>
+<div style="padding:16px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px">
+<div style="font:400 19px 'Archivo Black',sans-serif;color:#F7F3E9;letter-spacing:-.02em">THE GLIDER</div>
+<div style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(247,243,233,.55)">09 STEPS</div>
+</div>
+<div style="font:400 13.5px/1.45 'Instrument Sans',sans-serif;color:rgba(247,243,233,.68);margin-bottom:14px">Wide wings, slow hang.</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;padding:12px 0;border-top:1px solid rgba(247,243,233,.14);border-bottom:1px solid rgba(247,243,233,.14)">
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 9px 'IBM Plex Mono',monospace;color:rgba(247,243,233,.6);letter-spacing:.08em">SPEED</span><span style="display:flex;gap:2px"><i style="width:6px;height:10px;background:#E8615C;display:block"></i><i style="width:6px;height:10px;background:#E8615C;display:block"></i><i style="width:6px;height:10px;background:rgba(247,243,233,.18);display:block"></i><i style="width:6px;height:10px;background:rgba(247,243,233,.18);display:block"></i><i style="width:6px;height:10px;background:rgba(247,243,233,.18);display:block"></i></span></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 9px 'IBM Plex Mono',monospace;color:rgba(247,243,233,.6);letter-spacing:.08em">DIST</span><span style="display:flex;gap:2px"><i style="width:6px;height:10px;background:#7FA8C9;display:block"></i><i style="width:6px;height:10px;background:#7FA8C9;display:block"></i><i style="width:6px;height:10px;background:#7FA8C9;display:block"></i><i style="width:6px;height:10px;background:rgba(247,243,233,.18);display:block"></i><i style="width:6px;height:10px;background:rgba(247,243,233,.18);display:block"></i></span></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 9px 'IBM Plex Mono',monospace;color:rgba(247,243,233,.6);letter-spacing:.08em">AIRTIME</span><span style="display:flex;gap:2px"><i style="width:6px;height:10px;background:#7FA8C9;display:block"></i><i style="width:6px;height:10px;background:#7FA8C9;display:block"></i><i style="width:6px;height:10px;background:#7FA8C9;display:block"></i><i style="width:6px;height:10px;background:#7FA8C9;display:block"></i><i style="width:6px;height:10px;background:#7FA8C9;display:block"></i></span></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 9px 'IBM Plex Mono',monospace;color:rgba(247,243,233,.6);letter-spacing:.08em">EASE</span><span style="display:flex;gap:2px"><i style="width:6px;height:10px;background:#6FA97F;display:block"></i><i style="width:6px;height:10px;background:#6FA97F;display:block"></i><i style="width:6px;height:10px;background:#6FA97F;display:block"></i><i style="width:6px;height:10px;background:#6FA97F;display:block"></i><i style="width:6px;height:10px;background:rgba(247,243,233,.18);display:block"></i></span></div>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px">
+<div style="font:500 9.5px 'IBM Plex Mono',monospace;color:rgba(247,243,233,.5);letter-spacing:.08em">A4 · 3 MIN</div>
+<div style="padding:7px 13px;background:#E8615C;color:#0E1626;border-radius:4px;font:600 11.5px 'Instrument Sans',sans-serif">Start folding</div>
+</div>
+</div>
+</div>
+
+<div style="position:relative;background:#16233A;border:1px solid rgba(111,169,127,.5);border-radius:8px;overflow:hidden">
+<div style="position:absolute;left:0;right:0;top:150px;height:1px;background:repeating-linear-gradient(90deg,rgba(247,243,233,.3) 0 4px,transparent 4px 9px);z-index:2"></div>
+<div style="position:absolute;left:-6px;top:145px;width:12px;height:12px;border-radius:50%;background:#0E1626;z-index:3"></div>
+<div style="position:absolute;right:-6px;top:145px;width:12px;height:12px;border-radius:50%;background:#0E1626;z-index:3"></div>
+<div style="height:150px;background:#101F2C;background-image:repeating-linear-gradient(-45deg,rgba(111,169,127,.08) 0 6px,transparent 6px 12px);display:flex;align-items:center;justify-content:center;position:relative">
+<div style="width:116px;height:54px;background:rgba(247,243,233,.45);clip-path:polygon(0 6%,100% 46%,0 94%,24% 50%)"></div>
+<div style="position:absolute;top:10px;right:10px;display:flex;align-items:center;gap:5px;padding:4px 7px;border:1.5px solid #6FA97F">
+<div style="width:14px;height:7px;background:#6FA97F;clip-path:polygon(0 50%,28% 0,50% 50%,72% 0,100% 50%,50% 100%)"></div>
+<div style="font:600 9px 'IBM Plex Mono',monospace;color:#6FA97F;letter-spacing:.12em">WINGS</div>
+</div>
+</div>
+<div style="padding:16px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px">
+<div style="font:400 19px 'Archivo Black',sans-serif;color:#F7F3E9;letter-spacing:-.02em">THE ARROWHEAD</div>
+<div style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(247,243,233,.55)">11 STEPS</div>
+</div>
+<div style="font:400 13.5px/1.45 'Instrument Sans',sans-serif;color:rgba(247,243,233,.68);margin-bottom:14px">A blunt nose that survives crashes.</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;padding:12px 0;border-top:1px solid rgba(247,243,233,.14);border-bottom:1px solid rgba(247,243,233,.14)">
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 9px 'IBM Plex Mono',monospace;color:rgba(247,243,233,.6);letter-spacing:.08em">SPEED</span><span style="display:flex;gap:2px"><i style="width:6px;height:10px;background:#E8615C;display:block"></i><i style="width:6px;height:10px;background:#E8615C;display:block"></i><i style="width:6px;height:10px;background:#E8615C;display:block"></i><i style="width:6px;height:10px;background:rgba(247,243,233,.18);display:block"></i><i style="width:6px;height:10px;background:rgba(247,243,233,.18);display:block"></i></span></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 9px 'IBM Plex Mono',monospace;color:rgba(247,243,233,.6);letter-spacing:.08em">DIST</span><span style="display:flex;gap:2px"><i style="width:6px;height:10px;background:#7FA8C9;display:block"></i><i style="width:6px;height:10px;background:#7FA8C9;display:block"></i><i style="width:6px;height:10px;background:#7FA8C9;display:block"></i><i style="width:6px;height:10px;background:#7FA8C9;display:block"></i><i style="width:6px;height:10px;background:rgba(247,243,233,.18);display:block"></i></span></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 9px 'IBM Plex Mono',monospace;color:rgba(247,243,233,.6);letter-spacing:.08em">AIRTIME</span><span style="display:flex;gap:2px"><i style="width:6px;height:10px;background:#7FA8C9;display:block"></i><i style="width:6px;height:10px;background:#7FA8C9;display:block"></i><i style="width:6px;height:10px;background:rgba(247,243,233,.18);display:block"></i><i style="width:6px;height:10px;background:rgba(247,243,233,.18);display:block"></i><i style="width:6px;height:10px;background:rgba(247,243,233,.18);display:block"></i></span></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 9px 'IBM Plex Mono',monospace;color:rgba(247,243,233,.6);letter-spacing:.08em">EASE</span><span style="display:flex;gap:2px"><i style="width:6px;height:10px;background:#6FA97F;display:block"></i><i style="width:6px;height:10px;background:#6FA97F;display:block"></i><i style="width:6px;height:10px;background:#6FA97F;display:block"></i><i style="width:6px;height:10px;background:#6FA97F;display:block"></i><i style="width:6px;height:10px;background:rgba(247,243,233,.18);display:block"></i></span></div>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px">
+<div style="font:500 9.5px 'IBM Plex Mono',monospace;color:#6FA97F;letter-spacing:.08em">SERIAL 0117</div>
+<div style="padding:7px 13px;border:1.5px solid rgba(247,243,233,.6);color:#F7F3E9;border-radius:4px;font:600 11.5px 'Instrument Sans',sans-serif">Fold again</div>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1f">
+<div class="dv-olabel"><a class="dv-oid" href="#1f">1f</a>Night Flight — tutorial stage</div>
+<div class="dv-card" style="width:1120px;border-color:rgba(247,243,233,.2)">
+<div style="background:#0E1626">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid rgba(247,243,233,.14)">
+<div style="display:flex;align-items:center;gap:14px">
+<div style="font:500 11px 'IBM Plex Mono',monospace;color:rgba(247,243,233,.6)">← THE HANGAR</div>
+<div style="font:400 16px 'Archivo Black',sans-serif;color:#F7F3E9;letter-spacing:-.01em">THE DART</div>
+<div style="padding:3px 8px;border:1px solid rgba(247,243,233,.3);font:600 9.5px 'IBM Plex Mono',monospace;color:#F7F3E9;letter-spacing:.1em">BEGINNER LICENSE</div>
+</div>
+<div style="display:flex;align-items:center;gap:12px">
+<div style="font:500 11px 'IBM Plex Mono',monospace;color:rgba(247,243,233,.6)">04 / 12</div>
+<div style="width:160px;height:6px;background:rgba(247,243,233,.16);border-radius:3px;overflow:hidden"><div style="width:33%;height:100%;background:#7FA8C9"></div></div>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 330px">
+<div style="padding:24px">
+<div style="height:420px;border:1px solid rgba(247,243,233,.14);border-radius:8px;background:radial-gradient(circle at 50% 35%,#1B2A45,#0B1220);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center">
+<div style="position:absolute;inset:0;background-image:linear-gradient(rgba(247,243,233,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(247,243,233,.045) 1px,transparent 1px);background-size:40px 40px"></div>
+<div style="position:absolute;top:14px;left:14px;font:500 9.5px 'IBM Plex Mono',monospace;color:rgba(247,243,233,.45);letter-spacing:.12em">VIEW: 3⁄4 · DRAG TO ORBIT</div>
+<div style="perspective:1400px;width:430px;height:300px;display:flex;align-items:center;justify-content:center">
+<div style="transform-style:preserve-3d;animation:hover3d 9s ease-in-out infinite;position:relative;width:280px;height:206px">
+<div style="position:absolute;inset:0;transform-style:preserve-3d">
+<div style="position:absolute;left:0;top:0;width:140px;height:206px;background:linear-gradient(120deg,#F4EFE3,#D9D2C2);border:1px solid rgba(247,243,233,.3);box-shadow:-6px 8px 22px rgba(0,0,0,.45)"></div>
+<div style="position:absolute;left:140px;top:0;width:140px;height:206px;transform-origin:left center;transform-style:preserve-3d;animation:fold 5.5s cubic-bezier(.5,0,.2,1) infinite;background:linear-gradient(240deg,#F4EFE3,#CFC8B7);border:1px solid rgba(247,243,233,.3);box-shadow:6px 8px 22px rgba(0,0,0,.45)">
+<div style="position:absolute;inset:0;background:#04070D;animation:foldshade 5.5s cubic-bezier(.5,0,.2,1) infinite"></div>
+</div>
+<div style="position:absolute;left:139px;top:0;width:2px;height:206px;background:repeating-linear-gradient(180deg,#E8615C 0 7px,transparent 7px 14px)"></div>
+</div>
+</div>
+</div>
+<div style="position:absolute;bottom:14px;left:14px;display:flex;align-items:center;gap:8px;padding:7px 11px;background:rgba(14,22,38,.85);border:1px solid rgba(247,243,233,.18);border-radius:4px">
+<div style="width:8px;height:8px;border-radius:50%;background:#E8615C;animation:blink 1.4s steps(1,end) infinite"></div>
+<div style="font:500 10px 'IBM Plex Mono',monospace;color:#F7F3E9;letter-spacing:.08em">PLAYING FOLD 04</div>
+</div>
+</div>
+<div style="margin-top:14px;display:flex;align-items:center;gap:14px;padding:12px 16px;background:#16233A;border:1px solid rgba(247,243,233,.14);border-radius:8px">
+<div style="display:flex;gap:7px">
+<div style="width:36px;height:36px;border:1.5px solid rgba(247,243,233,.3);border-radius:4px;display:flex;align-items:center;justify-content:center"><div style="width:0;height:0;border-top:6px solid transparent;border-bottom:6px solid transparent;border-right:9px solid #F7F3E9"></div></div>
+<div style="width:36px;height:36px;background:#E8615C;border-radius:4px;display:flex;align-items:center;justify-content:center;gap:3px"><div style="width:4px;height:12px;background:#0E1626"></div><div style="width:4px;height:12px;background:#0E1626"></div></div>
+<div style="width:36px;height:36px;border:1.5px solid rgba(247,243,233,.3);border-radius:4px;display:flex;align-items:center;justify-content:center"><div style="width:0;height:0;border-top:6px solid transparent;border-bottom:6px solid transparent;border-left:9px solid #F7F3E9"></div></div>
+</div>
+<div style="flex:1">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
+<div style="font:600 10px 'IBM Plex Mono',monospace;color:#F7F3E9;letter-spacing:.1em">STEP 04 / 12</div>
+<div style="font:500 9.5px 'IBM Plex Mono',monospace;color:rgba(247,243,233,.5)">0:04 / 0:07</div>
+</div>
+<div style="display:flex;gap:4px">
+<div style="flex:1;height:7px;background:#6FA97F;border-radius:2px"></div><div style="flex:1;height:7px;background:#6FA97F;border-radius:2px"></div><div style="flex:1;height:7px;background:#6FA97F;border-radius:2px"></div><div style="flex:1;height:7px;background:#E8615C;border-radius:2px"></div><div style="flex:1;height:7px;background:rgba(247,243,233,.16);border-radius:2px"></div><div style="flex:1;height:7px;background:rgba(247,243,233,.16);border-radius:2px"></div><div style="flex:1;height:7px;background:rgba(247,243,233,.16);border-radius:2px"></div><div style="flex:1;height:7px;background:rgba(247,243,233,.16);border-radius:2px"></div><div style="flex:1;height:7px;background:rgba(247,243,233,.16);border-radius:2px"></div><div style="flex:1;height:7px;background:rgba(247,243,233,.16);border-radius:2px"></div><div style="flex:1;height:7px;background:rgba(247,243,233,.16);border-radius:2px"></div><div style="flex:1;height:7px;background:rgba(247,243,233,.16);border-radius:2px"></div>
+</div>
+</div>
+<div style="width:36px;height:36px;border:1.5px solid rgba(247,243,233,.3);border-radius:4px;display:flex;align-items:center;justify-content:center;font:600 12px 'IBM Plex Mono',monospace;color:#F7F3E9">↺</div>
+</div>
+</div>
+
+<div style="border-left:1px solid rgba(247,243,233,.14);background:#111C2F;padding:24px 26px;display:flex;flex-direction:column">
+<div style="font:600 10px 'IBM Plex Mono',monospace;color:#E8615C;letter-spacing:.16em;margin-bottom:12px">STEP 04 / 12</div>
+<div style="font:400 25px/1.12 'Archivo Black',sans-serif;color:#F7F3E9;letter-spacing:-.025em;margin-bottom:16px">FOLD THE TOP CORNERS IN</div>
+<div style="font:400 18px/1.6 'Instrument Sans',sans-serif;color:rgba(247,243,233,.9);margin-bottom:18px;text-wrap:pretty">Take the top right corner and bring it down so its edge lines up with the middle crease. Press it flat with your thumb. Do the same on the left.</div>
+<div style="padding:14px;background:#16233A;border-left:3px solid #7FA8C9;border-radius:0 4px 4px 0;margin-bottom:20px">
+<div style="font:600 9.5px 'IBM Plex Mono',monospace;color:#7FA8C9;letter-spacing:.14em;margin-bottom:6px">WHY</div>
+<div style="font:400 15px/1.5 'Instrument Sans',sans-serif;color:rgba(247,243,233,.8)">These two folds put the weight at the nose, which keeps the plane pointed forward.</div>
+</div>
+<div style="margin-top:auto;display:flex;gap:10px">
+<div style="padding:13px 16px;border:1.5px solid rgba(247,243,233,.6);color:#F7F3E9;border-radius:4px;font:600 13px 'Instrument Sans',sans-serif">Back</div>
+<div style="flex:1;padding:13px 16px;background:#E8615C;color:#0E1626;border-radius:4px;font:600 14px 'Instrument Sans',sans-serif;text-align:center">Next fold →</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: "make the fold animation in <a class="dv-oid" href="#1b">1b</a> a real multi-step sequence" · "show <a class="dv-oid" href="#1b">1b</a> stacked for mobile" · "more card layout options for <a class="dv-oid" href="#1a">1a</a>"</p>
+</section>
+
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Flight School - The Hangar</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config injected via script as per instructions -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error-container": "#ffdad6",
+                        "on-secondary-container": "#650008",
+                        "secondary-fixed-dim": "#ffb3ad",
+                        "primary": "#031634",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed": "#cae6ff",
+                        "surface-dim": "#dddad0",
+                        "secondary-fixed": "#ffdad6",
+                        "secondary": "#b12a2a",
+                        "surface-container": "#f1eee4",
+                        "on-tertiary-container": "#6e97b7",
+                        "primary-fixed-dim": "#b6c6ee",
+                        "surface-container-low": "#f7f3e9",
+                        "on-secondary-fixed": "#410003",
+                        "background": "#fdf9ef",
+                        "on-primary": "#ffffff",
+                        "on-primary-fixed-variant": "#364767",
+                        "inverse-primary": "#b6c6ee",
+                        "tertiary": "#001928",
+                        "on-background": "#1c1c16",
+                        "secondary-container": "#fe625b",
+                        "surface-bright": "#fdf9ef",
+                        "surface-container-highest": "#e6e2d8",
+                        "on-tertiary-fixed-variant": "#1e4b67",
+                        "inverse-surface": "#31312a",
+                        "surface-tint": "#4e5e80",
+                        "primary-fixed": "#d8e2ff",
+                        "error": "#ba1a1a",
+                        "primary-container": "#1a2b4a",
+                        "on-secondary-fixed-variant": "#8f0e16",
+                        "tertiary-container": "#002e47",
+                        "on-surface-variant": "#44474e",
+                        "tertiary-fixed-dim": "#a2cbee",
+                        "surface-container-lowest": "#ffffff",
+                        "surface": "#fdf9ef",
+                        "outline": "#75777e",
+                        "surface-container-high": "#ece8de",
+                        "on-surface": "#1c1c16",
+                        "surface-variant": "#e6e2d8",
+                        "inverse-on-surface": "#f4f0e6",
+                        "on-primary-container": "#8293b7",
+                        "on-tertiary-fixed": "#001e30",
+                        "outline-variant": "#c5c6cf",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed": "#081b39"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "unit": "4px",
+                        "margin": "32px",
+                        "stack-sm": "8px",
+                        "stack-md": "16px",
+                        "stack-lg": "40px",
+                        "card-padding": "20px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Instrument Sans", "sans-serif"],
+                        "body-lg": ["Instrument Sans", "sans-serif"],
+                        "headline-sm": ["Archivo Narrow", "sans-serif"],
+                        "display-lg": ["Archivo Narrow", "sans-serif"],
+                        "display-md": ["Archivo Narrow", "sans-serif"],
+                        "data-mono": ["IBM Plex Mono", "monospace"],
+                        "label-caps": ["IBM Plex Mono", "monospace"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-sm": ["24px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "800" }],
+                        "display-md": ["32px", { "lineHeight": "1.1", "letterSpacing": "-0.01em", "fontWeight": "800" }],
+                        "data-mono": ["14px", { "lineHeight": "1.4", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "label-caps": ["12px", { "lineHeight": "1.2", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<!-- Google Fonts import to match config -->
+<style>
+        @import url('https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@700;800&family=IBM+Plex+Mono:wght@500;700&family=Instrument+Sans:wght@400;500;600&display=swap');
+        
+        body {
+            background-image: url('data:image/svg+xml;utf8,<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noiseFilter)" opacity="0.05"/></svg>');
+            background-attachment: fixed;
+        }
+
+        .perforated-edge {
+            background-image: linear-gradient(to bottom, transparent 50%, theme('colors.surface') 50%);
+            background-size: 100% 8px;
+            border-left: 2px dashed theme('colors.primary');
+        }
+
+        .stamp {
+            border: 3px solid theme('colors.secondary');
+            color: theme('colors.secondary');
+            transform: rotate(-15deg);
+            mix-blend-mode: multiply;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<nav class="docked full-width top border-b border-primary dark:border-on-primary-fixed bg-background dark:bg-surface">
+<div class="flex justify-between items-center w-full px-margin py-4 max-w-[1200px] mx-auto border-b border-primary dark:border-on-primary-fixed flat no shadows">
+<div class="font-display-md text-display-md font-extrabold uppercase text-primary dark:text-on-primary-fixed tracking-tighter">
+                FLIGHT SCHOOL
+            </div>
+<div class="hidden md:flex items-center gap-stack-md font-display-md text-display-md uppercase">
+<!-- THE HANGAR (Active) -->
+<a class="text-primary dark:text-on-primary-fixed font-bold border-b-2 border-primary dark:border-on-primary-fixed pb-1 hover:bg-primary-container/10 dark:hover:bg-tertiary-container/20 scale-95 transition-transform duration-150" href="#">
+                    THE HANGAR
+                </a>
+<!-- MY LOGBOOK (Inactive) -->
+<a class="text-on-surface-variant dark:text-outline p-2 hover:text-primary dark:hover:text-on-primary-fixed transition-colors hover:bg-primary-container/10 dark:hover:bg-tertiary-container/20" href="#">
+                    MY LOGBOOK
+                </a>
+</div>
+<div class="flex items-center">
+<button class="p-2 text-primary dark:text-on-primary-fixed hover:bg-primary-container/10 dark:hover:bg-tertiary-container/20 rounded-full transition-colors">
+<span class="material-symbols-outlined" data-icon="dark_mode">dark_mode</span>
+</button>
+</div>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-grow w-full max-w-[1200px] mx-auto px-margin py-stack-lg">
+<header class="mb-stack-lg border-b-2 border-primary pb-stack-sm flex justify-between items-end relative">
+<h1 class="font-display-lg text-display-lg uppercase text-primary tracking-tighter">
+                THE HANGAR
+            </h1>
+<div class="font-data-mono text-data-mono text-primary flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="route">route</span>
+                FLEET OVERVIEW
+            </div>
+</header>
+<!-- Fleet Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+<!-- Card 1: The Dart -->
+<article class="relative bg-surface-container border border-primary flex flex-col shadow-[2px_2px_0px_0px_rgba(3,22,52,0.2)] hover:-translate-y-1 transition-transform group overflow-hidden">
+<div class="absolute inset-y-0 left-0 w-2 perforated-edge"></div>
+<div class="pl-card-padding pr-stack-md py-stack-md flex-grow flex flex-col z-10 bg-surface/50 backdrop-blur-sm">
+<div class="flex justify-between items-start mb-stack-sm border-b border-primary/20 pb-2">
+<h2 class="font-headline-sm text-headline-sm text-primary uppercase">The Dart</h2>
+<span class="font-label-caps text-label-caps bg-primary text-on-primary px-2 py-1 rounded-sm">BEGINNER</span>
+</div>
+<div class="h-48 relative mb-stack-md bg-surface-variant/50 rounded-sm overflow-hidden flex items-center justify-center border border-primary/10">
+<!-- STITCH_THREEJS_START:ANIMATION_3 class="absolute inset-0 w-full h-full" -->
+<div class="absolute inset-0 w-full h-full" style="display:block;">
+<script src="https://ajax.googleapis.com/ajax/libs/threejs/r125/three.min.js"></script>
+<div id="threejs-container-ANIMATION_3" style="width:100%;height:100%"></div>
+<script>
+(function() {
+  const container = document.getElementById('threejs-container-ANIMATION_3');
+  const devicePixelRatio = window.devicePixelRatio || 1;
+  <threejs-scene>
+  const scene = new THREE.Scene();
+  const width = container.clientWidth || window.innerWidth;
+  const height = container.clientHeight || window.innerHeight;
+  const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+  renderer.setSize(width, height);
+  container.appendChild(renderer.domElement);
+
+  // Simple "Paper Plane" geometry (The Dart)
+  const group = new THREE.Group();
+  const material = new THREE.MeshPhongMaterial({ 
+    color: 0xffffff, 
+    side: THREE.DoubleSide,
+    flatShading: true 
+  });
+
+  const bodyGeom = new THREE.BufferGeometry();
+  const vertices = new Float32Array([
+    0, 0, 1.5,   // nose
+    -0.5, 0, 0,  // left wing tip
+    0, 0.2, 0,   // spine back
+    0, 0, 1.5,   // nose
+    0.5, 0, 0,   // right wing tip
+    0, 0.2, 0    // spine back
+  ]);
+  bodyGeom.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+  const body = new THREE.Mesh(bodyGeom, material);
+  group.add(body);
+  scene.add(group);
+
+  const light = new THREE.DirectionalLight(0xffffff, 1);
+  light.position.set(5, 5, 5);
+  scene.add(light);
+  scene.add(new THREE.AmbientLight(0x404040));
+
+  camera.position.z = 3;
+
+  function animate() {
+    requestAnimationFrame(animate);
+    group.rotation.y += 0.01;
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  });
+</threejs-scene>
+})();
+</script>
+</div>
+<!-- STITCH_THREEJS_END:ANIMATION_3 -->
+<div class="absolute top-2 left-2 stamp px-3 py-1 font-headline-sm text-headline-sm uppercase tracking-wider bg-surface-container/80 backdrop-blur-md">
+                           WINGS EARNED
+                       </div>
+</div>
+<div class="mt-auto space-y-2">
+<div class="flex justify-between font-data-mono text-data-mono text-primary">
+<span>STEPS</span>
+<span>05</span>
+</div>
+<div class="space-y-1">
+<div class="flex justify-between items-center text-xs font-label-caps text-primary">
+<span>SPEED</span>
+<div class="w-16 h-1 bg-surface-variant flex"><div class="h-full bg-primary w-[80%]"></div></div>
+</div>
+<div class="flex justify-between items-center text-xs font-label-caps text-primary">
+<span>DISTANCE</span>
+<div class="w-16 h-1 bg-surface-variant flex"><div class="h-full bg-primary w-[60%]"></div></div>
+</div>
+</div>
+</div>
+</div>
+</article>
+<!-- Card 2: The Glider -->
+<article class="relative bg-surface border border-primary flex flex-col shadow-[2px_2px_0px_0px_rgba(3,22,52,0.2)] hover:-translate-y-1 transition-transform group overflow-hidden">
+<div class="absolute inset-y-0 left-0 w-2 perforated-edge"></div>
+<div class="pl-card-padding pr-stack-md py-stack-md flex-grow flex flex-col z-10">
+<div class="flex justify-between items-start mb-stack-sm border-b border-primary/20 pb-2">
+<h2 class="font-headline-sm text-headline-sm text-primary uppercase">The Glider</h2>
+<span class="font-label-caps text-label-caps border border-primary text-primary px-2 py-1 rounded-sm">BEGINNER</span>
+</div>
+<div class="h-48 relative mb-stack-md bg-surface-variant/50 rounded-sm overflow-hidden flex items-center justify-center border border-primary/10">
+<!-- STITCH_THREEJS_START:ANIMATION_3 class="absolute inset-0 w-full h-full" -->
+<div class="absolute inset-0 w-full h-full" style="display:block;">
+<script src="https://ajax.googleapis.com/ajax/libs/threejs/r125/three.min.js"></script>
+<div id="threejs-container-ANIMATION_3" style="width:100%;height:100%"></div>
+<script>
+(function() {
+  const container = document.getElementById('threejs-container-ANIMATION_3');
+  const devicePixelRatio = window.devicePixelRatio || 1;
+  <threejs-scene>
+  const scene = new THREE.Scene();
+  const width = container.clientWidth || window.innerWidth;
+  const height = container.clientHeight || window.innerHeight;
+  const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+  renderer.setSize(width, height);
+  container.appendChild(renderer.domElement);
+
+  // Simple "Paper Plane" geometry (The Dart)
+  const group = new THREE.Group();
+  const material = new THREE.MeshPhongMaterial({ 
+    color: 0xffffff, 
+    side: THREE.DoubleSide,
+    flatShading: true 
+  });
+
+  const bodyGeom = new THREE.BufferGeometry();
+  const vertices = new Float32Array([
+    0, 0, 1.5,   // nose
+    -0.5, 0, 0,  // left wing tip
+    0, 0.2, 0,   // spine back
+    0, 0, 1.5,   // nose
+    0.5, 0, 0,   // right wing tip
+    0, 0.2, 0    // spine back
+  ]);
+  bodyGeom.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+  const body = new THREE.Mesh(bodyGeom, material);
+  group.add(body);
+  scene.add(group);
+
+  const light = new THREE.DirectionalLight(0xffffff, 1);
+  light.position.set(5, 5, 5);
+  scene.add(light);
+  scene.add(new THREE.AmbientLight(0x404040));
+
+  camera.position.z = 3;
+
+  function animate() {
+    requestAnimationFrame(animate);
+    group.rotation.y += 0.01;
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  });
+</threejs-scene>
+})();
+</script>
+</div>
+<!-- STITCH_THREEJS_END:ANIMATION_3 -->
+</div>
+<div class="mt-auto space-y-2">
+<div class="flex justify-between font-data-mono text-data-mono text-primary">
+<span>STEPS</span>
+<span>07</span>
+</div>
+<div class="space-y-1">
+<div class="flex justify-between items-center text-xs font-label-caps text-primary">
+<span>SPEED</span>
+<div class="w-16 h-1 bg-surface-variant flex"><div class="h-full bg-primary w-[40%]"></div></div>
+</div>
+<div class="flex justify-between items-center text-xs font-label-caps text-primary">
+<span>DISTANCE</span>
+<div class="w-16 h-1 bg-surface-variant flex"><div class="h-full bg-primary w-[90%]"></div></div>
+</div>
+</div>
+</div>
+</div>
+</article>
+<!-- Card 3: The Stuntman -->
+<article class="relative bg-surface border border-primary flex flex-col shadow-[2px_2px_0px_0px_rgba(3,22,52,0.2)] hover:-translate-y-1 transition-transform group overflow-hidden opacity-90">
+<div class="absolute inset-y-0 left-0 w-2 perforated-edge"></div>
+<div class="pl-card-padding pr-stack-md py-stack-md flex-grow flex flex-col z-10">
+<div class="flex justify-between items-start mb-stack-sm border-b border-primary/20 pb-2">
+<h2 class="font-headline-sm text-headline-sm text-primary uppercase">The Stuntman</h2>
+<span class="font-label-caps text-label-caps border border-primary text-primary px-2 py-1 rounded-sm">PILOT</span>
+</div>
+<div class="h-48 relative mb-stack-md bg-surface-variant/50 rounded-sm overflow-hidden flex items-center justify-center border border-primary/10">
+<!-- STITCH_THREEJS_START:ANIMATION_3 class="absolute inset-0 w-full h-full" -->
+<div class="absolute inset-0 w-full h-full" style="display:block;">
+<script src="https://ajax.googleapis.com/ajax/libs/threejs/r125/three.min.js"></script>
+<div id="threejs-container-ANIMATION_3" style="width:100%;height:100%"></div>
+<script>
+(function() {
+  const container = document.getElementById('threejs-container-ANIMATION_3');
+  const devicePixelRatio = window.devicePixelRatio || 1;
+  <threejs-scene>
+  const scene = new THREE.Scene();
+  const width = container.clientWidth || window.innerWidth;
+  const height = container.clientHeight || window.innerHeight;
+  const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+  renderer.setSize(width, height);
+  container.appendChild(renderer.domElement);
+
+  // Simple "Paper Plane" geometry (The Dart)
+  const group = new THREE.Group();
+  const material = new THREE.MeshPhongMaterial({ 
+    color: 0xffffff, 
+    side: THREE.DoubleSide,
+    flatShading: true 
+  });
+
+  const bodyGeom = new THREE.BufferGeometry();
+  const vertices = new Float32Array([
+    0, 0, 1.5,   // nose
+    -0.5, 0, 0,  // left wing tip
+    0, 0.2, 0,   // spine back
+    0, 0, 1.5,   // nose
+    0.5, 0, 0,   // right wing tip
+    0, 0.2, 0    // spine back
+  ]);
+  bodyGeom.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+  const body = new THREE.Mesh(bodyGeom, material);
+  group.add(body);
+  scene.add(group);
+
+  const light = new THREE.DirectionalLight(0xffffff, 1);
+  light.position.set(5, 5, 5);
+  scene.add(light);
+  scene.add(new THREE.AmbientLight(0x404040));
+
+  camera.position.z = 3;
+
+  function animate() {
+    requestAnimationFrame(animate);
+    group.rotation.y += 0.01;
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  });
+</threejs-scene>
+})();
+</script>
+</div>
+<!-- STITCH_THREEJS_END:ANIMATION_3 -->
+</div>
+</div>
+</article>
+<!-- Card 4: The Voyager -->
+<article class="relative bg-surface border border-primary flex flex-col shadow-[2px_2px_0px_0px_rgba(3,22,52,0.2)] hover:-translate-y-1 transition-transform group overflow-hidden opacity-90">
+<div class="absolute inset-y-0 left-0 w-2 perforated-edge"></div>
+<div class="pl-card-padding pr-stack-md py-stack-md flex-grow flex flex-col z-10">
+<div class="flex justify-between items-start mb-stack-sm border-b border-primary/20 pb-2">
+<h2 class="font-headline-sm text-headline-sm text-primary uppercase">The Voyager</h2>
+<span class="font-label-caps text-label-caps border border-primary text-primary px-2 py-1 rounded-sm">PILOT</span>
+</div>
+<div class="h-48 relative mb-stack-md bg-surface-variant/50 rounded-sm overflow-hidden flex items-center justify-center border border-primary/10">
+<!-- STITCH_THREEJS_START:ANIMATION_3 class="absolute inset-0 w-full h-full" -->
+<div class="absolute inset-0 w-full h-full" style="display:block;">
+<script src="https://ajax.googleapis.com/ajax/libs/threejs/r125/three.min.js"></script>
+<div id="threejs-container-ANIMATION_3" style="width:100%;height:100%"></div>
+<script>
+(function() {
+  const container = document.getElementById('threejs-container-ANIMATION_3');
+  const devicePixelRatio = window.devicePixelRatio || 1;
+  <threejs-scene>
+  const scene = new THREE.Scene();
+  const width = container.clientWidth || window.innerWidth;
+  const height = container.clientHeight || window.innerHeight;
+  const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+  renderer.setSize(width, height);
+  container.appendChild(renderer.domElement);
+
+  // Simple "Paper Plane" geometry (The Dart)
+  const group = new THREE.Group();
+  const material = new THREE.MeshPhongMaterial({ 
+    color: 0xffffff, 
+    side: THREE.DoubleSide,
+    flatShading: true 
+  });
+
+  const bodyGeom = new THREE.BufferGeometry();
+  const vertices = new Float32Array([
+    0, 0, 1.5,   // nose
+    -0.5, 0, 0,  // left wing tip
+    0, 0.2, 0,   // spine back
+    0, 0, 1.5,   // nose
+    0.5, 0, 0,   // right wing tip
+    0, 0.2, 0    // spine back
+  ]);
+  bodyGeom.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+  const body = new THREE.Mesh(bodyGeom, material);
+  group.add(body);
+  scene.add(group);
+
+  const light = new THREE.DirectionalLight(0xffffff, 1);
+  light.position.set(5, 5, 5);
+  scene.add(light);
+  scene.add(new THREE.AmbientLight(0x404040));
+
+  camera.position.z = 3;
+
+  function animate() {
+    requestAnimationFrame(animate);
+    group.rotation.y += 0.01;
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  });
+</threejs-scene>
+})();
+</script>
+</div>
+<!-- STITCH_THREEJS_END:ANIMATION_3 -->
+</div>
+</div>
+</article>
+<!-- Card 5: The Ace -->
+<article class="relative bg-surface border border-primary flex flex-col shadow-[2px_2px_0px_0px_rgba(3,22,52,0.2)] hover:-translate-y-1 transition-transform group overflow-hidden opacity-90">
+<div class="absolute inset-y-0 left-0 w-2 perforated-edge"></div>
+<div class="pl-card-padding pr-stack-md py-stack-md flex-grow flex flex-col z-10">
+<div class="flex justify-between items-start mb-stack-sm border-b border-primary/20 pb-2">
+<h2 class="font-headline-sm text-headline-sm text-primary uppercase">The Ace</h2>
+<span class="font-label-caps text-label-caps bg-secondary text-on-secondary px-2 py-1 rounded-sm">ACE</span>
+</div>
+<div class="h-48 relative mb-stack-md bg-surface-variant/50 rounded-sm overflow-hidden flex items-center justify-center border border-primary/10">
+<!-- STITCH_THREEJS_START:ANIMATION_3 class="absolute inset-0 w-full h-full" -->
+<div class="absolute inset-0 w-full h-full" style="display:block;">
+<script src="https://ajax.googleapis.com/ajax/libs/threejs/r125/three.min.js"></script>
+<div id="threejs-container-ANIMATION_3" style="width:100%;height:100%"></div>
+<script>
+(function() {
+  const container = document.getElementById('threejs-container-ANIMATION_3');
+  const devicePixelRatio = window.devicePixelRatio || 1;
+  <threejs-scene>
+  const scene = new THREE.Scene();
+  const width = container.clientWidth || window.innerWidth;
+  const height = container.clientHeight || window.innerHeight;
+  const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+  renderer.setSize(width, height);
+  container.appendChild(renderer.domElement);
+
+  // Simple "Paper Plane" geometry (The Dart)
+  const group = new THREE.Group();
+  const material = new THREE.MeshPhongMaterial({ 
+    color: 0xffffff, 
+    side: THREE.DoubleSide,
+    flatShading: true 
+  });
+
+  const bodyGeom = new THREE.BufferGeometry();
+  const vertices = new Float32Array([
+    0, 0, 1.5,   // nose
+    -0.5, 0, 0,  // left wing tip
+    0, 0.2, 0,   // spine back
+    0, 0, 1.5,   // nose
+    0.5, 0, 0,   // right wing tip
+    0, 0.2, 0    // spine back
+  ]);
+  bodyGeom.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+  const body = new THREE.Mesh(bodyGeom, material);
+  group.add(body);
+  scene.add(group);
+
+  const light = new THREE.DirectionalLight(0xffffff, 1);
+  light.position.set(5, 5, 5);
+  scene.add(light);
+  scene.add(new THREE.AmbientLight(0x404040));
+
+  camera.position.z = 3;
+
+  function animate() {
+    requestAnimationFrame(animate);
+    group.rotation.y += 0.01;
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  });
+</threejs-scene>
+})();
+</script>
+</div>
+<!-- STITCH_THREEJS_END:ANIMATION_3 -->
+</div>
+</div>
+</article>
+<!-- Card 6: The Stealth -->
+<article class="relative bg-surface border border-primary flex flex-col shadow-[2px_2px_0px_0px_rgba(3,22,52,0.2)] hover:-translate-y-1 transition-transform group overflow-hidden opacity-90">
+<div class="absolute inset-y-0 left-0 w-2 perforated-edge"></div>
+<div class="pl-card-padding pr-stack-md py-stack-md flex-grow flex flex-col z-10">
+<div class="flex justify-between items-start mb-stack-sm border-b border-primary/20 pb-2">
+<h2 class="font-headline-sm text-headline-sm text-primary uppercase">The Stealth</h2>
+<span class="font-label-caps text-label-caps bg-secondary text-on-secondary px-2 py-1 rounded-sm">ACE</span>
+</div>
+<div class="h-48 relative mb-stack-md bg-surface-variant/50 rounded-sm overflow-hidden flex items-center justify-center border border-primary/10">
+<!-- STITCH_THREEJS_START:ANIMATION_3 class="absolute inset-0 w-full h-full" -->
+<div class="absolute inset-0 w-full h-full" style="display:block;">
+<script src="https://ajax.googleapis.com/ajax/libs/threejs/r125/three.min.js"></script>
+<div id="threejs-container-ANIMATION_3" style="width:100%;height:100%"></div>
+<script>
+(function() {
+  const container = document.getElementById('threejs-container-ANIMATION_3');
+  const devicePixelRatio = window.devicePixelRatio || 1;
+  <threejs-scene>
+  const scene = new THREE.Scene();
+  const width = container.clientWidth || window.innerWidth;
+  const height = container.clientHeight || window.innerHeight;
+  const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+  renderer.setSize(width, height);
+  container.appendChild(renderer.domElement);
+
+  // Simple "Paper Plane" geometry (The Dart)
+  const group = new THREE.Group();
+  const material = new THREE.MeshPhongMaterial({ 
+    color: 0xffffff, 
+    side: THREE.DoubleSide,
+    flatShading: true 
+  });
+
+  const bodyGeom = new THREE.BufferGeometry();
+  const vertices = new Float32Array([
+    0, 0, 1.5,   // nose
+    -0.5, 0, 0,  // left wing tip
+    0, 0.2, 0,   // spine back
+    0, 0, 1.5,   // nose
+    0.5, 0, 0,   // right wing tip
+    0, 0.2, 0    // spine back
+  ]);
+  bodyGeom.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+  const body = new THREE.Mesh(bodyGeom, material);
+  group.add(body);
+  scene.add(group);
+
+  const light = new THREE.DirectionalLight(0xffffff, 1);
+  light.position.set(5, 5, 5);
+  scene.add(light);
+  scene.add(new THREE.AmbientLight(0x404040));
+
+  camera.position.z = 3;
+
+  function animate() {
+    requestAnimationFrame(animate);
+    group.rotation.y += 0.01;
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  });
+</threejs-scene>
+})();
+</script>
+</div>
+<!-- STITCH_THREEJS_END:ANIMATION_3 -->
+</div>
+</div>
+</article>
+</div>
+</main>
+<!-- Footer -->
+<footer class="docked full-width bottom-0 bg-background dark:bg-surface w-full py-stack-md px-margin flex flex-col items-center justify-center gap-stack-sm border-t-4 border-[repeating-linear-gradient(45deg,#b12a2a,#b12a2a_10px,#031634_10px,#031634_20px)] flat no shadows mt-auto">
+<div class="flex gap-stack-md font-data-mono text-data-mono uppercase">
+<a class="text-on-surface-variant dark:text-outline hover:underline hover:text-primary dark:hover:text-primary-fixed transition-colors" href="#">PRIVACY</a>
+<a class="text-on-surface-variant dark:text-outline hover:underline hover:text-primary dark:hover:text-primary-fixed transition-colors" href="#">SAFETY</a>
+<a class="text-on-surface-variant dark:text-outline hover:underline hover:text-primary dark:hover:text-primary-fixed transition-colors" href="#">SUPPORT</a>
+</div>
+<div class="font-label-caps text-label-caps text-primary dark:text-on-primary-fixed mt-stack-sm text-center">
+            © 2024 CADET FLIGHT MANIFEST - LICENSE #0815-FA
+        </div>
+</footer>
+</body></html>
