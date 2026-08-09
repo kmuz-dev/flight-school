@@ -1,0 +1,181 @@
+"use client";
+
+/**
+ * One boarding-pass card in the Hangar grid (SCREENS.md §1).
+ *
+ * The card ships a build-time engine SVG of the finished plane. Waking it -
+ * hover on a fine pointer, or pressing the preview control on any device -
+ * mounts a live fold engine over that SVG which floats with a slow bob. The
+ * parent decides which cards may be live (at most two) and this component only
+ * reports intent, so the LRU rule lives in one place rather than per card.
+ */
+import { useEffect, useRef } from "react";
+import { createFoldEngine } from "@/engine";
+import type { EngineOptions, FoldEngineHandle } from "@/engine/core/types";
+import type { PlaneStructure } from "@/content/types";
+import { Chip } from "@/components/ui/Chip";
+import { EngineSvg } from "@/components/ui/EngineSvg";
+import { GaugeBar } from "@/components/ui/GaugeBar";
+import { FOCUS_RING } from "@/components/ui/focus";
+import { TIER_CHIP } from "@/components/ui/tier";
+import { format, pad2 } from "@/components/ui/format";
+import type { HangarPlaneView, HangarUiStrings } from "./types";
+
+export type CardEngineFactory = (
+  container: HTMLElement,
+  structure: PlaneStructure,
+  opts?: EngineOptions,
+) => FoldEngineHandle;
+
+/** Hover only wakes a card where hovering is a real, deliberate gesture. */
+function hasFinePointer(): boolean {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return false;
+  return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+}
+
+export type PlaneCardProps = {
+  view: HangarPlaneView;
+  ui: HangarUiStrings;
+  completed: boolean;
+  live: boolean;
+  selected: boolean;
+  onHoverStart: (id: string) => void;
+  onHoverEnd: (id: string) => void;
+  onToggleSelect: (id: string) => void;
+  createEngine?: CardEngineFactory;
+};
+
+export function PlaneCard({
+  view,
+  ui,
+  completed,
+  live,
+  selected,
+  onHoverStart,
+  onHoverEnd,
+  onToggleSelect,
+  createEngine = createFoldEngine,
+}: PlaneCardProps) {
+  const mountRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!live) return;
+    const mount = mountRef.current;
+    if (!mount) return;
+
+    const handle = createEngine(mount, view.structure, {});
+    // The catalog shows the aircraft, not the folding of it.
+    handle.gotoStep(view.stepCount - 1, { animate: false });
+    const onResize = (): void => handle.resize();
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      window.removeEventListener("resize", onResize);
+      handle.dispose();
+    };
+  }, [live, createEngine, view.structure, view.stepCount]);
+
+  return (
+    <article
+      data-plane={view.id}
+      data-live={live ? "true" : "false"}
+      onPointerEnter={() => {
+        if (hasFinePointer()) onHoverStart(view.id);
+      }}
+      onPointerLeave={() => {
+        if (hasFinePointer()) onHoverEnd(view.id);
+      }}
+      className={`relative flex flex-col rounded-card border bg-raised shadow-[0_6px_18px_rgb(26_43_74_/_0.09)] transition-transform duration-200 ease-move ${
+        completed ? "border-green/40" : "border-ink-12"
+      } ${live ? "" : "hover:-translate-y-[3px]"}`}
+    >
+      <div className="relative">
+        <button
+          type="button"
+          aria-pressed={selected}
+          aria-label={format(ui.preview, { name: view.name })}
+          onClick={() => onToggleSelect(view.id)}
+          className={`relative block aspect-[3/2] w-full overflow-hidden rounded-t-[7px] bg-paper ${FOCUS_RING}`}
+        >
+          <span
+            aria-hidden="true"
+            className="absolute inset-0"
+            style={{
+              backgroundImage:
+                "repeating-linear-gradient(-45deg, rgb(26 43 74 / 0.055) 0 6px, transparent 6px 12px)",
+            }}
+          />
+          <EngineSvg svg={view.svg} className="absolute inset-0 flex items-center justify-center" />
+          {live ? (
+            <div
+              ref={mountRef}
+              data-testid="live-scene"
+              aria-hidden="true"
+              className="plane-bob pointer-events-none absolute -inset-4"
+            />
+          ) : null}
+        </button>
+
+        <Chip variant={TIER_CHIP[view.tier]} className="absolute top-sm right-sm">
+          {ui.tier[view.tier]}
+        </Chip>
+
+        {completed ? (
+          <span
+            data-testid="wings-stamp"
+            className="pointer-events-none absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 -rotate-[14deg] items-center gap-xs border-2 border-green bg-paper/80 px-sm py-xs font-mono text-micro font-semibold tracking-[0.14em] text-green uppercase"
+          >
+            {ui.wingsEarned}
+          </span>
+        ) : null}
+      </div>
+
+      {/* Perforated ticket edge: the dashed tear line plus its two punched notches. */}
+      <div className="relative">
+        <div className="perforation" />
+        <span
+          aria-hidden="true"
+          className="absolute top-1/2 -left-[7px] size-[14px] -translate-y-1/2 rounded-full bg-paper"
+        />
+        <span
+          aria-hidden="true"
+          className="absolute top-1/2 -right-[7px] size-[14px] -translate-y-1/2 rounded-full bg-paper"
+        />
+      </div>
+
+      <div className="flex flex-1 flex-col gap-sm p-md">
+        <h2 className="font-display text-h3 leading-none font-bold tracking-tight uppercase">
+          <a href={view.href} className={`hover:text-red ${FOCUS_RING}`}>
+            {view.name}
+          </a>
+        </h2>
+
+        <p className="flex items-center justify-between font-mono text-micro tracking-[0.1em] text-ink-60 uppercase">
+          <span>{ui.steps}</span>
+          <span className="tabular-nums">{pad2(view.stepCount)}</span>
+        </p>
+
+        <div className="mt-auto flex flex-col gap-xs border-t border-ink-12 pt-sm">
+          <GaugeBar
+            label={ui.rating.speed}
+            accessibleLabel={format(ui.ratingGauge, {
+              label: ui.rating.speed,
+              value: view.ratings.speed,
+            })}
+            value={view.ratings.speed}
+            tone="red"
+          />
+          <GaugeBar
+            label={ui.rating.distance}
+            accessibleLabel={format(ui.ratingGauge, {
+              label: ui.rating.distance,
+              value: view.ratings.distance,
+            })}
+            value={view.ratings.distance}
+            tone="sky"
+          />
+        </div>
+      </div>
+    </article>
+  );
+}
