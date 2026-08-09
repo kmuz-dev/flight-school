@@ -34,3 +34,4 @@ This sets the complexity ceiling (no design ships if a 10-year-old cannot comple
 - **Backend**: none. No database, no API routes, no auth. All content is TypeScript data compiled into the static build.
 - **Deployment**: Cloudflare Pages free tier (unlimited bandwidth, PR preview deploys). GitHub Pages is the documented fallback (same static output, needs basePath config). This is a free-hosting demo project by design.
 - **Design system**: "flight academy for paper" fiction; full system in DESIGN.md, paste-ready mockup brief in docs/DESIGN-BRIEF.md.
+- **Screen synthesis**: Stitch + Claude Design mockups merged per docs/SCREENS.md (all-Claude tutorial, Stitch-visual preflight, live-3D hangar cards on hover/selection, chevron striping kept, Archivo Narrow headlines).

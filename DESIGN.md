@@ -19,7 +19,7 @@
 
 All faces are on Google Fonts so external mockup tools (Stitch, Claude Design) can load them.
 
-- **Display/Hero:** Archivo (weights 700-900). All-caps, tight tracking, placard style: "FLIGHT LICENSE: BEGINNER". Reserved for headers and section placards only; never body-length text.
+- **Display/Hero:** Archivo Narrow (600/700). All-caps, tight tracking, placard style: "FLIGHT LICENSE: BEGINNER". Reserved for headers and section placards only; never body-length text. (Confirmed against the approved Stitch mockup, which uses Archivo Narrow for headlines.)
 - **Body:** Instrument Sans (400/500/600). Kid-clear, warm, highly legible at tutorial reading sizes.
 - **UI/Labels:** Instrument Sans 600, sentence case for buttons, small-caps-feel labels via Archivo 700 at small sizes.
 - **Data/Flight details:** IBM Plex Mono (400/500), tabular-nums. Step counters, paper specs, ratings, badge serials. This is the technical-document voice of the academy.
@@ -71,3 +71,7 @@ Pastel craft pink; endless uniform card grids; numbered steps in pastel circles;
 |------|----------|-----------|
 | 2026-08-09 | Initial design system created | /design-consultation with competitive research (origami.me captured; foldnfly and flyporter unreachable headless). User chose the flight-academy fiction over the engine-as-hero direction. |
 | 2026-08-09 | Two-ink + one-accent palette | Kitsch guard: the academy fiction stays classy through restraint, theming via type and motifs only. |
+| 2026-08-09 | Display face is Archivo Narrow | User approved the Stitch mockup's headline font and identified it as Archivo Narrow; same family as the original Archivo choice. |
+| 2026-08-09 | Airmail chevron striping stays | User initially disliked it on the certificate, then reversed on direct question; motif remains system-wide. |
+| 2026-08-09 | Hangar planes go live-3D on hover and selection | Cards show static renders by default; a hovered or selected card wakes a floating, slowly rotating 3D plane. Touch devices get selection-only. |
+| 2026-08-09 | Screen-level synthesis of Stitch + Claude Design mockups | Recorded in docs/SCREENS.md; tutorial follows Claude Design, preflight is Stitch visual + Claude info, plus a tutorial-bottom tip bar. |
