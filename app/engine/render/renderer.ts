@@ -148,6 +148,8 @@ export type RendererLike = {
 export type ControlsLike = {
   target: Vector3;
   enabled: boolean;
+  autoRotate?: boolean;
+  autoRotateSpeed?: number;
   update(delta?: number): boolean | void;
   dispose(): void;
 };
@@ -313,6 +315,10 @@ export class FoldEngine implements FoldEngineHandle {
       this.camera,
       this.renderer.domElement,
     );
+    // A display surface turns on the spot; a tutorial stage never does, because
+    // a moving camera during a fold makes it impossible to see what moved.
+    this.controls.autoRotate = opts.autoRotate === true && !this.reducedMotion;
+    this.controls.autoRotateSpeed = 0.6;
 
     // User intent beats any scripted camera move.
     this.renderer.domElement.addEventListener("pointerdown", this.onPointerDown, {

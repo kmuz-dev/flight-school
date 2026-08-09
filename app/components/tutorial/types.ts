@@ -90,21 +90,9 @@ export type EngineFactory = (
   opts?: EngineOptions,
 ) => FoldEngineHandle;
 
-/** `{placeholder}` interpolation. Unknown placeholders are left untouched. */
-export function format(
-  template: string,
-  vars: Readonly<Record<string, string | number>>,
-): string {
-  return template.replace(/\{(\w+)\}/g, (whole, key: string) => {
-    const value = vars[key];
-    return value === undefined ? whole : String(value);
-  });
-}
-
-/** Step counters read as "04", matching the mono placard style of the mockup. */
-export function pad2(n: number): string {
-  return String(n).padStart(2, "0");
-}
+// Interpolation and counter padding live in components/ui/format: one copy,
+// used by every screen.
+export { format, pad2 } from "@/components/ui/format";
 
 /** Seconds -> "m:ss" for the transport readout. */
 export function formatTime(seconds: number): string {

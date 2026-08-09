@@ -180,5 +180,11 @@ export type EngineOptions = {
   readonly theme?: "paper" | "night";
   /** Force the no-WebGL fallback (also auto-detected). */
   readonly forceFallback?: boolean;
+  /**
+   * Turn the model slowly on the spot, for a display surface rather than a
+   * tutorial (the hangar's live cards). Ignored under prefers-reduced-motion
+   * and by the no-WebGL fallback, which has no camera.
+   */
+  readonly autoRotate?: boolean;
   readonly onReady?: () => void;
 };

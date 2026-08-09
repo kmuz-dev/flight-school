@@ -9,7 +9,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FoldEngineHandle, PaperFormat } from "@/engine/core/types";
 import type { PlaneStructure, Tier } from "@/content/types";
-import { writeStored } from "@/lib/storage";
+import { recordCompletion, recordStep, usePlaneProgress } from "@/lib/progress";
 import { FoldStage } from "./FoldStage";
 import { TransportBar } from "./TransportBar";
 import { StepRail } from "./StepRail";
@@ -89,24 +89,33 @@ export function TutorialScreen({
     setIsPlaying(true);
   }
 
+  /**
+   * Resume where the cadet left off.
+   *
+   * A static export cannot know the position at build time, and reading
+   * localStorage during render would not match the prerendered HTML - so it
+   * arrives through the progress store, whose server snapshot is empty and
+   * whose real snapshot lands on the render straight after hydration. Consuming
+   * it during render rather than in an effect matters: React re-renders before
+   * committing, so the effect below sees the resumed step directly and never
+   * gets a chance to persist step 0 over the position being resumed to.
+   */
+  const storedResume = usePlaneProgress(structure.id).resumeStep;
+  const [resumeConsumed, setResumeConsumed] = useState(false);
+  if (!resumeConsumed && storedResume !== null) {
+    setResumeConsumed(true);
+    setStepIndex(Math.max(0, Math.min(storedResume, total - 1)));
+  }
+
   // Side effects of a step change: command the engine and remember the place.
   useEffect(() => {
     engine?.gotoStep(stepIndex);
-    writeStored((prev) => ({
-      ...prev,
-      progress: {
-        ...prev.progress,
-        [structure.id]: { step: stepIndex, updatedAt: new Date().toISOString() },
-      },
-    }));
+    recordStep(structure.id, stepIndex);
   }, [engine, stepIndex, structure.id]);
 
   const goNext = useCallback(() => {
     if (isLastStep) {
-      writeStored((prev) => ({
-        ...prev,
-        completed: { ...prev.completed, [structure.id]: { at: new Date().toISOString() } },
-      }));
+      recordCompletion(structure.id);
       onComplete?.();
       return;
     }

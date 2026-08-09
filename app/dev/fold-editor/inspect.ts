@@ -17,11 +17,7 @@ import type {
   Vec2,
 } from "@/engine/core/types";
 import type { PlaneStructure } from "@/content/types";
-import { computeFoldState, computeStepDelta, totalArea } from "@/engine/core/state";
-import { facetInTable } from "@/engine/core/fold";
-import { area, centroid } from "@/engine/core/polygon";
-import { isoDet } from "@/engine/core/iso2";
-import { PAPER_SIZES, formatForPlane } from "@/engine/core/paper";
+import { PAPER_SIZES, area, centroid, computeFoldState, computeStepDelta, facetInTable, formatForPlane, isoDet, totalArea } from "@/engine";
 import { describeLayers } from "./plan";
 
 /** Relative area drift beyond this is worth flagging to a geometry author. */

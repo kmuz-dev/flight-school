@@ -23,9 +23,7 @@ import type {
   Line2,
   Vec2,
 } from "@/engine/core/types";
-import { facetInTable } from "@/engine/core/fold";
-import { boundingBox, centroid, classify, splitConvex } from "@/engine/core/polygon";
-import { isoDet } from "@/engine/core/iso2";
+import { boundingBox, centroid, classify, facetInTable, isoDet, splitConvex } from "@/engine";
 
 /** One facet, ready to draw: table-space polygon plus the flags the tool colours by. */
 export type PlanPolygon = {

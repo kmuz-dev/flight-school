@@ -1,10 +1,6 @@
 /**
- * Dictionary placeholder interpolation, shared by the catalog, preflight and
- * completion screens.
- *
- * The tutorial module carries an identical pair in `components/tutorial/types`
- * (written before this file existed); they should be consolidated here when the
- * tutorial module is next touched.
+ * Dictionary placeholder interpolation. Every screen shares these; the tutorial
+ * module re-exports them so its own imports keep reading naturally.
  */
 
 /** `{placeholder}` interpolation. Unknown placeholders are left untouched. */

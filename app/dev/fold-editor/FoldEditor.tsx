@@ -17,8 +17,7 @@
 import { useCallback, useMemo, useState } from "react";
 import type { FoldEngineHandle, Vec2 } from "@/engine/core/types";
 import type { PlaneStructure } from "@/content/types";
-import { computeFoldState, validateSequence } from "@/engine/core/state";
-import { renderStateToSvg } from "@/engine/core/svgRender";
+import { computeFoldState, renderStateToSvg, validateSequence } from "@/engine";
 import { Stage3D } from "./Stage3D";
 import { TablePlan } from "./TablePlan";
 import { DiagnosticsPanel, FacetTable, Panel, StepList, ValidationPanel } from "./panels";

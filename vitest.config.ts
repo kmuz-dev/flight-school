@@ -28,6 +28,7 @@ export default defineConfig({
           name: "components",
           include: ["tests/components/**/*.test.{ts,tsx}"],
           environment: "jsdom",
+          setupFiles: ["tests/setup.ts", "tests/setup.components.ts"],
         },
       },
     ],
