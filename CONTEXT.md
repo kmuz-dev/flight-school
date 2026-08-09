@@ -33,3 +33,4 @@ This sets the complexity ceiling (no design ships if a 10-year-old cannot comple
 - **Stack**: Next.js 16 App Router + TypeScript + Tailwind 4 + Three.js + GSAP, in full static-export mode (`output: 'export'`). The anatomy repo's library set without its vinext/Cloudflare-Workers harness.
 - **Backend**: none. No database, no API routes, no auth. All content is TypeScript data compiled into the static build.
 - **Deployment**: Cloudflare Pages free tier (unlimited bandwidth, PR preview deploys). GitHub Pages is the documented fallback (same static output, needs basePath config). This is a free-hosting demo project by design.
+- **Design system**: "flight academy for paper" fiction; full system in DESIGN.md, paste-ready mockup brief in docs/DESIGN-BRIEF.md.
