@@ -13,6 +13,8 @@ export type PlaneStrings = {
   /** One-paragraph flight description (kid-clear). */
   readonly description: string;
   readonly throwTip: string;
+  /** Step id -> short placard title, e.g. "Fold the top corners in". */
+  readonly titles: Readonly<Record<string, string>>;
   /** Step id -> instruction text. Every step id must be present (validated). */
   readonly steps: Readonly<Record<string, string>>;
   /** Step id -> optional one-line why. Required iff step.hasWhy (validated). */
@@ -27,7 +29,12 @@ export type GlossaryEntry = {
 };
 
 export type PlanesDictionary = {
-  readonly planes: Readonly<Record<PlaneId, PlaneStrings>>;
+  /**
+   * Partial by design: the catalog grows plane by plane. A content test asserts
+   * every plane in the registry has an entry here, so the gap that matters (a
+   * plane shipping without prose) still fails the build.
+   */
+  readonly planes: Partial<Readonly<Record<PlaneId, PlaneStrings>>>;
   /** Fold-term glossary (valley-fold, mountain-fold, crease, ...). */
   readonly glossary: Readonly<Record<string, GlossaryEntry>>;
 };
