@@ -8,7 +8,7 @@
  * The engine is React-free by architectural rule (SPEC 3): it owns no DOM
  * beyond the canvas it appends, and React drives it through `FoldEngineHandle`.
  */
-import { computeFoldState, computeStepDelta, validateSequence } from "@/engine/core/state";
+import { computeFoldState, computeStepDelta, totalArea, validateSequence } from "@/engine/core/state";
 import { poseAtProgress, posesForState } from "@/engine/core/pose";
 import { renderStateToSvg } from "@/engine/core/svgRender";
 
@@ -74,8 +74,15 @@ export function renderPlaneThumbnailSvg(structure: PlaneStructure): string {
 }
 
 // Pure core functions, re-exported for tests, content validation, the
-// fold-editor dev route and the thumbnail pipeline.
-export { computeFoldState, validateSequence, renderStateToSvg };
+// fold-editor dev route and the thumbnail pipeline. The rule this upholds is
+// that React-side code imports from "@/engine" and never reaches into
+// "@/engine/core/*"; the fold editor needs the whole inspection surface, so it
+// all belongs here rather than pushing that route through the boundary.
+export { computeFoldState, computeStepDelta, validateSequence, totalArea, renderStateToSvg };
+export { facetInTable, facetSide } from "./core/fold";
+export { area, centroid, boundingBox, classify, splitConvex } from "./core/polygon";
+export { isoApply, isoDet, isoInverse } from "./core/iso2";
+export { PAPER_SIZES, LAYER_THICKNESS, formatForPlane, freshSheet } from "./core/paper";
 
 export { isWebGLAvailable } from "./render/fallback";
 export { disposeThumbnailRenderer } from "./render/thumbnail";

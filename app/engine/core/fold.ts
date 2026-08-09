@@ -47,8 +47,12 @@ function creaseInPaper(facet: Facet, crease: Line2): Line2 {
 /**
  * Which side of the (table-space) crease does this facet sit on?
  * Returns +1 left, -1 right, 0 straddling or on the line.
+ *
+ * Exported so the fold editor can shade the moving half by the same rule the
+ * reducer uses. A second implementation of the side convention would be a
+ * second place for it to drift.
  */
-function facetSide(facet: Facet, crease: Line2): -1 | 0 | 1 {
+export function facetSide(facet: Facet, crease: Line2): -1 | 0 | 1 {
   const pts = facetInTable(facet);
   let sawLeft = false;
   let sawRight = false;
