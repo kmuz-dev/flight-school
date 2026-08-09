@@ -78,12 +78,20 @@ export function TutorialScreen({
     };
   }, [engine]);
 
-  // Each step change: move the engine, reset the self-check, remember progress.
-  useEffect(() => {
-    engine?.gotoStep(stepIndex);
+  // Per-step UI state is derived from stepIndex, so it is adjusted during
+  // render rather than in an effect - resetting it in an effect would render
+  // once with the previous step's state and cascade.
+  const [renderedStep, setRenderedStep] = useState(stepIndex);
+  if (renderedStep !== stepIndex) {
+    setRenderedStep(stepIndex);
     setSelfChecked(false);
     setProgress(0);
     setIsPlaying(true);
+  }
+
+  // Side effects of a step change: command the engine and remember the place.
+  useEffect(() => {
+    engine?.gotoStep(stepIndex);
     writeStored((prev) => ({
       ...prev,
       progress: {
