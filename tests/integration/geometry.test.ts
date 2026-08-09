@@ -11,7 +11,9 @@ import { PLANES } from "@/content";
 import { computeFoldState, computeStepDelta, totalArea, validateSequence } from "@/engine/core/state";
 import { facetInTable } from "@/engine/core/fold";
 import { PAPER_SIZES, formatForPlane } from "@/engine/core/paper";
-import { boundingBox } from "@/engine/core/polygon";
+import { boundingBox, area as polygonArea } from "@/engine/core/polygon";
+import { posesForState, transformPoint } from "@/engine/core/pose";
+import type { PlaneStructure } from "@/content/types";
 
 describe.each(Object.entries(PLANES))("%s: authored sequence", (id, plane) => {
   const last = plane.steps.length - 1;
@@ -95,3 +97,52 @@ describe("wing opening forms a V", () => {
     expect(overlap, "the two wing steps must move different layers").toEqual([]);
   });
 });
+
+/**
+ * Wings have to end up roughly level, and the engine cannot tell you that from
+ * a bounding box. The fold angle is per wing measured from closed, so the two
+ * finish about twice it apart - which means reading it as "degrees from level"
+ * silently produces a plane with its wings nearly shut. That is precisely how
+ * the Dart shipped through Gate 1, at 25 degrees and a 49 degree spread.
+ */
+describe.each(Object.entries(PLANES))("%s: wings sit at a flyable dihedral", (_id, plane) => {
+  it("opens the wings to between 150 and 178 degrees apart", () => {
+    expect(wingSpreadDegrees(plane)).toBeGreaterThan(150);
+    expect(wingSpreadDegrees(plane)).toBeLessThan(178);
+  });
+});
+
+/**
+ * Angle between the two wings, measured from the final hinge outward, with the
+ * hinge direction projected out. 180 is a flat plank, 0 is shut. Measuring the
+ * angle between the wing surfaces instead cannot distinguish 10 degrees from
+ * 170, which is the whole question.
+ */
+function wingSpreadDegrees(plane: PlaneStructure): number {
+  const state = computeFoldState(plane, plane.steps.length - 1);
+  const poses = posesForState(state);
+  const axis = computeStepDelta(plane, plane.steps.length - 1)?.axis;
+  if (!axis) throw new Error("the last step must be the wing that opens second");
+
+  const wings = state.facets
+    .filter((f) => f.bend.length > 0)
+    .sort((a, b) => polygonArea(b.polygon) - polygonArea(a.polygon))
+    .slice(0, 2);
+  expect(wings, "expected two bent wing facets").toHaveLength(2);
+
+  const acrossHinge = (facet: (typeof wings)[number]): readonly number[] => {
+    const pose = poses.get(facet.id);
+    if (!pose) throw new Error(`facet ${facet.id} has no pose`);
+    const pts = facet.polygon.map((p) => transformPoint(pose, p));
+    const arm = [0, 1, 2].map(
+      (i) => pts.reduce((sum, p) => sum + (p[i] ?? 0), 0) / pts.length - (axis.origin[i] ?? 0),
+    );
+    const along = arm.reduce((sum, v, i) => sum + v * (axis.dir[i] ?? 0), 0);
+    return arm.map((v, i) => v - along * (axis.dir[i] ?? 0));
+  };
+
+  const [a, b] = [acrossHinge(wings[0]!), acrossHinge(wings[1]!)];
+  const dot = a.reduce((sum, v, i) => sum + v * (b[i] ?? 0), 0);
+  const norm = (v: readonly number[]) => Math.hypot(...v);
+  return (Math.acos(Math.max(-1, Math.min(1, dot / (norm(a) * norm(b))))) * 180) / Math.PI;
+}

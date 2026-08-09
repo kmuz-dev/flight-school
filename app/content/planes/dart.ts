@@ -31,6 +31,9 @@ const APEX: [number, number] = [0, HALF_H];
  */
 const SLOPE_EDGE_Y = HALF_H - HALF_W * (1 + Math.SQRT2);
 
+/** Degrees each wing swings up from closed. See step 11. */
+const WING_OPEN = 82;
+
 const steps: readonly FoldStep[] = [
   // Sheet: the full rectangle. Fold the right half onto the left to mark the
   // centre line; the whole plane is built symmetrically around it.
@@ -170,13 +173,19 @@ const steps: readonly FoldStep[] = [
   // side of this crease, stacked, so each half of the stack opens separately and
   // in the opposite direction - that is what makes a V rather than a tilt. This
   // is a partial fold: the wing stops part way instead of lying flat.
+  //
+  // The angle is per wing, measured from closed, so the two wings finish about
+  // 2x it apart: WING_OPEN of 82 leaves a 163 degree spread, the shallow
+  // dihedral a dart actually flies with. Reading it as an angle from level
+  // instead gets this exactly backwards - 25 would leave the wings 50 degrees
+  // apart, all but shut. tests/integration/geometry.test.ts pins the spread.
   {
     id: "dart.step-11",
     action: {
       type: "fold",
       crease: { a: [25, HALF_H], b: [25, -HALF_H] },
       side: "left",
-      angle: 25,
+      angle: WING_OPEN,
       direction: "mountain",
       layers: "top",
     },
@@ -191,7 +200,7 @@ const steps: readonly FoldStep[] = [
       type: "fold",
       crease: { a: [25, HALF_H], b: [25, -HALF_H] },
       side: "left",
-      angle: 25,
+      angle: WING_OPEN,
       direction: "valley",
       layers: "bottom",
     },

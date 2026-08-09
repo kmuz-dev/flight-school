@@ -223,8 +223,12 @@ describe("describeAction", () => {
     expect(describeAction(dart.steps[1]!.action)).toBe("unfold to dart.step-01");
     expect(describeAction(dart.steps[8]!.action)).toBe("flip over");
     expect(describeAction(dart.steps[9]!.action)).toBe("rotate 180 deg");
-    expect(describeAction(dart.steps[10]!.action)).toBe(
-      "fold left / 25 deg mountain / layers top",
+    // Read the angle off the step: this is a test of the formatter, and pinning
+    // the Dart's wing angle here only makes a content change look like a bug.
+    const wing = dart.steps[10]!.action;
+    if (wing.type !== "fold") throw new Error("step 11 should be the near wing fold");
+    expect(describeAction(wing)).toBe(
+      `fold left / ${wing.angle} deg mountain / layers top`,
     );
     expect(
       describeAction({ type: "cut", line: { a: [0, 0], b: [0, 1] }, keep: "right" }),
