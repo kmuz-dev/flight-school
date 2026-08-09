@@ -65,6 +65,37 @@ describe.each(Object.entries(PLANES))("%s: structure and prose agree", (id, plan
     }
   });
 
+  it("never asks the user to convert paper the plane already folds from", () => {
+    // A "letter-a4" plane folds straight from either of those sheets, and a
+    // "square" plane folds straight from a square. Prep for its own paper must
+    // be pass-through, or Paper Prep would tell the user to cut up a sheet that
+    // was already correct.
+    const native =
+      plane.paper.format === "square" ? (["square"] as const) : (["letter", "a4"] as const);
+    for (const format of native) {
+      expect(plane.paper.prep[format], `${format} prep should be pass-through`).toEqual([]);
+    }
+  });
+
+  it("gives every prep step prose, and a why exactly where hasWhy is set", () => {
+    // Prep steps are Steps like any other (PRD 6.2.4): same UI, same placard.
+    for (const [format, prepSteps] of Object.entries(plane.paper.prep)) {
+      for (const step of prepSteps) {
+        expect(step.id.startsWith(`${id}.`), `${step.id} is not namespaced to ${id}`).toBe(true);
+        expect(strings.steps[step.id], `missing ${format} prep instruction for ${step.id}`).toBeTruthy();
+        expect(strings.titles[step.id], `missing ${format} prep title for ${step.id}`).toBeTruthy();
+        const why = strings.why[step.id];
+        if (step.hasWhy) expect(why, `${step.id} declares hasWhy but has no why-line`).toBeTruthy();
+        else expect(why, `${step.id} has a why-line but hasWhy is false`).toBeUndefined();
+      }
+    }
+  });
+
+  it("gives every step, prep included, a unique id", () => {
+    const ids = [...plane.steps, ...Object.values(plane.paper.prep).flat()].map((s) => s.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
   it("uses ratings in range and an accent from the palette", () => {
     for (const value of Object.values(plane.ratings)) {
       expect(value).toBeGreaterThanOrEqual(1);
