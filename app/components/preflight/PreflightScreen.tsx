@@ -18,6 +18,8 @@ import { format } from "@/components/ui/format";
 import { RATING_KEYS, type RatingKey } from "@/components/hangar/types";
 import { OrbitViewer, type ViewerEngineFactory } from "./OrbitViewer";
 import type { PreflightUiStrings, PreflightView } from "./types";
+import { formatForPlane } from "@/engine/core/paper";
+import { PaperPicker } from "./PaperPicker";
 
 const GAUGE_TONE: Readonly<Record<RatingKey, GaugeTone>> = {
   speed: "red",
@@ -127,6 +129,12 @@ export function PreflightScreen({
               ))}
             </dl>
           </section>
+
+          <PaperPicker
+            structure={view.structure}
+            strings={ui.paperPicker}
+            defaultPaper={formatForPlane(view.structure.paper.format)}
+          />
 
           <section className="mt-md flex gap-md rounded-card border border-ink-12 bg-raised p-md">
             <span aria-hidden="true" className="w-[4px] flex-none bg-red" />

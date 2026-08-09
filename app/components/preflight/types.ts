@@ -10,6 +10,10 @@ import type { PlaneStructure, Rating, Tier } from "@/content/types";
 import type { PlanesDictionary, UiDictionary } from "@/i18n/types";
 import type { PlaneId } from "@/content/types";
 import type { RatingKey } from "@/components/hangar/types";
+import type { PaperPickerStrings } from "./PaperPicker";
+
+/** The two sheets a plane's own sequence can be authored against. */
+export type AuthoredFormat = "letter-a4" | "square";
 
 export type CreaseMix = { readonly valley: number; readonly mountain: number };
 
@@ -23,7 +27,8 @@ export type PreflightView = {
   readonly tier: Tier;
   readonly stepCount: number;
   readonly ratings: Readonly<Record<RatingKey, Rating>>;
-  readonly paperFormat: PlaneStructure["paper"]["format"];
+  /** Authored planes only: the composed prep+plane form is never shown here. */
+  readonly paperFormat: AuthoredFormat;
   readonly creases: CreaseMix;
   /** Position in the catalog, for the manifest line. 1-based. */
   readonly index: number;
@@ -49,7 +54,7 @@ export type PreflightUiStrings = {
   readonly weight: string;
   readonly folds: string;
   readonly creases: string;
-  readonly paperValue: Readonly<Record<PlaneStructure["paper"]["format"], string>>;
+  readonly paperValue: Readonly<Record<AuthoredFormat, string>>;
   readonly weightValue: string;
   /** "{count} folds". */
   readonly foldsValue: string;
@@ -57,6 +62,7 @@ export type PreflightUiStrings = {
   /** "{valley} valley, {mountain} mountain". */
   readonly creasesMix: string;
   readonly throwTip: string;
+  readonly paperPicker: PaperPickerStrings;
   readonly startFolding: string;
   /** "Resume at step {step}". */
   readonly resume: string;
@@ -79,6 +85,13 @@ export const PREFLIGHT_UI_KEYS = [
   "preflight.creases",
   "preflight.paperValue.letter-a4",
   "preflight.paperValue.square",
+  "preflight.paperQuestion",
+  "preflight.paperChoice.a4",
+  "preflight.paperChoice.letter",
+  "preflight.paperChoice.square",
+  "preflight.paperChoice.index-4x6",
+  "preflight.paperNeedsPrep",
+  "preflight.paperNoPrep",
   "preflight.weightValue",
   "preflight.foldsValue",
   "preflight.creasesAllValley",
@@ -133,6 +146,17 @@ export function preflightUiFromDictionary(ui: UiDictionary): PreflightUiStrings 
     creasesAllValley: t("preflight.creasesAllValley"),
     creasesMix: t("preflight.creasesMix"),
     throwTip: t("preflight.throwTip"),
+    paperPicker: {
+      question: t("preflight.paperQuestion"),
+      label: {
+        a4: t("preflight.paperChoice.a4"),
+        letter: t("preflight.paperChoice.letter"),
+        square: t("preflight.paperChoice.square"),
+        "index-4x6": t("preflight.paperChoice.index-4x6"),
+      },
+      needsPrep: t("preflight.paperNeedsPrep"),
+      noPrep: t("preflight.paperNoPrep"),
+    },
     startFolding: t("preflight.startFolding"),
     resume: t("preflight.resume"),
     manifestLine: t("preflight.manifestLine"),
@@ -171,7 +195,7 @@ export function buildPreflightView(
     tier: structure.tier,
     stepCount: structure.steps.length,
     ratings: structure.ratings,
-    paperFormat: structure.paper.format,
+    paperFormat: structure.paper.format as AuthoredFormat,
     creases: creaseMix(structure),
     index: index >= 0 ? index + 1 : 1,
     total: catalogIds.length,

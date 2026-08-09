@@ -42,7 +42,14 @@ export function freshSheet(format: PaperFormat): FoldState {
   return { facets: [facet], creaseMarks: [], maxLayer: 0 };
 }
 
-/** The format a plane's own fold sequence starts from. */
-export function formatForPlane(sequenceFormat: "letter-a4" | "square"): PaperFormat {
-  return sequenceFormat === "square" ? "square" : "a4";
+/**
+ * What a fold sequence starts from. Authored planes say "letter-a4" (Letter and
+ * A4 fold the same, so one sequence covers both) or "square". A sequence
+ * composed with a paper-prep run in front of it starts from the concrete sheet
+ * the cadet actually has, so those names are accepted too.
+ */
+export type SequenceFormat = "letter-a4" | PaperFormat;
+
+export function formatForPlane(sequenceFormat: SequenceFormat): PaperFormat {
+  return sequenceFormat === "letter-a4" ? "a4" : sequenceFormat;
 }

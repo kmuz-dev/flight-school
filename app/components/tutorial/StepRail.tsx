@@ -91,7 +91,18 @@ export function StepRail({
         {ui.selfCheck}
       </label>
 
-      <div className="flex gap-sm">
+      <p className="font-mono text-micro tracking-[0.08em] text-[color:var(--color-ink-38)]">
+        {format(ui.foldsToWings, { count: remaining })}
+      </p>
+
+      {/*
+        On a phone the rail stacks under the stage, which puts Back and Next
+        below a screenful of why-box and glossary - the cadet has one hand on
+        the paper and should not have to scroll to advance. Sticking the action
+        row to the bottom of the viewport keeps it in reach at every step; the
+        opaque background is what stops the prose showing through behind it.
+      */}
+      <div className="sticky bottom-0 z-10 -mx-lg flex gap-sm bg-[color:var(--color-paper)] px-lg pt-sm pb-md lg:static lg:mx-0 lg:px-0 lg:pt-0 lg:pb-0">
         <button
           type="button"
           onClick={onBack}
@@ -109,9 +120,6 @@ export function StepRail({
         </button>
       </div>
 
-      <p className="font-mono text-micro tracking-[0.08em] text-[color:var(--color-ink-38)]">
-        {format(ui.foldsToWings, { count: remaining })}
-      </p>
     </section>
   );
 }

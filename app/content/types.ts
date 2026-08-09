@@ -3,6 +3,7 @@
  * All human-readable text lives in app/i18n dictionaries keyed by stable ids.
  */
 import type { FoldStep, PaperFormat } from "@/engine/core/types";
+import type { SequenceFormat } from "@/engine/core/paper";
 
 export type PlaneId =
   | "dart"
@@ -21,8 +22,12 @@ export type PlaneStructure = {
   readonly id: PlaneId;
   readonly tier: Tier;
   readonly paper: {
-    /** The format the fold sequence itself starts from. */
-    readonly format: "letter-a4" | "square";
+    /**
+     * The format the fold sequence itself starts from. Authored planes use
+     * "letter-a4" or "square"; a sequence composed with its paper prep in front
+     * carries the concrete source sheet instead.
+     */
+    readonly format: SequenceFormat;
     /**
      * Prep sequences per source paper the user actually has.
      * An empty array means pass-through (no conversion needed).

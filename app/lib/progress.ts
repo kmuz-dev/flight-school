@@ -16,6 +16,7 @@
  */
 import { useSyncExternalStore } from "react";
 import type { PlaneId } from "@/content/types";
+import type { PaperFormat } from "@/engine/core/types";
 import { readStored, writeStored, type Stored } from "./storage";
 
 const EMPTY: Stored = { progress: {}, completed: {} };
@@ -66,6 +67,11 @@ export function planeProgress(stored: Stored, planeId: PlaneId): PlaneProgress {
   };
 }
 
+/** Which sheet the cadet said they have, if they have said. */
+export function paperChoice(stored: Stored, planeId: PlaneId): PaperFormat | null {
+  return stored.paperChoice?.[planeId] ?? null;
+}
+
 export function wingsEarned(stored: Stored): number {
   return Object.keys(stored.completed).length;
 }
@@ -91,6 +97,21 @@ export function recordCompletion(planeId: PlaneId): void {
   invalidate();
 }
 
+/**
+ * Record which sheet the cadet is folding from. Changing it changes the fold
+ * sequence (paper prep runs in front of it), so the resume position from the
+ * old sheet no longer refers to the same step and is dropped.
+ */
+export function setPaperChoice(planeId: PlaneId, paper: PaperFormat): void {
+  writeStored((prev) => {
+    if (prev.paperChoice?.[planeId] === paper) return prev;
+    const progress = { ...prev.progress };
+    delete progress[planeId];
+    return { ...prev, progress, paperChoice: { ...prev.paperChoice, [planeId]: paper } };
+  });
+  invalidate();
+}
+
 /** Forget the resume position. Wings, once earned, are never taken away. */
 export function clearProgress(planeId: PlaneId): void {
   writeStored((prev) => {
@@ -109,6 +130,10 @@ export function useProgressSnapshot(): Stored {
 
 export function usePlaneProgress(planeId: PlaneId): PlaneProgress {
   return planeProgress(useProgressSnapshot(), planeId);
+}
+
+export function usePaperChoice(planeId: PlaneId): PaperFormat | null {
+  return paperChoice(useProgressSnapshot(), planeId);
 }
 
 export function useWingsEarned(): number {

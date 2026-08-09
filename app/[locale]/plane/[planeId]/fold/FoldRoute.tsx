@@ -1,17 +1,65 @@
 "use client";
 
 /**
- * The client seam for the tutorial route: the screen itself is unchanged, this
- * only gives its completion beat somewhere to go (the wings certificate).
+ * The client seam for the tutorial route.
+ *
+ * Two things the server cannot decide: where the cadet's completion beat goes
+ * (the wings certificate), and which sheet they are folding from. The sheet
+ * lives in localStorage, so the route prerenders a variant per usable sheet and
+ * this picks one - a variant whose paper needs converting simply carries the
+ * prep folds in front of the plane's own.
  */
 import { useRouter } from "next/navigation";
-import { TutorialScreen, type TutorialScreenProps } from "@/components/tutorial/TutorialScreen";
+import type { PaperFormat } from "@/engine/core/types";
+import type { PlaneId, PlaneStructure, Tier } from "@/content/types";
+import type { TutorialStepView, TutorialUiStrings } from "@/components/tutorial/types";
+import { TutorialScreen } from "@/components/tutorial/TutorialScreen";
+import { usePaperChoice } from "@/lib/progress";
 
-export type FoldRouteProps = Omit<TutorialScreenProps, "onComplete"> & {
-  completionHref: string;
+export type FoldVariant = {
+  readonly structure: PlaneStructure;
+  readonly steps: readonly TutorialStepView[];
+  readonly paperFormat: PaperFormat;
 };
 
-export function FoldRoute({ completionHref, ...screen }: FoldRouteProps) {
+export type FoldRouteProps = {
+  readonly ui: TutorialUiStrings;
+  readonly variants: Readonly<Record<string, FoldVariant>>;
+  readonly defaultPaper: PaperFormat;
+  readonly planeId: PlaneId;
+  readonly planeName: string;
+  readonly tier: Tier;
+  readonly hangarHref: string;
+  readonly completionHref: string;
+};
+
+export function FoldRoute({
+  ui,
+  variants,
+  defaultPaper,
+  planeId,
+  planeName,
+  tier,
+  hangarHref,
+  completionHref,
+}: FoldRouteProps) {
   const router = useRouter();
-  return <TutorialScreen {...screen} onComplete={() => router.push(completionHref)} />;
+  const chosen = usePaperChoice(planeId);
+  // An unusable choice falls back rather than dead-ending: the sheet may have
+  // been chosen for this plane before the catalog changed under it.
+  const variant = (chosen ? variants[chosen] : undefined) ?? variants[defaultPaper];
+  if (!variant) return null;
+
+  return (
+    <TutorialScreen
+      ui={ui}
+      structure={variant.structure}
+      steps={variant.steps}
+      planeName={planeName}
+      tier={tier}
+      paperFormat={variant.paperFormat}
+      hangarHref={hangarHref}
+      onComplete={() => router.push(completionHref)}
+    />
+  );
 }
