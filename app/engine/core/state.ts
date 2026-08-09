@@ -13,24 +13,34 @@ import { applyStep, facetInTable } from "./fold";
 import { classify, convexOverlap, area } from "./polygon";
 import { EPS } from "./vec2";
 
-const memo = new WeakMap<readonly FoldStep[], Map<number, FoldState>>();
+/**
+ * Replay cache. The outer key is the steps array rather than the structure so
+ * that a caller rebuilding its `PlaneStructure` object each render still hits;
+ * the inner key carries the paper format, because the same sequence folded from
+ * a different sheet is a different state and keying on steps alone silently
+ * returned the first sheet computed. That collision is invisible in the product
+ * (each plane owns its steps array) but immediate in the fold editor, which
+ * exists to preview one sequence on different paper.
+ */
+const memo = new WeakMap<readonly FoldStep[], Map<string, FoldState>>();
 
 /** Replay steps 0..n (inclusive). n = -1 gives the fresh sheet. */
 export function computeFoldState(structure: PlaneStructure, n: number): FoldState {
   const steps = structure.steps;
-  const cache = memo.get(steps) ?? new Map<number, FoldState>();
+  const cache = memo.get(steps) ?? new Map<string, FoldState>();
   if (!memo.has(steps)) memo.set(steps, cache);
 
+  const format = formatForPlane(structure.paper.format);
   const clamped = Math.max(-1, Math.min(n, steps.length - 1));
-  const hit = cache.get(clamped);
+  const key = (i: number): string => `${format}:${i}`;
+  const hit = cache.get(key(clamped));
   if (hit) return hit;
 
-  const format = formatForPlane(structure.paper.format);
   let state = freshSheet(format);
   let nextId = 1;
   const history = new Map<string, FoldState>();
 
-  cache.set(-1, state);
+  cache.set(key(-1), state);
   for (let i = 0; i <= clamped; i++) {
     const step = steps[i];
     if (!step) break;
@@ -38,7 +48,7 @@ export function computeFoldState(structure: PlaneStructure, n: number): FoldStat
     const result = applyStep(state, step, nextId, history);
     state = result.state;
     nextId = result.nextId;
-    cache.set(i, state);
+    cache.set(key(i), state);
   }
   return state;
 }

@@ -19,6 +19,18 @@ const HALF_H = 148.5;
 /** The apex every nose fold radiates from: the top edge's midpoint. */
 const APEX: [number, number] = [0, HALF_H];
 
+/**
+ * Where the step 5/6 crease meets the side edge.
+ *
+ * That crease bisects the 45 degree slope left by steps 3/4 and the vertical
+ * centre line, so it leaves the apex at 67.5 degrees, and tan(67.5) = 1 + sqrt2
+ * exactly. Rounding this to -105 (which it very nearly is) misses by 0.008 mm,
+ * and the fold then lands 0.008 mm off the centre line instead of on it,
+ * leaving a 0.23 mm^2 wedge on every layer it crosses. Four wedges, each
+ * claiming a layer of its own. Exact construction beats a tidy number.
+ */
+const SLOPE_EDGE_Y = HALF_H - HALF_W * (1 + Math.SQRT2);
+
 const steps: readonly FoldStep[] = [
   // Sheet: the full rectangle. Fold the right half onto the left to mark the
   // centre line; the whole plane is built symmetrically around it.
@@ -77,12 +89,12 @@ const steps: readonly FoldStep[] = [
   // Silhouette is now a house shape: apex at (0, 148.5), sloping edges down to
   // (+-105, 43.5). Fold the right slope in to the centre line. The crease
   // bisects the angle between that slope (-45 deg) and straight down (-90 deg),
-  // so it leaves the apex at -67.5 deg and reaches the right edge near y = -105.
+  // so it leaves the apex at -67.5 deg (see SLOPE_EDGE_Y).
   {
     id: "dart.step-05",
     action: {
       type: "fold",
-      crease: { a: APEX, b: [HALF_W, -HALF_W] },
+      crease: { a: APEX, b: [HALF_W, SLOPE_EDGE_Y] },
       side: "left",
       angle: 180,
       direction: "valley",
@@ -96,7 +108,7 @@ const steps: readonly FoldStep[] = [
     id: "dart.step-06",
     action: {
       type: "fold",
-      crease: { a: APEX, b: [-HALF_W, -HALF_W] },
+      crease: { a: APEX, b: [-HALF_W, SLOPE_EDGE_Y] },
       side: "right",
       angle: 180,
       direction: "valley",

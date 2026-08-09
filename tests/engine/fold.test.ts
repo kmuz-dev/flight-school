@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { applyStep, facetInTable } from "@/engine/core/fold";
-import { computeFoldState, totalArea, validateSequence } from "@/engine/core/state";
+import { computeFoldState, computeStepDelta, totalArea, validateSequence } from "@/engine/core/state";
 import { freshSheet, PAPER_SIZES } from "@/engine/core/paper";
 import { area } from "@/engine/core/polygon";
 import { isoDet } from "@/engine/core/iso2";
@@ -8,6 +8,7 @@ import { posesForState, poseAtProgress, transformPoint } from "@/engine/core/pos
 import { renderStateToSvg } from "@/engine/core/svgRender";
 import type { FoldState, FoldStep, Line2 } from "@/engine/core/types";
 import type { PlaneStructure } from "@/content/types";
+import { dart } from "@/content/planes/dart";
 
 /** A4 spans x in [-105,105], y in [-148.5,148.5]. */
 const V_CENTER: Line2 = { a: [0, -200], b: [0, 200] };
@@ -389,5 +390,117 @@ describe("18. svg projection", () => {
 describe("area helper", () => {
   it("measures the A4 sheet", () => {
     expect(near(area(freshSheet("a4").facets[0]!.polygon), 210 * 297, 1e-6)).toBe(true);
+  });
+});
+
+/**
+ * Three defects the fold editor exposed, pinned so they cannot come back.
+ * All three are invisible in the product but decide real geometry.
+ */
+describe("stack splitting is decided by paper, not by debris", () => {
+  /**
+   * Two equal sheets stacked, plus two sub-millimetre wedges on top. Everything
+   * sits clear of the crease so nothing is split and facet ids survive into the
+   * delta - the point here is selection, not splitting.
+   */
+  function stackWithDebris(): FoldState {
+    const sheet = [[10, -50], [110, -50], [110, 50], [10, 50]] as const;
+    const wedge = [[10, -50], [11, -50], [11, -49]] as const;
+    const flat = [1, 0, 0, 0, 1, 0] as const;
+    return {
+      facets: [
+        { id: 1, polygon: sheet, flatMap: flat, layer: 0, bend: [] },
+        { id: 2, polygon: sheet, flatMap: flat, layer: 1, bend: [] },
+        { id: 3, polygon: wedge, flatMap: flat, layer: 2, bend: [] },
+        { id: 4, polygon: wedge, flatMap: flat, layer: 3, bend: [] },
+      ],
+      creaseMarks: [],
+      maxLayer: 3,
+    };
+  }
+
+  /** The stack lies to the "right" of an upward crease at x = 0. */
+  const openWing = (direction: "valley" | "mountain", layers: "top" | "bottom"): FoldStep =>
+    step("w.step-01", {
+      type: "fold",
+      crease: { a: [0, -200], b: [0, 200] },
+      side: "right",
+      angle: 30,
+      direction,
+      layers,
+    });
+
+  const movedBy = (layers: "top" | "bottom") =>
+    applyStep(
+      stackWithDebris(),
+      openWing(layers === "top" ? "mountain" : "valley", layers),
+      100,
+      new Map(),
+    ).delta?.movingFacetIds ?? [];
+
+  it("puts one full sheet in each half, ignoring the wedges", () => {
+    // Counting layers would split at index 2 and hand BOTH sheets to "bottom".
+    expect(movedBy("top")).toContain(2);
+    expect(movedBy("top")).not.toContain(1);
+    expect(movedBy("bottom")).toContain(1);
+    expect(movedBy("bottom")).not.toContain(2);
+  });
+
+  it("moves the whole stack across the two halves and never twice", () => {
+    const top = movedBy("top");
+    const bottom = movedBy("bottom");
+    expect(top.filter((id) => bottom.includes(id))).toEqual([]);
+    expect([...top, ...bottom].sort()).toEqual([1, 2, 3, 4]);
+  });
+
+  it("gives the Dart's two wings the same amount of paper", () => {
+    // Measured on the state AFTER each step: the step splits facets at the
+    // crease before selecting movers, so the delta's ids do not exist yet in
+    // the state before it. Folding is an isometry, so areas carry across.
+    const paperMoved = (n: number): number => {
+      const after = computeFoldState(dart, n);
+      const byId = new Map(after.facets.map((f) => [f.id, f]));
+      const ids = computeStepDelta(dart, n)?.movingFacetIds ?? [];
+      expect(ids.every((id) => byId.has(id))).toBe(true);
+      return ids.reduce((sum, id) => sum + area(byId.get(id)!.polygon), 0);
+    };
+    const nearWing = paperMoved(10);
+    const farWing = paperMoved(11);
+    expect(nearWing).toBeGreaterThan(0);
+    expect(Math.abs(nearWing - farWing) / nearWing).toBeLessThan(1e-9);
+  });
+
+  it("leaves both of the Dart's wings bent at the end, and nothing else", () => {
+    const bent = computeFoldState(dart, 11).facets.filter((f) => f.bend.length > 0);
+    const bentArea = bent.reduce((sum, f) => sum + area(f.polygon), 0);
+    const wing = bentArea / 2;
+    // Mirrored halves: each layer that bends has a partner of equal area.
+    const sizes = bent.map((f) => +area(f.polygon).toFixed(6)).sort();
+    expect(sizes).toEqual(sizes.slice().reverse().sort());
+    expect(bent.length % 2).toBe(0);
+    expect(wing).toBeGreaterThan(0);
+  });
+});
+
+describe("replay cache", () => {
+  it("does not serve one paper size's state for another", () => {
+    // Same steps array, different sheet: keying the memo on steps alone handed
+    // the second caller the first caller's paper.
+    const a4 = { ...dart, paper: { ...dart.paper, format: "letter-a4" as const } };
+    const square = { ...dart, paper: { ...dart.paper, format: "square" as const } };
+    expect(near(totalArea(computeFoldState(a4, -1)), 210 * 297)).toBe(true);
+    expect(near(totalArea(computeFoldState(square, -1)), 210 * 210)).toBe(true);
+    expect(near(totalArea(computeFoldState(a4, -1)), 210 * 297)).toBe(true);
+  });
+});
+
+describe("the Dart's nose folds land exactly on the centre line", () => {
+  it("leaves no wedge behind before the wings are opened", () => {
+    // Rounding the step 5/6 crease endpoint to a tidy -105 missed the true
+    // bisector by 0.008 mm and left a 0.23 mm^2 wedge on every layer it crossed.
+    for (let n = 0; n <= 9; n++) {
+      const crumbs = computeFoldState(dart, n).facets.filter((f) => area(f.polygon) < 1);
+      expect(crumbs, `step ${n + 1} left ${crumbs.length} wedges`).toEqual([]);
+    }
   });
 });

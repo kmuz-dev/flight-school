@@ -28,7 +28,7 @@ import {
   isoReflection,
   isoRotation,
 } from "./iso2";
-import { centroid, classify, isSliver, splitConvex } from "./polygon";
+import { area, centroid, classify, isSliver, splitConvex } from "./polygon";
 import { LAYER_THICKNESS } from "./paper";
 
 export { LAYER_THICKNESS };
@@ -118,11 +118,39 @@ function filterByLayers(
     return facets.filter((f) => wanted.has(f.layer));
   }
   if (facets.length === 0) return [];
-  const present = [...new Set(facets.map((f) => f.layer))].sort((a, b) => a - b);
-  const mid = present[Math.floor(present.length / 2)] ?? 0;
+
+  // Split the stack where half the PAPER lies below, not at the median layer
+  // index. Real sequences leave sub-millimetre wedges wherever two creases
+  // nearly meet, and each wedge takes a layer of its own; counting layers lets
+  // that debris move the split by whole layers, so which wing a facet joins
+  // would depend on numerical crumbs. Area cannot be pushed around that way -
+  // a 0.2 mm^2 wedge contributes 0.2 mm^2 to the running total and no more.
+  const areaByLayer = new Map<number, number>();
+  for (const f of facets) {
+    areaByLayer.set(f.layer, (areaByLayer.get(f.layer) ?? 0) + area(f.polygon));
+  }
+  const present = [...areaByLayer.keys()].sort((a, b) => a - b);
+  const total = [...areaByLayer.values()].reduce((sum, a) => sum + a, 0);
+
+  // Pick the cut that leaves the two halves closest in area, rather than the
+  // first layer past the halfway mark: debris inflates the total, so "past
+  // halfway" overshoots by a whole layer and hands both wings to one side.
+  // `mid` is the last layer of the bottom half, so the halves stay disjoint and
+  // exhaustive even when one of them comes out empty.
+  let mid = present[present.length - 1] ?? 0;
+  let best = Infinity;
+  let below = 0;
+  for (const layer of present) {
+    below += areaByLayer.get(layer) ?? 0;
+    const imbalance = Math.abs(below - (total - below));
+    if (imbalance < best - EPS) {
+      best = imbalance;
+      mid = layer;
+    }
+  }
   return layers === "top"
-    ? facets.filter((f) => f.layer >= mid)
-    : facets.filter((f) => f.layer < mid);
+    ? facets.filter((f) => f.layer > mid)
+    : facets.filter((f) => f.layer <= mid);
 }
 
 /** Consecutive layer indices from 0, order preserved. */
