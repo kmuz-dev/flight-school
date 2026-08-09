@@ -20,8 +20,14 @@ test.describe("the Dart tutorial", () => {
   });
 
   test("teaches fold terms on first use", async ({ page }) => {
-    await expect(page.getByText("Valley fold")).toBeVisible();
+    const rail = page.getByRole("region", { name: /current step/i });
+    await expect(rail.getByText("Valley fold")).toBeVisible();
     await expect(page.getByText(/crease dips down/i)).toBeVisible();
+  });
+
+  test("labels the fold on the stage", async ({ page }) => {
+    // The engine projects the annotation anchor; React renders the label.
+    await expect(page.getByTestId("fold-annotation")).toContainText(/valley fold/i);
   });
 
   test("steps through all twelve folds and reaches the finish", async ({ page }) => {

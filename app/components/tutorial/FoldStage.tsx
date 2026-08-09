@@ -11,7 +11,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { AnnotationAnchor, FoldEngineHandle, PaperFormat } from "@/engine/core/types";
 import type { PlaneStructure } from "@/content/types";
-import { createStubEngine } from "@/engine/stubEngine";
+import { createFoldEngine } from "@/engine";
 import { Chip } from "@/components/ui/Chip";
 import { FOCUS_RING } from "@/components/ui/focus";
 import {
@@ -62,7 +62,7 @@ export function FoldStage({
   activePreset,
   onSelectPreset,
   onEngineChange,
-  createEngine = createStubEngine,
+  createEngine = createFoldEngine,
   theme = "paper",
 }: FoldStageProps) {
   const mountRef = useRef<HTMLDivElement>(null);
