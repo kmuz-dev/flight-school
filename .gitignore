@@ -4,3 +4,10 @@ node_modules/
 out/
 dist/
 .gstack/
+/.next/
+/out/
+/node_modules/
+/playwright-report/
+/test-results/
+*.tsbuildinfo
+next-env.d.ts

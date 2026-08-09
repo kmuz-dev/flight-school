@@ -1,0 +1,123 @@
+@import "tailwindcss";
+
+/*
+ * Flight School design tokens - single source: DESIGN.md.
+ * Two-ink + one-accent system. Neutrals derive from ink at opacity steps,
+ * never standalone grays.
+ */
+@theme {
+  /* Color - light ("paper") */
+  --color-paper: #f7f3e9;
+  --color-raised: #ffffff;
+  --color-ink: #1a2b4a;
+  --color-red: #d64541;
+  --color-sky: #7fa8c9;
+  --color-green: #4a7c59;
+  --color-warning: #c98a2c;
+  --color-error: #b03a2e;
+
+  /* Color - Night Flight (dark scene change) */
+  --color-night: #0e1626;
+  --color-night-raised: #16223a;
+  --color-night-red: #e8615c;
+  --color-night-green: #6fa97f;
+
+  /* Ink opacity steps (the only permitted neutrals) */
+  --color-ink-87: rgb(26 43 74 / 0.87);
+  --color-ink-60: rgb(26 43 74 / 0.6);
+  --color-ink-38: rgb(26 43 74 / 0.38);
+  --color-ink-12: rgb(26 43 74 / 0.12);
+
+  /* Typography (families wired to next/font variables in the root layout) */
+  --font-display: var(--font-archivo-narrow);
+  --font-body: var(--font-instrument-sans);
+  --font-mono: var(--font-plex-mono);
+
+  /* Type scale (rem) per DESIGN.md */
+  --text-display-xl: 3.5rem;
+  --text-display: 2.5rem;
+  --text-h1: 2rem;
+  --text-h2: 1.5rem;
+  --text-h3: 1.25rem;
+  --text-instruction: 1.125rem;
+  --text-small: 0.875rem;
+  --text-micro: 0.75rem;
+
+  /* Spacing: 8px base */
+  --spacing-2xs: 2px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  --spacing-3xl: 64px;
+
+  /* Radius: stamps/placards square, cards 8, inputs 4 */
+  --radius-input: 4px;
+  --radius-card: 8px;
+
+  /* Motion */
+  --ease-enter: cubic-bezier(0, 0, 0.2, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --ease-move: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-stamp: cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+/* Night Flight is a class toggle on <html>, a scene change rather than inversion. */
+.night {
+  --color-paper: #0e1626;
+  --color-raised: #16223a;
+  --color-red: #e8615c;
+  --color-green: #6fa97f;
+  --color-ink: #f7f3e9;
+  --color-ink-87: rgb(247 243 233 / 0.87);
+  --color-ink-60: rgb(247 243 233 / 0.6);
+  --color-ink-38: rgb(247 243 233 / 0.38);
+  --color-ink-12: rgb(247 243 233 / 0.12);
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  /* Paper grain (from the approved .dc.html reference) */
+  background-image: radial-gradient(rgb(26 43 74 / 0.045) 1px, transparent 1px);
+  background-size: 3px 3px;
+}
+
+.night body,
+html.night body {
+  background-image: radial-gradient(rgb(247 243 233 / 0.035) 1px, transparent 1px);
+}
+
+/* Airmail chevron bar (exact pattern from the approved reference) */
+.chevron-bar {
+  height: 8px;
+  background: repeating-linear-gradient(
+    45deg,
+    var(--color-red) 0 14px,
+    #f7f3e9 14px 28px,
+    #1a2b4a 28px 42px,
+    #f7f3e9 42px 56px
+  );
+}
+
+/* Dashed section rule */
+.dashed-rule {
+  height: 1px;
+  background: repeating-linear-gradient(
+    90deg,
+    rgb(26 43 74 / 0.4) 0 5px,
+    transparent 5px 10px
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
