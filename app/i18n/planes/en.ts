@@ -27,8 +27,8 @@ const planes: PlanesDictionary = {
         "dart.step-08": "Fold the wings down",
         "dart.step-09": "Turn it over",
         "dart.step-10": "Stand it nose up",
-        "dart.step-11": "Open the wings out",
-        "dart.step-12": "Your dart is ready",
+        "dart.step-11": "Open the near wing",
+        "dart.step-12": "Open the far wing",
       },
       steps: {
         "dart.step-01":
@@ -52,9 +52,9 @@ const planes: PlanesDictionary = {
         "dart.step-10":
           "Stand the plane so the nose points up and look straight down the body. Both wings should be the same.",
         "dart.step-11":
-          "Open the two wings out so they stick out flat on either side, like a real airplane seen from the front.",
+          "Hold the body and lift the top wing up until it sticks out flat, like a real airplane seen from the front.",
         "dart.step-12":
-          "That is a Dart. Hold it underneath, near the nose, and throw it fast and level.",
+          "Turn it over and do the same to the other wing. Both wings should now stick out level, making a shallow V. That is a Dart.",
       },
       why: {
         "dart.step-01":
@@ -72,7 +72,7 @@ const planes: PlanesDictionary = {
         "dart.step-11":
           "Flat wings catch the air underneath them. If you leave the wings closed, the plane has nothing to ride on and drops.",
         "dart.step-12":
-          "The Dart is fast rather than floaty: a heavy nose and small wings trade hang time for speed.",
+          "Both wings have to match. If one sits higher than the other, the plane rolls that way instead of flying straight.",
       },
       tips: {
         default: "Press every fold with your thumbnail. Sharp creases fly better than soft ones.",
@@ -80,6 +80,7 @@ const planes: PlanesDictionary = {
         "dart.step-03": "Take your time lining the edge up. A crooked corner here makes a curved flight later.",
         "dart.step-08": "Fold both wings the same distance from the middle, or the plane will turn.",
         "dart.step-11": "Wings straight out and level, seen from the front, is what you want.",
+        "dart.step-12": "Sight down the nose: the two wings should look like a shallow V.",
       },
     },
   },

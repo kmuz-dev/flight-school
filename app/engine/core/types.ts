@@ -74,6 +74,14 @@ export type FoldAction =
       /** Degrees; 180 = flat fold, <180 = partial (wing) fold. */
       readonly angle: number;
       readonly direction: FoldDirection;
+      /**
+       * Which layers of the stack move. Side selection alone cannot express a
+       * wing pair: after folding a plane in half, both wings sit on the same
+       * side of the wing crease, stacked, and must open in OPPOSITE directions
+       * to form a V. "top"/"bottom" split the stack at its midpoint; an
+       * explicit list targets exact layer indices. Defaults to "all".
+       */
+      readonly layers?: "all" | "top" | "bottom" | readonly number[];
       /** Manual layer placement escape hatch; no layer solver exists. */
       readonly layerHint?: number;
     }

@@ -154,9 +154,10 @@ const steps: readonly FoldStep[] = [
     hasWhy: false,
     duration: 0.8,
   },
-  // Open the wings out from flat into flight position. This is a partial fold:
-  // the wings stop part way rather than lying flat, which is what gives the
-  // plane lift instead of knifing straight into the ground.
+  // Open the near wing out into flight position. Both wings sit on the same
+  // side of this crease, stacked, so each half of the stack opens separately and
+  // in the opposite direction - that is what makes a V rather than a tilt. This
+  // is a partial fold: the wing stops part way instead of lying flat.
   {
     id: "dart.step-11",
     action: {
@@ -165,18 +166,26 @@ const steps: readonly FoldStep[] = [
       side: "left",
       angle: 25,
       direction: "mountain",
+      layers: "top",
     },
     camera: { preset: "front" },
     hasWhy: true,
     duration: 1.4,
   },
-  // Final look from three-quarters: the finished dart.
+  // The far wing, same crease, opposite way: the plane now has a V of wings.
   {
     id: "dart.step-12",
-    action: { type: "rotate", degrees: 0 },
-    camera: { preset: "threeQuarter" },
+    action: {
+      type: "fold",
+      crease: { a: [25, HALF_H], b: [25, -HALF_H] },
+      side: "left",
+      angle: 25,
+      direction: "valley",
+      layers: "bottom",
+    },
+    camera: { preset: "front" },
     hasWhy: true,
-    duration: 1,
+    duration: 1.4,
   },
 ];
 

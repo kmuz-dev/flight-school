@@ -8,7 +8,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { PLANES } from "@/content";
-import { computeFoldState, totalArea, validateSequence } from "@/engine/core/state";
+import { computeFoldState, computeStepDelta, totalArea, validateSequence } from "@/engine/core/state";
 import { facetInTable } from "@/engine/core/fold";
 import { PAPER_SIZES, formatForPlane } from "@/engine/core/paper";
 import { boundingBox } from "@/engine/core/polygon";
@@ -57,5 +57,41 @@ describe.each(Object.entries(PLANES))("%s: authored sequence", (id, plane) => {
     ids.forEach((stepId, i) => {
       expect(stepId).toBe(`${id}.step-${String(i + 1).padStart(2, "0")}`);
     });
+  });
+});
+
+/**
+ * Wing pairs need opposite-direction opening. Side selection alone cannot
+ * express this: after the half fold both wings sit on the SAME side of the wing
+ * crease, stacked, so a single step would tilt them together instead of opening
+ * a V. The `layers` selector is what separates them.
+ */
+describe("wing opening forms a V", () => {
+  it("the Dart's two wing steps move disjoint layer sets in opposite directions", () => {
+    const dart = PLANES.dart!;
+    const wingSteps = dart.steps
+      .map((step, index) => ({ step, index }))
+      .filter(({ step }) => step.action.type === "fold" && step.action.layers !== undefined);
+
+    expect(wingSteps.length, "expected two layer-targeted wing steps").toBe(2);
+
+    const [first, second] = wingSteps;
+    const a = first!.step.action;
+    const b = second!.step.action;
+    if (a.type !== "fold" || b.type !== "fold") throw new Error("expected fold actions");
+
+    // Same crease, same side, opposite direction, complementary layer halves.
+    expect(a.crease).toEqual(b.crease);
+    expect(a.side).toBe(b.side);
+    expect(a.direction).not.toBe(b.direction);
+    expect([a.layers, b.layers].sort()).toEqual(["bottom", "top"]);
+
+    const movedFirst = computeStepDelta(dart, first!.index)?.movingFacetIds ?? [];
+    const movedSecond = computeStepDelta(dart, second!.index)?.movingFacetIds ?? [];
+    expect(movedFirst.length).toBeGreaterThan(0);
+    expect(movedSecond.length).toBeGreaterThan(0);
+    // Each step moves only part of the stack, never the whole of it.
+    const overlap = movedFirst.filter((id) => movedSecond.includes(id));
+    expect(overlap, "the two wing steps must move different layers").toEqual([]);
   });
 });

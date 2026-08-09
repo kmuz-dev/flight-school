@@ -103,6 +103,28 @@ function splitAll(state: FoldState, crease: Line2, startId: number): SplitOutcom
   return { facets: out, marks, nextId };
 }
 
+/**
+ * Narrow the movers to part of the stack. A wing pair lives on one side of its
+ * crease as two stacked halves, so opening it into a V needs two steps that
+ * differ by which layers move and which way they turn.
+ */
+function filterByLayers(
+  facets: readonly Facet[],
+  layers: "all" | "top" | "bottom" | readonly number[] | undefined,
+): Facet[] {
+  if (layers === undefined || layers === "all") return [...facets];
+  if (Array.isArray(layers)) {
+    const wanted = new Set(layers as readonly number[]);
+    return facets.filter((f) => wanted.has(f.layer));
+  }
+  if (facets.length === 0) return [];
+  const present = [...new Set(facets.map((f) => f.layer))].sort((a, b) => a - b);
+  const mid = present[Math.floor(present.length / 2)] ?? 0;
+  return layers === "top"
+    ? facets.filter((f) => f.layer >= mid)
+    : facets.filter((f) => f.layer < mid);
+}
+
 /** Consecutive layer indices from 0, order preserved. */
 function renormalizeLayers(facets: readonly Facet[]): Facet[] {
   const used = [...new Set(facets.map((f) => f.layer))].sort((a, b) => a - b);
@@ -159,10 +181,11 @@ export function applyStep(
     case "fold": {
       const { facets, marks, nextId: idAfterSplit } = splitAll(state, action.crease, nextId);
       const wantLeft = action.side === "left";
-      const movers = facets.filter((f) => {
+      const onSide = facets.filter((f) => {
         const s = facetSide(f, action.crease);
         return wantLeft ? s === 1 : s === -1;
       });
+      const movers = filterByLayers(onSide, action.layers);
       const stationary = facets.filter((f) => !movers.includes(f));
       const moverIds = movers.map((f) => f.id);
 
