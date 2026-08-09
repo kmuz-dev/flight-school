@@ -1,0 +1,50 @@
+/**
+ * Catalog view-model. Runs at build time inside the server component: it walks
+ * the plane registry generically (never a hard-coded id), pairs each structure
+ * with its prose, and renders the finished plane through the fold engine's SVG
+ * projection so the card ships a real engine render in its HTML.
+ *
+ * A plane whose dictionary entry has not landed yet is left out rather than
+ * rendered nameless; `tests/content` fails loudly on that gap, so the catalog
+ * degrades quietly while the build still tells the truth about it.
+ */
+import { computeFoldState, renderStateToSvg } from "@/engine";
+import { preflightHref } from "@/lib/paths";
+import type { PlaneStructure } from "@/content/types";
+import type { PlaneId } from "@/content/types";
+import type { PlanesDictionary } from "@/i18n/types";
+import type { HangarPlaneView } from "./types";
+
+/** Card render area, in the SVG's own units; the viewBox scales it to fit. */
+const CARD_RENDER = { width: 420, height: 280 } as const;
+
+export function finishedPlaneSvg(
+  structure: PlaneStructure,
+  size: { width: number; height: number } = CARD_RENDER,
+): string {
+  const finished = computeFoldState(structure, structure.steps.length - 1);
+  return renderStateToSvg(finished, { ...size, showCreaseMarks: false });
+}
+
+export function buildHangarPlanes(
+  locale: string,
+  planes: Readonly<Record<string, PlaneStructure>>,
+  dict: PlanesDictionary,
+): HangarPlaneView[] {
+  return Object.values(planes).flatMap((structure) => {
+    const strings = dict.planes[structure.id as PlaneId];
+    if (!strings) return [];
+    return [
+      {
+        id: structure.id,
+        name: strings.name,
+        tier: structure.tier,
+        stepCount: structure.steps.length,
+        ratings: structure.ratings,
+        svg: finishedPlaneSvg(structure),
+        href: preflightHref(locale, structure.id),
+        structure,
+      },
+    ];
+  });
+}

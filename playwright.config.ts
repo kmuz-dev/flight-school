@@ -10,6 +10,12 @@ export default defineConfig({
   testDir: "tests",
   testMatch: "**/*.spec.ts",
   fullyParallel: true,
+  // Every screen under test drives a real WebGL stage, and the full-fold walks
+  // click through a dozen animated steps. Playwright's 30s default is fine for
+  // one spec alone but starves those tests once several workers share a GPU,
+  // which showed up as flaky "waiting for Next fold" timeouts rather than as
+  // any product defect.
+  timeout: 60_000,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? "github" : "list",

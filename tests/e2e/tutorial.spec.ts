@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 /** The core product loop: open a tutorial and fold a plane start to finish. */
 test.describe("the Dart tutorial", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/en/plane/dart/");
+    await page.goto("/en/plane/dart/fold/");
   });
 
   test("renders the stage, transport, and step rail", async ({ page }) => {

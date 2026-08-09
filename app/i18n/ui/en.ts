@@ -5,16 +5,28 @@
 import type { UiDictionary } from "../types";
 
 const ui: UiDictionary = {
+  "brand.name": "Flight School",
+
   "nav.hangar": "The Hangar",
   "nav.logbook": "My Logbook",
-  "nav.wings": "{count} wings",
+  "nav.wings": "Wings: {count}",
+  "nav.backToHangar": "Back to the hangar",
 
   "hangar.title": "The Hangar",
   "hangar.subtitle": "Pick an aircraft. Every fold is shown in 3D, from flat paper to first flight.",
+  "hangar.eyebrow": "A flight academy for paper - {count} aircraft on the floor",
   "hangar.steps": "Steps",
   "hangar.wingsEarned": "Wings earned",
   "hangar.filterAll": "All",
+  "hangar.filterLabel": "Filter the fleet by licence",
   "hangar.fleetOverview": "Fleet overview",
+  "hangar.preview": "Preview {name} in 3D",
+  "hangar.empty": "No aircraft carry that licence yet.",
+  "hangar.footerLine": "Cadet flight manifest - licence no. 0815-FA",
+
+  "tier.easy": "Beginner",
+  "tier.medium": "Pilot",
+  "tier.advanced": "Ace",
 
   "tutorial.license.easy": "Beginner License",
   "tutorial.license.medium": "Pilot License",
@@ -24,6 +36,7 @@ const ui: UiDictionary = {
   "rating.distance": "Distance",
   "rating.airtime": "Airtime",
   "rating.ease": "Ease",
+  "rating.gauge": "{label}: {value} out of 5",
 
   "preflight.eyebrow": "Preflight",
   "preflight.getYourPaper": "Preflight: get your paper",
@@ -31,6 +44,17 @@ const ui: UiDictionary = {
   "preflight.weight": "Weight",
   "preflight.folds": "Folds",
   "preflight.time": "Time",
+  "preflight.creases": "Creases",
+  "preflight.creasesAllValley": "All valley folds",
+  "preflight.creasesMix": "{valley} valley, {mountain} mountain",
+  "preflight.paperValue.letter-a4": "A4 or Letter, one sheet",
+  "preflight.paperValue.square": "A square, cut from A4 or Letter",
+  "preflight.weightValue": "80 gsm, ordinary printer paper",
+  "preflight.foldsValue": "{count} folds",
+  "preflight.flightProfile": "Flight profile",
+  "preflight.specimen": "Fig 1.1 - prototype",
+  "preflight.manifestLine": "Aircraft {index} of {total} on the hangar floor",
+  "preflight.viewerLabel": "Finished plane, orbitable",
   "preflight.throwTip": "Throw tip",
   "preflight.startFolding": "Start folding",
   "preflight.resume": "Resume at step {step}",
@@ -77,9 +101,22 @@ const ui: UiDictionary = {
   "completion.title": "You have earned your wings.",
   "completion.body":
     "Nice work, cadet. Go find some open space, point it slightly up, and throw it level.",
+  "completion.certificateLabel": "Flight certificate",
+  "completion.certified": "Certified",
   "completion.rewardIssued": "Reward issued",
+  "completion.wingsBadge": "{tier} wings",
   "completion.logFlight": "Log your flight",
   "completion.returnToHangar": "Return to hangar",
+  "completion.foldAgain": "Fold it again",
+  "completion.statsLabel": "Flight record",
+  "completion.statFolds": "Folds",
+  "completion.statCertified": "Certified",
+  "completion.statWings": "Wings",
+  "completion.nextInHangar": "Next in the hangar",
+  "completion.nextMeta": "{folds} folds, {license}",
+  "completion.foldNextPlane": "Fold the next plane",
+  "completion.allComplete":
+    "That was the last aircraft on the floor. Every plane in the hangar is yours.",
 
   "a11y.themeToggle": "Switch between day and night flight",
   "a11y.localePicker": "Choose a language",
