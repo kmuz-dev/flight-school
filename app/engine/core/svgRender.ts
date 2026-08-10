@@ -5,9 +5,11 @@
  * thumbnails when WebGL is unavailable, and (if the 3D engine ever had to be
  * abandoned) static per-step diagrams from the same fold data.
  */
-import type { FoldState } from "./types";
-import { posesForState, transformPoint } from "./pose";
+import type { FoldState, Vec3 } from "./types";
+import { multiply, posesForState, transformPoint, type Mat4 } from "./pose";
+import { restTransform } from "./rest";
 import { boundingBox } from "./polygon";
+import { HERO_VIEW, closeness, project, viewBasis } from "../view";
 
 export type SvgOptions = {
   readonly width?: number;
@@ -19,6 +21,13 @@ export type SvgOptions = {
   readonly edgeColor?: string;
   /** Show scored crease-and-unfold marks. */
   readonly showCreaseMarks?: boolean;
+  /**
+   * Stand the model up before drawing it, for a surface showing a FINISHED
+   * plane rather than a step of a fold. Off by default: this renders arbitrary
+   * states, including the fold editor's mid-sequence ones, and those belong in
+   * the frame their creases were authored in.
+   */
+  readonly rest?: boolean;
 };
 
 const DEFAULTS = {
@@ -31,55 +40,47 @@ const DEFAULTS = {
 } as const;
 
 /**
- * Orthographic projection from the 3/4 view, matching the stage's default
- * camera preset so the SVG and the 3D stage show the same aircraft.
+ * Orthographic projection from the catalogue's hero angle, built from the same
+ * `HERO_VIEW` the 3D stage's `threeQuarter` preset uses, so the SVG behind a
+ * hangar card and the live scene that wakes over it show the same aircraft from
+ * the same place.
  *
- * This used to be a near-overhead view with a slight z shear, which is the
- * worst angle a paper plane has: nose-on, every aircraft in the catalog
- * collapsed to the same thin vertical strip, and the hangar asked cadets to
- * pick between six identical slivers. Turning the model off-axis and looking
- * down at it is what makes a dart read as a dart.
+ * They did not, twice over. The angle was 90 degrees round from the stage's,
+ * looking at the tail where the stage looks at the nose. And the projection was
+ * not a camera at all: `right`, `down` and a depth function were each built
+ * from yaw and pitch by hand, and the last two came out 26 degrees from
+ * perpendicular, so the picture was drawn from one place and sorted from
+ * another. Building all three as an orthonormal basis is what makes that
+ * unrepresentable rather than merely fixed - see `engine/view.ts`.
  *
- * Table space is x right, y forward (nose to tail), z up. Yaw first, then
- * pitch: at 90 degrees of pitch this degenerates to the old overhead view, at
- * 0 degrees to a pure front elevation.
+ * Table space is x right, y forward (nose to tail), z up.
  */
-const YAW = (38 * Math.PI) / 180;
-const PITCH = (32 * Math.PI) / 180;
-
-/** Distance into the scene, before the pitch tilts it onto the screen. */
-function alongView(p: readonly [number, number, number]): number {
-  return p[0] * Math.sin(YAW) + p[1] * Math.cos(YAW);
-}
-
-function project(p: readonly [number, number, number]): [number, number] {
-  return [
-    p[0] * Math.cos(YAW) - p[1] * Math.sin(YAW),
-    alongView(p) * Math.sin(PITCH) - p[2] * Math.cos(PITCH),
-  ];
-}
-
-/** Larger is nearer the camera. Degenerates to z when looking straight down. */
-function closeness(p: readonly [number, number, number]): number {
-  return p[2] * Math.sin(PITCH) - alongView(p) * Math.cos(PITCH);
-}
+const BASIS = viewBasis(HERO_VIEW.azimuthDeg, HERO_VIEW.elevationDeg);
 
 export function renderStateToSvg(state: FoldState, options: SvgOptions = {}): string {
   const opts = { ...DEFAULTS, ...options };
   const poses = posesForState(state);
+  const rest = opts.rest === true ? restTransform(state) : null;
+  // Left-multiplied onto each pose, never composed inward: rest is a rigid
+  // motion of the whole model, so it leaves the painter's order alone.
+  const posed = (id: number): Mat4 | undefined => {
+    const base = poses.get(id);
+    if (!base) return undefined;
+    return rest ? multiply(rest, base) : base;
+  };
+  const at = (pose: Mat4 | undefined, p: readonly [number, number]): Vec3 =>
+    pose ? transformPoint(pose, p) : [p[0], p[1], 0];
 
   const projected = state.facets.map((facet) => {
-    const pose = poses.get(facet.id);
-    const pts = facet.polygon.map((p) =>
-      project(pose ? transformPoint(pose, p) : [p[0], p[1], 0]),
-    );
+    const pose = posed(facet.id);
+    const pts = facet.polygon.map((p) => project(BASIS, at(pose, p)));
     // Mean closeness to the camera breaks ties the layer index cannot: bigger
     // is nearer, so it sorts last and paints on top. This has to be measured
     // along the view direction, not up the z axis - z alone only happens to be
     // the view direction when the camera is directly overhead, which is the one
     // angle this no longer uses.
     const depth = pose
-      ? facet.polygon.reduce((sum, p) => sum + closeness(transformPoint(pose, p)), 0) /
+      ? facet.polygon.reduce((sum, p) => sum + closeness(BASIS, transformPoint(pose, p)), 0) /
         Math.max(1, facet.polygon.length)
       : 0;
     const det =
@@ -109,11 +110,11 @@ export function renderStateToSvg(state: FoldState, options: SvgOptions = {}): st
     marks = state.creaseMarks
       .map((mark) => {
         const facet = state.facets.find((f) => f.id === mark.facetId);
-        const pose = facet ? poses.get(facet.id) : undefined;
+        const pose = facet ? posed(facet.id) : undefined;
         if (!pose) return "";
         const [a, b] = mark.segment;
-        const pa = project(transformPoint(pose, a));
-        const pb = project(transformPoint(pose, b));
+        const pa = project(BASIS, transformPoint(pose, a));
+        const pb = project(BASIS, transformPoint(pose, b));
         return `<line x1="${pa[0].toFixed(3)}" y1="${pa[1].toFixed(3)}" x2="${pb[0].toFixed(3)}" y2="${pb[1].toFixed(3)}" stroke="rgba(26,43,74,0.25)" stroke-width="0.3" stroke-dasharray="2 2"/>`;
       })
       .join("");

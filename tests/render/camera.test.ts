@@ -13,6 +13,11 @@ import {
   positionToOrbit,
   resolveCameraHint,
 } from "@/engine/render/renderer";
+import { HERO_VIEW, closeness, project, viewBasis } from "@/engine/view";
+import { PLANES } from "@/content";
+import { computeFoldState } from "@/engine/core/state";
+import { restTransform } from "@/engine/core/rest";
+import { multiply, poseForFacet, transformPoint } from "@/engine/core/pose";
 
 const ORIGIN = new Vector3(0, 0, 0);
 
@@ -118,5 +123,118 @@ describe("framingDistance", () => {
     expect(wide).toBeGreaterThan(100);
     expect(tall).toBeGreaterThan(wide);
     expect(framingDistance(200, 34, 16 / 9)).toBeCloseTo(wide * 2, 6);
+  });
+});
+
+/**
+ * The SVG behind every hangar card and the live scene that wakes over it are
+ * two different renderers, and they have to agree about where the viewer is
+ * standing. They did not: the flat projection looked at the tail while the
+ * stage looked at the nose, and worse, the flat projection was not a camera at
+ * all. Its screen axes were built from yaw and pitch independently and came out
+ * 26 degrees from perpendicular, so the picture was drawn from one place and
+ * depth-sorted from another - a bug that a shared, orthonormal basis makes
+ * unrepresentable rather than merely fixed.
+ */
+describe("one camera convention", () => {
+  const dot = (a: readonly number[], b: readonly number[]) =>
+    a[0]! * b[0]! + a[1]! * b[1]! + a[2]! * b[2]!;
+  const norm = (a: readonly number[]) => Math.hypot(a[0]!, a[1]!, a[2]!);
+
+  it("builds an orthonormal screen basis at every angle", () => {
+    for (const [azimuthDeg, elevationDeg] of [
+      [HERO_VIEW.azimuthDeg, HERO_VIEW.elevationDeg],
+      [0, 5],
+      [0, 85],
+      [140, 60],
+      [-179, 2],
+    ]) {
+      const b = viewBasis(azimuthDeg!, elevationDeg!);
+      const at = `az ${azimuthDeg} el ${elevationDeg}`;
+      expect(norm(b.right), at).toBeCloseTo(1, 12);
+      expect(norm(b.down), at).toBeCloseTo(1, 12);
+      expect(norm(b.eye), at).toBeCloseTo(1, 12);
+      expect(dot(b.right, b.down), at).toBeCloseTo(0, 12);
+      expect(dot(b.right, b.eye), at).toBeCloseTo(0, 12);
+      // The one that used to be -0.9.
+      expect(dot(b.down, b.eye), at).toBeCloseTo(0, 12);
+    }
+  });
+
+  it("is right-handed, so the picture is not mirrored", () => {
+    const b = viewBasis(HERO_VIEW.azimuthDeg, HERO_VIEW.elevationDeg);
+    const cross = [
+      b.right[1] * b.down[2] - b.right[2] * b.down[1],
+      b.right[2] * b.down[0] - b.right[0] * b.down[2],
+      b.right[0] * b.down[1] - b.right[1] * b.down[0],
+    ];
+    for (let i = 0; i < 3; i += 1) expect(cross[i]).toBeCloseTo(-b.eye[i]!, 12);
+  });
+
+  it("puts the flat projection's camera exactly where an orbit at the same angle would", () => {
+    // The assertion that stops the SVG and the stage drifting apart again: both
+    // build their camera from HERO_VIEW, and this is the proof that the two
+    // constructions agree. They used to be 90 degrees of azimuth apart, which
+    // is why waking a hangar card swung the aircraft round.
+    const b = viewBasis(HERO_VIEW.azimuthDeg, HERO_VIEW.elevationDeg);
+    const orbit = orbitToPosition({ ...HERO_VIEW, distance: 1 }, ORIGIN);
+    expect(b.eye[0]).toBeCloseTo(orbit.x, 9);
+    expect(b.eye[1]).toBeCloseTo(orbit.y, 9);
+    expect(b.eye[2]).toBeCloseTo(orbit.z, 9);
+  });
+
+  it("keeps the hero angle out of the fold steps' own presets", () => {
+    // Two different questions. A preset answers "where does this fold read
+    // best" and is authored into content; the hero angle answers "where does
+    // this aircraft look like itself" and no step may ask for it.
+    for (const preset of Object.values(CAMERA_PRESETS)) {
+      expect(preset).not.toEqual(HERO_VIEW);
+    }
+  });
+
+  it("hides motion along the view axis, which is what orthographic means", () => {
+    // The decisive symptom: a point pushed 100mm directly away from the viewer
+    // used to slide 90mm up the page.
+    const b = viewBasis(HERO_VIEW.azimuthDeg, HERO_VIEW.elevationDeg);
+    const away: [number, number, number] = [b.eye[0] * 100, b.eye[1] * 100, b.eye[2] * 100];
+    const [x0, y0] = project(b, [0, 0, 0]);
+    const [x1, y1] = project(b, away);
+    expect(x1 - x0).toBeCloseTo(0, 9);
+    expect(y1 - y0).toBeCloseTo(0, 9);
+    expect(closeness(b, away)).toBeCloseTo(100, 9);
+  });
+
+  it.each(Object.keys(PLANES))("shows %s its nose, not its tail", (id) => {
+    // The property a cadet actually sees, stated in the product's terms.
+    //
+    // The nose is found as the SHARP end - the end where the model is narrow -
+    // rather than by assuming an axis. Every plane in the catalogue ends with a
+    // 180-degree `rotate`, so the apex the sequence builds at +y is at -y when
+    // it is finished, and a test that assumed +y passed while asserting the
+    // exact opposite of what it claimed. That is how the hero angle came to be
+    // pointed at the catalogue's tails in the first place.
+    const b = viewBasis(HERO_VIEW.azimuthDeg, HERO_VIEW.elevationDeg);
+    const plane = PLANES[id]!;
+    const state = computeFoldState(plane, plane.steps.length - 1);
+    const rest = restTransform(state);
+    const pts: [number, number, number][] = [];
+    for (const facet of state.facets) {
+      const pose = multiply(rest, poseForFacet(facet));
+      for (const p of facet.polygon) pts.push(transformPoint(pose, p));
+    }
+    const ys = pts.map((p) => p[1]);
+    const lowY = Math.min(...ys);
+    const highY = Math.max(...ys);
+    const spanAt = (from: number, to: number) => {
+      const xs = pts.filter((p) => p[1] >= from && p[1] <= to).map((p) => p[0]);
+      return Math.max(...xs) - Math.min(...xs);
+    };
+    const band = (highY - lowY) * 0.12;
+    const noseAtLowY = spanAt(lowY, lowY + band) < spanAt(highY - band, highY);
+    const nose = pts.find((p) => p[1] === (noseAtLowY ? lowY : highY))!;
+    const tail = pts.find((p) => p[1] === (noseAtLowY ? highY : lowY))!;
+    expect(closeness(b, nose), `${id}: the nose must face the viewer`).toBeGreaterThan(
+      closeness(b, tail),
+    );
   });
 });
