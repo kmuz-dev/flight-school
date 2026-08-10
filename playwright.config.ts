@@ -2,6 +2,14 @@ import { defineConfig, devices } from "@playwright/test";
 
 // E2E runs against the static export (out/), matching production exactly.
 // `npm run build` must run before `npm run test:e2e`.
+//
+// Set E2E_BASE_URL to point the same suite at a deployed site instead - the
+// live smoke Gate 4 asks for. It is the same specs against the same build, so
+// a pass on the deployed URL means the thing CI proved is the thing that
+// shipped, rather than a separate hand-written smoke test that could drift.
+const LIVE_URL = process.env.E2E_BASE_URL;
+const LOCAL_URL = "http://127.0.0.1:4173";
+
 export default defineConfig({
   // Specs live beside the code they cover (tests/e2e, tests/dev), so the dir is
   // wide and the match is narrow. Playwright's default match also picks up
@@ -20,14 +28,20 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? "github" : "list",
   use: {
-    baseURL: "http://127.0.0.1:4173",
+    baseURL: LIVE_URL ?? LOCAL_URL,
     trace: "on-first-retry",
   },
-  webServer: {
-    command: "npx serve out -l 4173",
-    url: "http://127.0.0.1:4173",
-    reuseExistingServer: !process.env.CI,
-  },
+  // Against a deployed URL there is nothing to start, and starting the local
+  // server anyway would silently hold the wrong build open on port 4173.
+  ...(LIVE_URL
+    ? {}
+    : {
+        webServer: {
+          command: "npx serve out -l 4173",
+          url: LOCAL_URL,
+          reuseExistingServer: !process.env.CI,
+        },
+      }),
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
     { name: "mobile", use: { ...devices["Pixel 7"] } },

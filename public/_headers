@@ -1,0 +1,24 @@
+# Response headers for the deployed site. Next copies public/ into out/, which
+# is the assets directory wrangler.jsonc serves, so this file ships as-is.
+#
+# Cloudflare's default for static assets is max-age=0, must-revalidate on
+# everything. That is right for HTML, which changes on every deploy, and wrong
+# for Next's content-hashed chunks, whose filenames change when their contents
+# do - revalidating those costs a round trip per chunk per visit to be told
+# nothing changed.
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  # The modern frame-ancestors, which X-Frame-Options only approximates. No
+  # script-src here on purpose: Next's hydration relies on inline scripts, so a
+  # script policy would need 'unsafe-inline' and would be theatre.
+  Content-Security-Policy: frame-ancestors 'none'
+  # This site is used by children and asks for no device permissions at all.
+  # V2's Test Flight Bay would relax camera to (self); nothing today needs it.
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
+  Strict-Transport-Security: max-age=31536000
+
+# Content-hashed by the build: a given URL's bytes never change.
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
