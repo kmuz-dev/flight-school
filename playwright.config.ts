@@ -24,6 +24,14 @@ export default defineConfig({
   // which showed up as flaky "waiting for Next fold" timeouts rather than as
   // any product defect.
   timeout: 60_000,
+  // The same starvation, one level down. Raising `timeout` above covers a whole
+  // test but NOT a single assertion, which keeps Playwright's own 5s budget -
+  // so a `toBeVisible` or an `expect.poll` waiting on the engine to boot still
+  // failed at 5 seconds inside a test that had 60. Measured on this machine:
+  // the twelve-fold walk takes 8s with one worker and 57s with two sharing
+  // SwiftShader, a factor of seven, and 5 seconds does not survive that.
+  // A real hang is still caught by the test timeout above.
+  expect: { timeout: 20_000 },
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? "github" : "list",
