@@ -81,7 +81,10 @@ export function FoldStage({
     const mount = mountRef.current;
     if (!mount) return;
 
-    const handle = createEngine(mount, structure, { theme: activeTheme });
+    // `rest` but never `display`: the tutorial is a table, and the model
+    // stands up only once it has a bend - which is exactly when it stops
+    // being a sheet and starts being a plane.
+    const handle = createEngine(mount, structure, { rest: true, theme: activeTheme });
     const offAnnotation = handle.on("annotation", (payload) => {
       setEngineAnchor(toAnchor(payload));
     });

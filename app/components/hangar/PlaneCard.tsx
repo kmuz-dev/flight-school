@@ -65,16 +65,17 @@ export function PlaneCard({
     const mount = mountRef.current;
     if (!mount) return;
 
-    // A hangar card is a display surface: the plane turns slowly on the spot so
-    // you can read its shape. The engine drops the rotation under
-    // prefers-reduced-motion, which is also where the bob is dropped.
+    // A hangar card is a display surface: the aircraft stands up, lifts clear
+    // of the ground over a graded backdrop and a soft shadow, and breathes.
+    // No `autoRotate` - a constant spin holds the hero angle for about a second
+    // and then parks all six cards at the same non-hero angle in lockstep,
+    // which is the opposite of letting you read a shape. The engine drops the
+    // float under prefers-reduced-motion and keeps the staging.
     const handle = createEngine(mount, view.structure, {
-      autoRotate: true,
+      display: true,
+      rest: true,
       quality: "preview",
       theme,
-      // Start from the hero angle rather than from wherever the last fold step
-      // pointed the camera; the rotation carries on from there.
-      cameraPreset: "threeQuarter",
     });
     // The catalog shows the aircraft, not the folding of it.
     handle.gotoStep(view.stepCount - 1, { animate: false });
@@ -99,7 +100,7 @@ export function PlaneCard({
       }}
       className={`relative flex flex-col rounded-card border bg-raised shadow-[0_6px_18px_rgb(26_43_74_/_0.09)] transition-transform duration-200 ease-move ${
         completed ? "border-green/40" : "border-ink-12"
-      } ${live ? "" : "hover:-translate-y-[3px]"}`}
+      } hover:-translate-y-[3px]`}
     >
       <div className="relative">
         <button
@@ -109,13 +110,21 @@ export function PlaneCard({
           onClick={() => onToggleSelect(view.id)}
           className={`relative block aspect-[3/2] w-full overflow-hidden rounded-t-[7px] bg-paper ${FOCUS_RING}`}
         >
+          {/* The same two stops the live stage paints as its backdrop, and a
+              soft pool where its contact shadow lands, so waking a card adds
+              depth and motion rather than changing the scene. */}
           <span
             aria-hidden="true"
             className="absolute inset-0"
             style={{
               backgroundImage:
-                "repeating-linear-gradient(-45deg, var(--hatch) 0 6px, transparent 6px 12px)",
+                "linear-gradient(170deg, var(--color-raised), var(--color-paper))",
             }}
+          />
+          <span
+            aria-hidden="true"
+            className="absolute inset-x-[18%] bottom-[14%] h-[12%] rounded-[50%] blur-[10px]"
+            style={{ background: "var(--color-ink-12)" }}
           />
           <EngineSvg svg={view.svg} className="absolute inset-0 flex items-center justify-center" />
           {live ? (
@@ -123,7 +132,7 @@ export function PlaneCard({
               ref={mountRef}
               data-testid="live-scene"
               aria-hidden="true"
-              className="plane-bob pointer-events-none absolute -inset-4"
+              className="pointer-events-none absolute inset-0"
             />
           ) : null}
         </button>

@@ -14,6 +14,7 @@ import { gsap } from "gsap";
 import {
   ACESFilmicToneMapping,
   Color,
+  type DataTexture,
   DirectionalLight,
   Group,
   HemisphereLight,
@@ -44,8 +45,11 @@ import { HERO_VIEW } from "@/engine/view";
 import type { CoreApi, PoseMap } from "./coreApi";
 import { Annotations, annotationChanged } from "./annotations";
 import {
+  ContactShadow,
   SceneModel,
+  createBackdropTexture,
   createStageFloorMaterial,
+  displayBounds,
   stageTheme,
   unionBounds,
   type ModelBounds,
@@ -181,6 +185,53 @@ export type FoldEngineDeps = {
 const FOV_DEG = 34;
 const CAMERA_TWEEN_SECONDS = 0.7;
 
+/**
+ * Neutral height of a display stage's aircraft, as a fraction of the model's
+ * bounding radius rather than millimetres - `framingDistance` fits the frame to
+ * that same radius, so a height expressed this way subtends the same angle on a
+ * 179mm Square Cruiser as on a 310mm Dart, and reads identically on both cards.
+ */
+const DISPLAY_LIFT = 0.3;
+
+/**
+ * The idle float, in fractions of the model's bounding radius rather than
+ * millimetres, for the same reason as `DISPLAY_LIFT`.
+ *
+ * 4 and 6.5 seconds are close to 8:13, so the compound path takes about 26
+ * seconds to repeat and reads as drift rather than as a loop.
+ */
+const FLOAT = {
+  /** Vertical amplitude. */
+  bob: 0.06,
+  /** Lateral amplitude. */
+  drift: 0.035,
+  /** Degrees of roll at the extremes of the drift. */
+  bankDeg: 5,
+  bobSeconds: 4,
+  swaySeconds: 6.5,
+} as const;
+
+/** How long the finished plane takes to leave the table on the last step. */
+const LIFT_SECONDS = 0.9;
+
+/**
+ * A stable per-plane phase in [0, 1), FNV-1a over the plane id.
+ *
+ * Not `Math.random`: two cards must never breathe together, which random gives,
+ * but a card must also breathe the SAME way every time it wakes, which random
+ * does not - the hangar's LRU evicts and re-wakes scenes constantly, and a
+ * plane that jumped to a new phase on every wake would draw the eye to exactly
+ * the thing the float is meant to make unremarkable.
+ */
+export function floatPhase(id: string): number {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < id.length; i += 1) {
+    h ^= id.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return ((h >>> 0) % 1024) / 1024;
+}
+
 export type StageQuality = NonNullable<EngineOptions["quality"]>;
 
 /**
@@ -249,8 +300,25 @@ export class FoldEngine implements FoldEngineHandle {
   private readonly annotations: Annotations;
   private readonly stage = new Group();
 
-  private readonly floorMesh: Mesh;
-  private readonly floorMaterial: MeshStandardMaterial;
+  /** Null on a display stage, which has a backdrop and a shadow instead. */
+  private readonly floorMesh: Mesh | null;
+  private readonly floorMaterial: MeshStandardMaterial | null;
+  private readonly backdrop: DataTexture | null;
+  private readonly shadow: ContactShadow | null;
+  /** Neutral height above the ground, in mm. Zero on a tutorial stage. */
+  private liftMm = 0;
+  /**
+   * How much of the lift is in effect, 0 to 1. Display surfaces start at 1 and
+   * never move it; a tutorial starts at 0 and tweens to 1 when the last fold
+   * settles, which is the beat that hands off to the CERTIFIED stamp.
+   */
+  private liftProgress: number;
+  private liftTween: ReturnType<typeof gsap.to> | null = null;
+  /** True when the model group holds no placement, so a still stage writes once. */
+  private placementNeutral = true;
+  private readonly startMs: number;
+  private readonly bobPhase: number;
+  private readonly swayPhase: number;
   private readonly keyLight: DirectionalLight;
   private readonly fillLight: DirectionalLight;
   private readonly rimLight: DirectionalLight;
@@ -302,6 +370,19 @@ export class FoldEngine implements FoldEngineHandle {
     this.core = deps.core;
     this.themeName = opts.theme === "night" ? "night" : "paper";
     this.theme = stageTheme(this.themeName);
+    // Read before anything is built: these decide what the stage IS, and the
+    // scene furniture below branches on them.
+    this.rest = opts.rest === true;
+    this.display = opts.display === true;
+    // A display surface is already showing a finished aircraft; only a tutorial
+    // has a fold to finish first.
+    this.liftProgress = this.display ? 1 : 0;
+    this.startMs = 0;
+    const phase = floatPhase(structure.id);
+    this.bobPhase = 2 * Math.PI * phase;
+    // Golden-ratio decorrelated, so one plane's two terms are not locked to
+    // each other either.
+    this.swayPhase = 2 * Math.PI * ((phase * 1.618033988749895) % 1);
 
     const doc = container.ownerDocument;
     this.view = doc.defaultView as (Window & typeof globalThis) | null;
@@ -314,14 +395,16 @@ export class FoldEngine implements FoldEngineHandle {
     this.renderer = (deps.rendererFactory ?? createDefaultRenderer)(canvas, this.quality);
     container.appendChild(this.renderer.domElement);
 
-    this.scene.background = new Color(this.theme.background);
+    // A display stage swaps the flat clear colour for a vertical grade. It has
+    // to be drawn in GL: the canvas is `alpha: false`, so the CSS gradients on
+    // the panels around it have never once shown through.
+    this.backdrop = this.display ? createBackdropTexture(this.theme) : null;
+    this.scene.background = this.backdrop ?? new Color(this.theme.background);
     this.scene.add(this.stage);
 
     this.camera = new PerspectiveCamera(FOV_DEG, 1, 1, 20000);
     // Table space is z=0 with +Z up; tell Three before OrbitControls is built.
     this.camera.up.set(0, 0, 1);
-    this.rest = opts.rest === true;
-    this.display = opts.display === true;
     this.pinnedPreset = opts.cameraPreset;
     // A display surface opens on the catalogue's hero angle, which is not a
     // preset and cannot be asked for by a fold step.
@@ -336,13 +419,24 @@ export class FoldEngine implements FoldEngineHandle {
     this.annotations = new Annotations(this.theme);
     this.stage.add(this.model.root, this.annotations.root);
 
-    const floorSpan = 4000;
-    this.floorMaterial = createStageFloorMaterial(this.theme, floorSpan * 0.42);
-    this.floorMesh = new Mesh(new PlaneGeometry(floorSpan, floorSpan), this.floorMaterial);
-    this.floorMesh.position.z = -1.5;
-    this.floorMesh.receiveShadow = true;
-    this.floorMesh.name = "stage-floor";
-    this.stage.add(this.floorMesh);
+    // Not built at all on a display stage rather than hidden: it is a 4000mm
+    // plane carrying the most expensive shader compile this scene does, and a
+    // hangar card would be paying for a grid nobody sees.
+    if (this.display) {
+      this.floorMaterial = null;
+      this.floorMesh = null;
+      this.shadow = new ContactShadow(this.theme);
+      this.stage.add(this.shadow.mesh);
+    } else {
+      const floorSpan = 4000;
+      this.floorMaterial = createStageFloorMaterial(this.theme, floorSpan * 0.42);
+      this.floorMesh = new Mesh(new PlaneGeometry(floorSpan, floorSpan), this.floorMaterial);
+      this.floorMesh.position.z = -1.5;
+      this.floorMesh.receiveShadow = true;
+      this.floorMesh.name = "stage-floor";
+      this.stage.add(this.floorMesh);
+      this.shadow = null;
+    }
 
     this.hemiLight = new HemisphereLight(
       new Color(this.theme.hemiSky),
@@ -350,7 +444,12 @@ export class FoldEngine implements FoldEngineHandle {
       this.theme.hemiIntensity,
     );
     this.keyLight = new DirectionalLight(new Color(this.theme.keyColor), this.theme.keyIntensity);
-    this.keyLight.castShadow = QUALITY[this.quality].shadows;
+    // A display stage has nothing to receive a shadow map - the floor is gone
+    // and the contact shadow is drawn, not cast. Without this the Preflight
+    // hero, which runs at "full", would pay for a 1024-square depth pass that
+    // lands on nothing AND look different from a hangar card, which cannot
+    // afford one at all.
+    this.keyLight.castShadow = QUALITY[this.quality].shadows && !this.display;
     this.keyLight.shadow.mapSize.set(1024, 1024);
     this.keyLight.shadow.bias = -0.0008;
     this.keyLight.shadow.normalBias = 0.6;
@@ -469,6 +568,8 @@ export class FoldEngine implements FoldEngineHandle {
     if (this.raf !== 0) this.view?.cancelAnimationFrame(this.raf);
     this.raf = 0;
     this.killCameraTween();
+    this.liftTween?.kill();
+    this.liftTween = null;
     this.stepTimeline?.kill();
     this.stepTimeline = null;
 
@@ -484,9 +585,13 @@ export class FoldEngine implements FoldEngineHandle {
     this.controls.dispose();
     this.model.dispose();
     this.annotations.dispose();
-    this.floorMesh.geometry.dispose();
-    this.floorMaterial.dispose();
-    this.floorMesh.removeFromParent();
+    this.floorMesh?.geometry.dispose();
+    this.floorMaterial?.dispose();
+    this.floorMesh?.removeFromParent();
+    this.shadow?.dispose();
+    // The hangar wakes and sleeps scenes constantly, so a texture leaked per
+    // wake is a real leak rather than a theoretical one.
+    this.backdrop?.dispose();
     this.keyLight.dispose();
     this.fillLight.dispose();
     this.rimLight.dispose();
@@ -526,8 +631,12 @@ export class FoldEngine implements FoldEngineHandle {
     const from = this.stateAfter(index - 1);
     const to = this.stateAfter(index);
     const step = this.step(index);
+    const isLast = index === this.structure.steps.length - 1;
 
     this.stepTimeline?.kill();
+    // Stepping anywhere puts the plane back on the table: a cadet who moves off
+    // the last step is folding again. A display surface never leaves 1.
+    if (!this.display) this.setLift(isLast && mode === "end" ? 1 : 0, false);
     // Build meshes from the post-step state: splits happen up front so the mesh
     // set never changes mid-animation, and pose keys stay stable.
     this.model.sync(to);
@@ -556,15 +665,30 @@ export class FoldEngine implements FoldEngineHandle {
       reducedMotion: this.reducedMotion,
       onProgress: (t) => {
         this.annotations.setVisible(t < 1);
+        // Scrubbing back off the end puts the plane down again, and snaps
+        // rather than eases: the cadet owns the playhead while dragging, and a
+        // 0.9s tween chasing a drag feels broken.
+        if (t < 1 && this.liftProgress !== 0 && !this.display) this.setLift(0, false);
         this.emit("progress", t);
       },
       onComplete: () => {
         this.annotations.setVisible(false);
+        // The plane is finished, so it leaves the table. Fires once whether the
+        // end was reached by playback or by a scrub, which is the right rule
+        // either way.
+        if (isLast && !this.display) this.setLift(1, mode === "play");
         this.emit("stepComplete", index);
       },
     });
 
-    this.refit(unionBounds(this.model.computeBounds(), settledBounds));
+    // Measured at neutral height, then the lift is derived from it and the box
+    // grown to include the ground the shadow lands on. Breaking the circularity
+    // this way - lift is a fraction of the radius, radius is measured through
+    // the lift - is what keeps the framing stable while the model breathes.
+    const raw = unionBounds(this.model.computeBounds(), settledBounds);
+    this.liftMm = this.display || isLast ? DISPLAY_LIFT * raw.radius : 0;
+    this.refit(this.liftMm > 0 ? displayBounds(raw, this.liftMm) : raw);
+    this.placeShadow(raw);
     this.setTargetCrease(step);
     this.annotations.setVisible(mode !== "end");
 
@@ -623,6 +747,91 @@ export class FoldEngine implements FoldEngineHandle {
       this.target.y + d * 1.1,
       this.target.z + d * 0.25,
     );
+  }
+
+  /**
+   * The display float, evaluated from the clock rather than tweened.
+   *
+   * One scalar drives the bob, the drift, the bank and the shadow's answer to
+   * all three, so they cannot slide out of step with each other the way four
+   * repeating tweens would - and there is no infinite tween to leak past
+   * `dispose()`.
+   *
+   * The bank is the DERIVATIVE of the drift, so the plane rolls into the
+   * direction it is sliding. That is what makes it read as a bank rather than a
+   * wobble.
+   */
+  private updatePlacement(nowMs: number): void {
+    const lifted = this.liftProgress > 0 || this.liftTween !== null;
+    if (!this.display && !lifted) {
+      // A tutorial mid-fold wants the model exactly where the poses put it.
+      // Written once on the way down rather than every frame.
+      if (!this.placementNeutral) {
+        this.placementNeutral = true;
+        this.model.setPlacement(this.target, 0, 0, 0);
+      }
+      return;
+    }
+    this.placementNeutral = false;
+
+    const t = (nowMs - this.startMs) / 1000;
+    // Only a display surface breathes. A tutorial lifts the finished plane and
+    // then holds it: the cadet is about to be handed a certificate, not a
+    // screensaver.
+    const breathing = this.display && !this.reducedMotion ? 1 : 0;
+    const r = this.modelRadius;
+
+    const bob = breathing * FLOAT.bob * r * Math.sin((2 * Math.PI * t) / FLOAT.bobSeconds + this.bobPhase);
+    const sway = (2 * Math.PI * t) / FLOAT.swaySeconds + this.swayPhase;
+    const drift = breathing * FLOAT.drift * r * Math.sin(sway);
+    const bankRad = -breathing * MathUtils.degToRad(FLOAT.bankDeg) * Math.cos(sway);
+
+    const height = this.liftMm * this.liftProgress + bob;
+    this.model.setPlacement(this.target, drift, height, bankRad);
+    // -1 at the bottom of the bob, +1 at the top; zero amplitude reads as
+    // neutral, which is what keeps a reduced-motion stage from a faint shadow.
+    this.shadow?.follow(breathing === 0 || r === 0 ? 0 : bob / (FLOAT.bob * r));
+  }
+
+  /**
+   * Take the plane off the table, or put it back.
+   *
+   * `animate` eases; a scrub or a step change snaps. Reduced motion always
+   * snaps, exactly as the camera tween does - the staging is not motion, so a
+   * cadet with the setting on still gets the lifted plane, just not the rise.
+   */
+  private setLift(to: number, animate: boolean): void {
+    this.liftTween?.kill();
+    this.liftTween = null;
+    if (!animate || this.reducedMotion || this.liftProgress === to) {
+      this.liftProgress = to;
+      return;
+    }
+    const proxy = { v: this.liftProgress };
+    this.liftTween = gsap.to(proxy, {
+      v: to,
+      duration: LIFT_SECONDS,
+      ease: "power2.out",
+      onUpdate: () => {
+        this.liftProgress = proxy.v;
+      },
+      onComplete: () => {
+        this.liftProgress = to;
+        this.liftTween = null;
+      },
+    });
+  }
+
+  /**
+   * Put the contact shadow under the model, offset along the direction the key
+   * light actually points so it lands where the light says rather than looking
+   * like a sticker. One source of truth for the lighting.
+   */
+  private placeShadow(bounds: ModelBounds): void {
+    if (!this.shadow) return;
+    const toLight = this.keyLight.position.clone().sub(this.target);
+    const drop = toLight.z !== 0 ? this.liftMm / toLight.z : 0;
+    this.shadow.fit(bounds, -toLight.x * drop, -toLight.y * drop, bounds.radius * 0.35);
   }
 
   private setTargetCrease(step: FoldStep | undefined): void {
@@ -702,17 +911,24 @@ export class FoldEngine implements FoldEngineHandle {
   private startLoop(): void {
     const view = this.view;
     if (!view || typeof view.requestAnimationFrame !== "function") return;
-    const frame = (): void => {
+    const frame = (nowMs: number): void => {
       if (this.disposed) return;
       this.raf = view.requestAnimationFrame(frame);
-      this.renderFrame();
+      this.renderFrame(nowMs);
     };
     this.raf = view.requestAnimationFrame(frame);
   }
 
-  /** One frame: damping, draw, then report the label anchor if it moved. */
-  renderFrame(): void {
+  /**
+   * One frame: breathe, damping, draw, then report the label anchor if it moved.
+   *
+   * `nowMs` is the rAF timestamp. Optional so the existing tests that drive
+   * frames by hand still compile, and so a test can hand it exact milliseconds
+   * and assert the float is a function of time rather than of frame count.
+   */
+  renderFrame(nowMs = 0): void {
     if (this.disposed) return;
+    this.updatePlacement(nowMs);
     this.controls.update();
     this.renderer.render(this.scene, this.camera);
     const anchor = this.annotations.project(this.camera, this.width, this.height);

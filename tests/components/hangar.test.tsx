@@ -117,10 +117,10 @@ describe("the Hangar", () => {
   });
 
   /**
-   * A card is a decorative 3:2 thumbnail behind a bob animation, and six of them
-   * share one phone. Both of these are what keeps that affordable, and neither
-   * is visible in anything the card renders, so nothing else would catch their
-   * removal until the hangar was slow on a real device.
+   * A card is a decorative 3:2 thumbnail of a floating aircraft, and six of
+   * them share one phone. None of these is visible in anything the card
+   * renders, so nothing else would catch their removal until the hangar was
+   * either slow on a real device or showing planes on their sides.
    */
   it("wakes cards as cheap display surfaces, not as tutorial stages", () => {
     const { log } = renderHangar();
@@ -128,9 +128,29 @@ describe("the Hangar", () => {
 
     const opts = log.created[0]?.opts;
     expect(opts?.quality).toBe("preview");
-    // The hero angle, not wherever the plane's last fold step left the camera.
-    expect(opts?.cameraPreset).toBe("threeQuarter");
-    expect(opts?.autoRotate).toBe(true);
+    // Display mode carries the hero angle itself. It is deliberately not a
+    // `cameraPreset`: presets are authored into fold steps, and no step may ask
+    // for the angle a finished aircraft is photographed from.
+    expect(opts?.display).toBe(true);
+    expect(opts?.cameraPreset).toBeUndefined();
+    // Stands the plane up rather than leaving it on its side, half under the
+    // table, in the frame its creases were authored in.
+    expect(opts?.rest).toBe(true);
+    // No constant spin: it holds the hero angle for about a second and then
+    // parks every card at the same non-hero angle in lockstep. The float in the
+    // engine is the motion now.
+    expect(opts?.autoRotate).toBeUndefined();
+  });
+
+  it("keeps the idle float in the engine, not in CSS", () => {
+    // A CSS animation on the mount translates the CANVAS, which would drag the
+    // backdrop and the contact shadow up and down with the plane - contradicting
+    // exactly what the shadow is there to say.
+    const { container } = renderHangar();
+    fireEvent.click(screen.getByRole("button", { name: `Preview ${planes[0]!.name} in 3D` }));
+    const scene = container.querySelector("[data-testid='live-scene']");
+    expect(scene).not.toBeNull();
+    expect(scene?.className).not.toContain("plane-bob");
   });
 
   it("never keeps more than two scenes live at once", () => {

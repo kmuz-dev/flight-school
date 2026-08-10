@@ -53,7 +53,8 @@ export function OrbitViewer({
     // fold step's camera hint, which is authored for that fold rather than for
     // looking at the result - on the Dart that is nose-on.
     const handle = createEngine(mount, structure, {
-      cameraPreset: "threeQuarter",
+      display: true,
+      rest: true,
       theme,
       onReady: () => setLive(true),
     });

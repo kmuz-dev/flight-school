@@ -62,7 +62,7 @@ function getSharedRenderer(): WebGLRenderer | null {
 /** SVG of the final state, encoded so it can be used as an `<img>` source. */
 export function svgThumbnail(structure: PlaneStructure, core: CoreApi): string {
   const state = core.computeFoldState(structure, structure.steps.length - 1);
-  const svg = core.renderStateToSvg(state);
+  const svg = core.renderStateToSvg(state, { rest: true });
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 

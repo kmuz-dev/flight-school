@@ -13,13 +13,21 @@ import {
   BufferAttribute,
   BufferGeometry,
   Box3,
+  ClampToEdgeWrapping,
   Color,
+  DataTexture,
   DoubleSide,
   Group,
+  LinearFilter,
   LineBasicMaterial,
   LineSegments,
+  Matrix4,
   Mesh,
   MeshStandardMaterial,
+  PlaneGeometry,
+  RGBAFormat,
+  SRGBColorSpace,
+  ShaderMaterial,
   Vector3,
 } from "three";
 import type { Facet, FoldState, Vec2 } from "@/engine/core/types";
@@ -55,6 +63,17 @@ export type StageTheme = {
   readonly rimIntensity: number;
   readonly crease: number;
   readonly shadowOpacity: number;
+  /**
+   * Display stage only: the two stops of the backdrop that replaces the
+   * graph-paper floor, top and bottom. They are the page's own
+   * `--color-raised` -> `--color-paper`, which is exactly the CSS gradient the
+   * panels around the canvas already use, so a card does not flash when its
+   * live scene wakes over the static one.
+   */
+  readonly displaySky: number;
+  readonly displayGround: number;
+  /** Ink of the fake contact shadow a display stage casts instead of a real one. */
+  readonly contactShadow: number;
 };
 
 export const STAGE_THEMES: Readonly<Record<ThemeName, StageTheme>> = {
@@ -79,6 +98,9 @@ export const STAGE_THEMES: Readonly<Record<ThemeName, StageTheme>> = {
     rimIntensity: 0,
     crease: 0xd64541,
     shadowOpacity: 0.16,
+    displaySky: 0xffffff,
+    displayGround: 0xf7f3e9,
+    contactShadow: 0x1a2b4a,
   },
   night: {
     background: 0x0b1220,
@@ -101,6 +123,9 @@ export const STAGE_THEMES: Readonly<Record<ThemeName, StageTheme>> = {
     rimIntensity: 2.6,
     crease: 0xe8615c,
     shadowOpacity: 0.45,
+    displaySky: 0x16223a,
+    displayGround: 0x0e1626,
+    contactShadow: 0x04070d,
   },
 };
 
@@ -254,6 +279,11 @@ export class SceneModel {
   private readonly edgeMaterial: LineBasicMaterial;
   private readonly meshes = new Map<number, Mesh>();
   private signature = "";
+  /** Standing the model up; changes once per step. */
+  private readonly rest = new Matrix4();
+  /** Where the standing model floats; changes every frame on a display stage. */
+  private readonly placement = new Matrix4();
+  private readonly scratch = new Matrix4();
   private readonly box = new Box3();
   /** Scratch for the per-vertex bounds walk; avoids an allocation per vertex. */
   private readonly point = new Vector3();
@@ -299,8 +329,30 @@ export class SceneModel {
    * follow this for free.
    */
   setRest(matrix: readonly number[] | null): void {
-    if (matrix && matrix.length >= 16) this.root.matrix.fromArray(matrix as number[]);
-    else this.root.matrix.identity();
+    if (matrix && matrix.length >= 16) this.rest.fromArray(matrix as number[]);
+    else this.rest.identity();
+    this.writeRoot();
+  }
+
+  /**
+   * Where the standing model sits and how it is banked, composed OVER the rest
+   * transform in the same group matrix.
+   *
+   * Roll is about the aircraft's own longitudinal axis through `pivot`, not
+   * about the world origin, so a bank banks instead of swinging the whole plane
+   * sideways - the Dart's centre sits 25mm off x=0 and 7mm off y=0, which is
+   * plenty to turn a 5-degree roll into a visible slew.
+   */
+  setPlacement(pivot: Vector3, driftX: number, heightZ: number, bankRad: number): void {
+    this.placement
+      .makeTranslation(pivot.x + driftX, pivot.y, pivot.z + heightZ)
+      .multiply(this.scratch.makeRotationY(bankRad))
+      .multiply(this.scratch.makeTranslation(-pivot.x, -pivot.y, -pivot.z));
+    this.writeRoot();
+  }
+
+  private writeRoot(): void {
+    this.root.matrix.multiplyMatrices(this.placement, this.rest);
     this.root.matrixWorldNeedsUpdate = true;
   }
 
@@ -388,6 +440,159 @@ export class SceneModel {
       mesh.clear();
     }
     this.meshes.clear();
+  }
+}
+
+/**
+ * The box a DISPLAY stage frames: the model at its neutral height, plus the
+ * ground its contact shadow lands on.
+ *
+ * Without a floor, a lifted plane framed on itself alone puts its own shadow
+ * outside the frame. The float is deliberately not included - `framingDistance`
+ * already carries 15% air and the bob is a few percent of the radius, and a
+ * camera that re-framed with the breathing is the thing that would look wrong.
+ */
+export function displayBounds(bounds: ModelBounds, liftMm: number): ModelBounds {
+  const min = bounds.min.clone().setZ(0);
+  const max = bounds.max.clone().setZ(bounds.max.z + liftMm);
+  return boundsFromBox(new Box3(min, max));
+}
+
+/**
+ * The display backdrop: a vertical grade where the graph-paper floor was.
+ *
+ * It has to be drawn in GL rather than left to CSS. The canvas is created with
+ * `alpha: false`, so nothing behind it is ever visible - the panel gradients in
+ * OrbitViewer and FoldStage have never once shown through. Assigning it to
+ * `scene.background` is the cheapest surface there is: Three draws a plain
+ * texture as a screen-space quad, and an sRGB one is not tone-mapped, so the
+ * two stops land on exactly the hexes the design system names.
+ *
+ * A 1-D vertical ramp stretched over any aspect is still a vertical ramp, so
+ * this needs no resize hook.
+ */
+export function createBackdropTexture(theme: StageTheme): DataTexture {
+  const height = 128;
+  const sky = new Color(theme.displaySky);
+  const ground = new Color(theme.displayGround);
+  const data = new Uint8Array(height * 4);
+  for (let i = 0; i < height; i += 1) {
+    // v=0 is the BOTTOM of the quad, so the ground stop belongs at i=0.
+    const v = i / (height - 1);
+    // Smoothstep rather than linear: the grade concentrates low, which reads as
+    // light falling off toward a ground rather than as a two-colour wash.
+    const k = v * v * (3 - 2 * v);
+    data[i * 4] = Math.round((ground.r + (sky.r - ground.r) * k) * 255);
+    data[i * 4 + 1] = Math.round((ground.g + (sky.g - ground.g) * k) * 255);
+    data[i * 4 + 2] = Math.round((ground.b + (sky.b - ground.b) * k) * 255);
+    data[i * 4 + 3] = 255;
+  }
+  const texture = new DataTexture(data, 1, height, RGBAFormat);
+  texture.colorSpace = SRGBColorSpace;
+  texture.minFilter = LinearFilter;
+  texture.magFilter = LinearFilter;
+  texture.wrapS = ClampToEdgeWrapping;
+  texture.wrapT = ClampToEdgeWrapping;
+  texture.needsUpdate = true;
+  return texture;
+}
+
+/**
+ * The contact shadow a display stage casts instead of a real one.
+ *
+ * Deliberately fake. A hangar card renders at `quality: "preview"`, where
+ * shadow mapping is switched off outright - that is the whole reason the
+ * preview tier exists, because a depth pass is the most expensive thing this
+ * stage could ask a mid-range phone for. One alpha-blended ellipse costs
+ * nothing and, at this size and softness, is not distinguishable from the real
+ * thing anyway.
+ *
+ * A raw `ShaderMaterial` rather than a patched `MeshBasicMaterial`: it wants no
+ * lights, no fog and no tone mapping, and the whole fragment shader is shorter
+ * than the patch would be.
+ */
+export class ContactShadow {
+  readonly mesh: Mesh;
+  private readonly material: ShaderMaterial;
+  private readonly base: number;
+
+  constructor(theme: StageTheme) {
+    this.base = theme.shadowOpacity;
+    this.material = new ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      uniforms: {
+        uColor: { value: new Color(theme.contactShadow) },
+        uOpacity: { value: theme.shadowOpacity },
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 uColor;
+        uniform float uOpacity;
+        varying vec2 vUv;
+        void main() {
+          float d = length( vUv - 0.5 ) * 2.0;
+          // Two terms: a tight core where the keel almost touches, and a wide
+          // soft pool that stands in for the bounce the floor used to give.
+          float core = 1.0 - smoothstep( 0.0, 0.85, d );
+          float halo = 1.0 - smoothstep( 0.0, 1.0, d );
+          gl_FragColor = vec4( uColor, uOpacity * ( core * 0.72 + halo * 0.28 ) );
+        }
+      `,
+    });
+    this.mesh = new Mesh(new PlaneGeometry(1, 1), this.material);
+    this.mesh.name = "contact-shadow";
+    this.mesh.renderOrder = -1;
+    this.mesh.frustumCulled = false;
+    // Clear of z=0 by a hair, so it never fights the rested model for the
+    // ground plane they both claim.
+    this.mesh.position.z = 0.1;
+  }
+
+  private width = 1;
+  private depth = 1;
+
+  /**
+   * Sit under the model and take its footprint, plus a spread so the pool
+   * reaches past the wings the way a soft light's would. Called on a step
+   * change, never per frame.
+   */
+  fit(bounds: ModelBounds, offsetX: number, offsetY: number, spreadMm: number): void {
+    this.width = bounds.max.x - bounds.min.x + spreadMm;
+    this.depth = bounds.max.y - bounds.min.y + spreadMm;
+    this.mesh.position.x = bounds.center.x + offsetX;
+    this.mesh.position.y = bounds.center.y + offsetY;
+    this.mesh.scale.set(this.width, this.depth, 1);
+  }
+
+  /**
+   * Answer to the plane's height. `u` is where it sits in its bob, -1 at the
+   * bottom and +1 at the top. Higher reads as wider and fainter, which is what
+   * tells a viewer the plane rose rather than that it grew.
+   */
+  follow(u: number): void {
+    const clamped = Math.max(-1, Math.min(1, u));
+    this.material.uniforms.uOpacity!.value = this.base * (1 - 0.28 * clamped);
+    const k = 1 + 0.1 * clamped;
+    this.mesh.scale.x = this.width * k;
+    this.mesh.scale.y = this.depth * k;
+  }
+
+  /** Current alpha at the pool's centre, for tests. */
+  get opacity(): number {
+    return this.material.uniforms.uOpacity!.value as number;
+  }
+
+  dispose(): void {
+    this.mesh.geometry.dispose();
+    this.material.dispose();
+    this.mesh.removeFromParent();
   }
 }
 

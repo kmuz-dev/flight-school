@@ -23,7 +23,10 @@ export function finishedPlaneSvg(
   size: { width: number; height: number } = CARD_RENDER,
 ): string {
   const finished = computeFoldState(structure, structure.steps.length - 1);
-  return renderStateToSvg(finished, { ...size, showCreaseMarks: false });
+  // `rest` because this is an aircraft, not a step of a fold: it stands up
+  // instead of lying on its side with half of it below the table. One edit
+  // covers the hangar cards, the preflight hero and the wings certificate.
+  return renderStateToSvg(finished, { ...size, showCreaseMarks: false, rest: true });
 }
 
 export function buildHangarPlanes(

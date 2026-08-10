@@ -199,13 +199,31 @@ export function DiagnosticsPanel({ diagnostics }: { diagnostics: StepDiagnostics
 
         <hr className="my-sm border-0 border-t border-ink-12" />
 
+        {/* How this state stands up when it is put down. Identity until the
+            first partial fold, so these read 0 for most of a sequence. */}
+        <p className="pb-xs font-mono text-micro tracking-[0.08em] text-ink-60 uppercase">
+          rest frame
+        </p>
+        <Field label="roll" value={`${d.rest.rollDeg.toFixed(1)} deg`} />
+        <Field label="rise" value={`${mm(d.rest.liftMm)} mm`} />
+        <Field
+          label="span x length x height"
+          value={`${mm(d.rest.span)} x ${mm(d.rest.length)} x ${mm(d.rest.height)} mm`}
+        />
+
+        <hr className="my-sm border-0 border-t border-ink-12" />
+
         <p className="pb-xs font-mono text-micro tracking-[0.08em] text-ink-60 uppercase">
           step delta
         </p>
         {delta ? (
           <>
             <Field label="kind" value={delta.kind} />
-            <Field label="angle" value={`${delta.angleDeg} deg`} />
+            {/* "angle" said one thing and meant two. The arc the animation
+                sweeps comes from `side`; the bend a partial fold stores comes
+                from `direction`, and they are only equal by accident. */}
+            <Field label="sweep (arc)" value={`${delta.angleDeg} deg`} />
+            <Field label="lift (turn)" value={`${mm(delta.liftMm ?? 0)} mm`} />
             <Field
               label="axis origin"
               value={
@@ -230,6 +248,19 @@ export function DiagnosticsPanel({ diagnostics }: { diagnostics: StepDiagnostics
                 {d.layerChanges.map((c) => `${c.facetId}: ${c.from} -> ${c.to}`).join("  ")}
               </p>
             ) : null}
+            {/* The reading that would have caught two thirds of the catalogue
+                sweeping paper through the floor. Every other number on this
+                panel looks at the endpoints, and the paper went under the table
+                strictly between them. */}
+            <Field
+              label="lowest z in sweep"
+              value={
+                d.divesUnderTable
+                  ? `${mm(d.lowestZ)} mm - dives ${mm(d.endpointZ - d.lowestZ)} mm below its endpoints`
+                  : `${mm(d.lowestZ)} mm`
+              }
+              tone={d.divesUnderTable ? "warn" : "normal"}
+            />
           </>
         ) : (
           <p className="font-mono text-small text-ink-60">

@@ -18,6 +18,9 @@ import type {
 } from "@/engine/core/types";
 import type { PlaneStructure } from "@/content/types";
 import { PAPER_SIZES, area, centroid, computeFoldState, computeStepDelta, facetInTable, formatForPlane, isoDet, totalArea } from "@/engine";
+import { LAYER_THICKNESS } from "@/engine/core/paper";
+import { multiply, poseAtProgress, poseForFacet, transformPoint, type Mat4 } from "@/engine/core/pose";
+import { restFrame } from "@/engine/core/rest";
 import { describeLayers } from "./plan";
 
 /** Relative area drift beyond this is worth flagging to a geometry author. */
@@ -97,6 +100,28 @@ export type StepDiagnostics = {
   readonly areaDrifted: boolean;
   readonly delta: StepDelta | null;
   readonly layerChanges: readonly LayerChangeRow[];
+  /**
+   * Lowest world z anywhere in the step's animation, and the lowest either of
+   * its endpoints reaches.
+   *
+   * The single number that would have caught the defect this tool exists to
+   * catch. Two thirds of the catalogue's steps used to sweep paper as deep as
+   * -105mm through a floor mesh at z=-1.5, so it did not look wrong on the
+   * stage - it disappeared - and every other reading here was clean because
+   * every other reading looks at the endpoints.
+   */
+  readonly lowestZ: number;
+  readonly endpointZ: number;
+  /** True when the step dips more than a layer of paper below its endpoints. */
+  readonly divesUnderTable: boolean;
+  /** How the settled model stands up: roll, rise, and the box it then occupies. */
+  readonly rest: {
+    readonly rollDeg: number;
+    readonly liftMm: number;
+    readonly span: number;
+    readonly length: number;
+    readonly height: number;
+  };
 };
 
 /**
@@ -128,6 +153,10 @@ export function stepDiagnostics(structure: PlaneStructure, index: number): StepD
         .sort((a, b) => a.facetId - b.facetId)
     : [];
 
+  const sweep = sweepDepth(delta);
+  const frame = restFrame(state);
+  const box = restBox(state, frame.matrix);
+
   return {
     stepIndex: clamped,
     stepId: step?.id ?? null,
@@ -140,7 +169,54 @@ export function stepDiagnostics(structure: PlaneStructure, index: number): StepD
     areaDrifted: hasAreaDrift(current, sheet, cutSoFar),
     delta,
     layerChanges,
+    lowestZ: sweep.lowest,
+    endpointZ: sweep.endpoints,
+    divesUnderTable: sweep.lowest < sweep.endpoints - LAYER_THICKNESS,
+    rest: {
+      rollDeg: frame.rollDeg,
+      liftMm: frame.liftMm,
+      span: box.span,
+      length: box.length,
+      height: box.height,
+    },
   };
+}
+
+/** Lowest z over 33 samples of the step, and the lower of its two endpoints. */
+function sweepDepth(delta: StepDelta | null): { lowest: number; endpoints: number } {
+  if (!delta) return { lowest: 0, endpoints: 0 };
+  const at = (t: number): number => {
+    const poses = poseAtProgress(delta, t);
+    let z = Infinity;
+    for (const facet of delta.startFacets) {
+      const pose = poses.get(facet.id);
+      if (!pose) continue;
+      for (const p of facet.polygon) z = Math.min(z, transformPoint(pose, p)[2]);
+    }
+    return Number.isFinite(z) ? z : 0;
+  };
+  const endpoints = Math.min(at(0), at(1));
+  let lowest = endpoints;
+  for (let i = 1; i < 32; i += 1) lowest = Math.min(lowest, at(i / 32));
+  return { lowest, endpoints };
+}
+
+/** The box the state occupies once it is standing up. */
+function restBox(state: FoldState, rest: Mat4) {
+  const min = [Infinity, Infinity, Infinity];
+  const max = [-Infinity, -Infinity, -Infinity];
+  for (const facet of state.facets) {
+    const pose = multiply(rest, poseForFacet(facet));
+    for (const p of facet.polygon) {
+      const w = transformPoint(pose, p);
+      for (let i = 0; i < 3; i += 1) {
+        min[i] = Math.min(min[i]!, w[i]!);
+        max[i] = Math.max(max[i]!, w[i]!);
+      }
+    }
+  }
+  if (!Number.isFinite(min[0])) return { span: 0, length: 0, height: 0 };
+  return { span: max[0]! - min[0]!, length: max[1]! - min[1]!, height: max[2]! - min[2]! };
 }
 
 /** Validation issues bucketed by the step index they belong to. */

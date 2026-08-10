@@ -124,25 +124,6 @@ html.night body {
 }
 
 /*
- * Hangar card liveness: a woken plane floats with a slow bob (DESIGN.md motion,
- * SCREENS.md §1). The mount is inset past the card's clipped edges so the bob
- * never exposes a gap behind the opaque engine canvas.
- */
-@keyframes plane-bob {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
-  50% {
-    transform: translate3d(0, -8px, 0);
-  }
-}
-
-.plane-bob {
-  animation: plane-bob 6s var(--ease-move) infinite;
-}
-
-/*
  * The rubber-stamp slam: one of DESIGN.md's two delight moments. Curve and
  * keyframes are taken verbatim from the approved reference (`stampin`).
  * `both` matters: under reduced motion the near-zero duration lands the stamp
@@ -185,12 +166,11 @@ html.night body {
   }
 
   /*
-   * The blanket rule above is right for one-shot motion - the stamp still lands
-   * on its final frame because it fills `both`. A looping idle animation would
-   * instead cycle at 0.01ms and read as jitter, so the bob is switched off by
-   * name (the !important above only pins duration, not animation-name).
+   * No exemption needed here any more. The one looping idle animation on the
+   * site - the hangar card's float - moved into the engine, which reads
+   * prefers-reduced-motion itself and holds the plane still while keeping it
+   * lifted: the staging is not motion. The blanket rule above is right for the
+   * one-shot motion that remains, and the stamp still lands on its final frame
+   * because it fills `both`.
    */
-  .plane-bob {
-    animation-name: none;
-  }
 }
