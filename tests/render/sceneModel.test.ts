@@ -1,11 +1,23 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
-import { BufferGeometry, LineSegments, Material, Matrix4, Mesh, SRGBColorSpace, Vector3 } from "three";
+import {
+  BufferGeometry,
+  LineSegments,
+  Material,
+  Matrix4,
+  Mesh,
+  RepeatWrapping,
+  ShaderChunk,
+  ShaderLib,
+  SRGBColorSpace,
+  Vector3,
+} from "three";
 import {
   ContactShadow,
   SceneModel,
   createBackdropTexture,
+  createPaperMaterial,
   displayBounds,
   facetGeometry,
   facetSignature,
@@ -14,6 +26,7 @@ import {
 } from "@/engine/render/sceneModel";
 import { createCoreStub, LAYER_Z_MM, makeStructure } from "@/engine/render/__contracts__/coreStub";
 import type { Vec2 } from "@/engine/core/types";
+import { DISPLAY_RIG } from "@/engine/view";
 
 const SQUARE_CCW: readonly Vec2[] = [
   [-10, -10],
@@ -102,6 +115,68 @@ describe("facetGeometry", () => {
     expect(geometry.getIndex()?.count).toBe(3);
     const normals = geometry.getAttribute("normal");
     for (let i = 0; i < normals.count; i += 1) expect(normals.getZ(i)).toBe(1);
+  });
+});
+
+/**
+ * The paper material is Three's standard shader with three lines spliced into
+ * it by string match, which is the most brittle thing in the render layer: a
+ * `String.replace` whose anchor has gone returns the source unchanged, compiles
+ * cleanly, and leaves nothing behind but a render that quietly looks worse.
+ * These tests are the tripwire for a Three upgrade.
+ */
+describe("createPaperMaterial", () => {
+  const ANCHORS = {
+    vertex: ["void main() {", "#include <beginnormal_vertex>"],
+    fragment: ["void main() {", "#include <color_fragment>"],
+    lights: ["float dotNL = saturate( dot( geometryNormal, directLight.direction ) );"],
+  } as const;
+
+  it("patches lines Three still ships", () => {
+    for (const anchor of ANCHORS.vertex) expect(ShaderLib.physical.vertexShader).toContain(anchor);
+    for (const anchor of ANCHORS.fragment) {
+      expect(ShaderLib.physical.fragmentShader).toContain(anchor);
+    }
+    for (const anchor of ANCHORS.lights) {
+      expect(ShaderChunk.lights_physical_pars_fragment).toContain(anchor);
+    }
+  });
+
+  it("applies every patch, and refuses to compile quietly if one stops matching", () => {
+    const material = createPaperMaterial(stageTheme("paper"));
+    const compile = (fragment: string, vertex = ShaderLib.physical.vertexShader) => {
+      const shader = { uniforms: {}, vertexShader: vertex, fragmentShader: fragment };
+      material.onBeforeCompile(shader as never, null as never);
+      return shader;
+    };
+
+    // Three calls onBeforeCompile BEFORE resolving #include, so this is the
+    // shipped source verbatim. Handing it the RESOLVED source instead is the
+    // mistake this test exists to catch: it compiles cleanly and silently
+    // drops the wrap term.
+    const shader = compile(ShaderLib.physical.fragmentShader);
+    expect(shader.vertexShader).toContain("vPaperNormal = objectNormal;");
+    expect(shader.fragmentShader).toContain("diffuseColor.rgb = backColor;");
+    // The wrap term, which is the one that would have gone silently.
+    expect(shader.fragmentShader).toContain(`+ ${DISPLAY_RIG.wrap.toFixed(2)} )`);
+    expect(shader.fragmentShader).not.toContain("#include <lights_physical_pars_fragment>");
+    expect(shader.fragmentShader).not.toContain(ANCHORS.lights[0]);
+
+    expect(() => compile("void main() {\n#include <color_fragment>\n}")).toThrow(
+      /no longer contains/,
+    );
+
+    material.dispose();
+  });
+
+  it("hangs the fibre grain on the sheet, not on the facet", () => {
+    const material = createPaperMaterial(stageTheme("paper"));
+    // Sampled from paper-space millimetres, so a crease that splits one facet
+    // into two leaves the grain running continuously across the join.
+    expect(material.roughnessMap).not.toBeNull();
+    expect(material.roughnessMap!.wrapS).toBe(RepeatWrapping);
+    expect(material.roughnessMap!.wrapT).toBe(RepeatWrapping);
+    material.dispose();
   });
 });
 

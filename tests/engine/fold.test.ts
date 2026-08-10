@@ -502,12 +502,27 @@ describe("18. svg projection", () => {
     );
     expect(fills.size).toBeGreaterThan(4);
 
-    // And the values stay in paper's range. Paper in a lit room occupies a
-    // narrower band than intuition suggests; anything darker than this reads as
-    // grey card, and it is what the first attempt at the lighting produced.
     const lightness = [...fills].map((hex) => parseInt(hex.slice(1, 3), 16) / 255);
-    expect(Math.max(...lightness)).toBeGreaterThan(0.9);
-    expect(Math.min(...lightness)).toBeGreaterThan(0.6);
+    const brightest = Math.max(...lightness);
+    const darkest = Math.min(...lightness);
+
+    // Lit paper is very near white at the top end.
+    expect(brightest).toBeGreaterThan(0.9);
+    // It is not grey card at the bottom either: a sheet is thin enough to pass
+    // light through itself, so its shadow side never goes dead.
+    expect(darkest).toBeGreaterThan(0.35);
+
+    /**
+     * And the two are actually far apart, which is the half this test used to
+     * be missing. It asserted only that nothing went below 0.6, on the reasoning
+     * that paper occupies a narrow band - true of one sheet under one light, and
+     * the wrong lesson to draw. The catalogue passed that assertion comfortably
+     * while rendering every plane in three values across a darkest-to-brightest
+     * ratio of 0.87, which is what "the planes look flat and a bit ugly" was
+     * describing. An aeroplane presents a dozen panels at a dozen angles and
+     * they have to LOOK like a dozen angles.
+     */
+    expect(darkest / brightest).toBeLessThan(0.75);
   });
 
   it("grounds a display render on a shadow it derives from the aircraft", () => {

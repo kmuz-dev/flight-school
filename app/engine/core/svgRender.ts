@@ -11,6 +11,7 @@ import { restTransform } from "./rest";
 import { boundingBox } from "./polygon";
 import {
   DISPLAY_LIFT,
+  DISPLAY_RIG,
   HERO_VIEW,
   LIGHT_RIG,
   closeness,
@@ -89,26 +90,16 @@ const BASIS = viewBasis(HERO_VIEW.azimuthDeg, HERO_VIEW.elevationDeg);
  * warm as it catches the key and one that just turns pale.
  */
 const LAMPS = [
-  { dir: normalize(LIGHT_RIG.key), rgb: [1.0, 0.94, 0.83], power: 2.4 },
-  { dir: normalize(LIGHT_RIG.fill), rgb: [0.6, 0.76, 0.92], power: 0.6 },
-  { dir: normalize(LIGHT_RIG.rim), rgb: [1.0, 1.0, 1.0], power: 0.15 },
+  { dir: normalize(LIGHT_RIG.key), rgb: [1.0, 0.94, 0.83], power: DISPLAY_RIG.key },
+  { dir: normalize(LIGHT_RIG.fill), rgb: [0.6, 0.76, 0.92], power: DISPLAY_RIG.fill },
+  { dir: normalize(LIGHT_RIG.rim), rgb: [1.0, 1.0, 1.0], power: DISPLAY_RIG.rim },
 ] as const;
 
 /** Hemisphere ambient: sky above, bounced ground below. */
 const SKY = [1.0, 0.97, 0.9] as const;
 const GROUND = [0.78, 0.74, 0.66] as const;
-/**
- * Powers are set for the ACES curve BELOW, not for the raw sum.
- *
- * ACES is heavily compressive in its upper range, so a rig that sums to 1.0
- * comes out around 0.84 after tone mapping and 0.98 white paper renders as
- * grey card. Solving the curve for a near-white top end puts the brightest
- * facet near 3.3, which is why these look like a lot of light: the total is
- * about 3.3 lit and 0.86 in shadow, giving sRGB 0.96 down to 0.81 - the range
- * a sheet of paper actually occupies in a bright room, which is narrower than
- * intuition suggests and is why overdoing the contrast reads as plastic.
- */
-const AMBIENT = 1.1;
+const AMBIENT = DISPLAY_RIG.ambient;
+const WRAP = DISPLAY_RIG.wrap;
 
 const srgbToLinear = (c: number): number =>
   c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
@@ -197,7 +188,14 @@ function shadeFacet(albedoHex: string, normal: Vec3, faceUp: boolean): string {
   const out: [number, number, number] = [0, 0, 0];
   for (let c = 0; c < 3; c += 1) {
     let light = AMBIENT * (GROUND[c]! + (SKY[c]! - GROUND[c]!) * sky);
-    for (const lamp of LAMPS) light += lamp.power * lamp.rgb[c]! * Math.max(0, dot(n, lamp.dir));
+    // Wrap lighting, the same term the 3D stage's paper shader applies: a
+    // sheet is thin enough that light entering the lit side scatters through
+    // and leaves the other, so the terminator is soft and the shadow side is
+    // never black. Without it the flat card's shadow side sits noticeably
+    // darker than the live scene that wakes over it.
+    for (const lamp of LAMPS) {
+      light += lamp.power * lamp.rgb[c]! * Math.max(0, (dot(n, lamp.dir) + WRAP) / (1 + WRAP));
+    }
     // The reverse of a sheet is the same paper seen from behind: a touch darker
     // and a touch warmer, not a different material.
     const albedo = srgbToLinear(base[c]!) * (faceUp ? 1 : 0.88);

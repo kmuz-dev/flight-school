@@ -441,10 +441,13 @@ export class FoldEngine implements FoldEngineHandle {
       this.shadow = null;
     }
 
+    // A tutorial and a display surface are lit for different jobs, and the
+    // theme carries both settings rather than one compromise. See the comment
+    // on `displayHemiIntensity`.
     this.hemiLight = new HemisphereLight(
       new Color(this.theme.hemiSky),
       new Color(this.theme.hemiGround),
-      this.theme.hemiIntensity,
+      this.display ? this.theme.displayHemiIntensity : this.theme.hemiIntensity,
     );
     this.keyLight = new DirectionalLight(new Color(this.theme.keyColor), this.theme.keyIntensity);
     // A display stage has nothing to receive a shadow map - the floor is gone
@@ -458,7 +461,7 @@ export class FoldEngine implements FoldEngineHandle {
     this.keyLight.shadow.normalBias = 0.6;
     this.fillLight = new DirectionalLight(
       new Color(this.theme.fillColor),
-      this.theme.fillIntensity,
+      this.display ? this.theme.displayFillIntensity : this.theme.fillIntensity,
     );
     this.rimLight = new DirectionalLight(new Color(this.theme.rimColor), this.theme.rimIntensity);
     this.scene.add(

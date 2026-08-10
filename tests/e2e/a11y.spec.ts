@@ -21,7 +21,37 @@ import { expect, test, type Page } from "@playwright/test";
  */
 const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"];
 
-function scan(page: Page) {
+/**
+ * Let every colour transition land before reading colours off the page.
+ *
+ * axe measures contrast from the computed styles at the instant it runs, and a
+ * `transition-colors` caught halfway through is measuring two colours that were
+ * never meant to be seen together. The hangar's filter chips cross the palette
+ * over 150ms when the theme toggles - ink navy on cream becoming cream on ink
+ * navy - and somewhere in the middle they pass through each other. That made
+ * the night scan fail about one run in three, and only in a full suite, where
+ * the machine is busy enough for the scan to land inside the window.
+ *
+ * Waiting on the animations themselves rather than sleeping: a sleep is a guess
+ * that gets tuned upward every time it flakes. Anything that never finishes -
+ * an idle loop, a spinner - is skipped, and the whole wait is bounded, because
+ * a stuck animation must not turn an accessibility failure into a timeout.
+ */
+async function settle(page: Page): Promise<void> {
+  await page.evaluate(async () => {
+    const finite = document.getAnimations().filter((a) => {
+      const timing = a.effect?.getComputedTiming();
+      return timing !== undefined && Number.isFinite(timing.endTime ?? Infinity);
+    });
+    await Promise.race([
+      Promise.allSettled(finite.map((a) => a.finished)),
+      new Promise((resolve) => setTimeout(resolve, 2000)),
+    ]);
+  });
+}
+
+async function scan(page: Page) {
+  await settle(page);
   return new AxeBuilder({ page })
     .withTags(TAGS)
     .exclude("[data-testid='engine-mount']")
@@ -29,11 +59,19 @@ function scan(page: Page) {
     .analyze();
 }
 
-/** Readable failure: axe's default dump is a wall of nodes. */
+/**
+ * Readable failure: axe's default dump is a wall of nodes.
+ *
+ * Each violation carries its nodes' selectors. Without them a failure reads
+ * "one element somewhere fails contrast", which is not something anyone can act
+ * on - and an intermittent one is then unfixable, because by the time you go
+ * looking it passes.
+ */
 function summarise(results: Awaited<ReturnType<typeof scan>>): string[] {
-  return results.violations.map(
-    (v) => `${v.id} (${v.impact ?? "unknown"}) x${v.nodes.length}: ${v.help}`,
-  );
+  return results.violations.map((v) => {
+    const where = v.nodes.map((n) => n.target.join(" ")).join(" | ");
+    return `${v.id} (${v.impact ?? "unknown"}) x${v.nodes.length}: ${v.help} @ ${where}`;
+  });
 }
 
 const SCREENS: readonly { readonly name: string; readonly path: string }[] = [

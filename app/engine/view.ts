@@ -115,6 +115,47 @@ export const LIGHT_RIG = {
 } as const;
 
 /**
+ * How hard each of those lamps burns on a DISPLAY surface, plus the ambient
+ * they sit on. One set of numbers, read by the 3D stage and the flat SVG alike.
+ *
+ * They lived in two places and had already drifted - the SVG lit its rim at
+ * 0.15 while the stage had it off, and their ambients differed by a fifth - so
+ * a card and the scene that woke over it were lit by two rigs that merely
+ * resembled each other. Directions were shared from the start; these are the
+ * other half of the same convention.
+ *
+ * These are the LIGHT theme's numbers. The flat SVG is built once at build time
+ * and has no theme, so it always uses them; Night Flight's stage overrides them
+ * in `STAGE_THEMES`, because a dark ground needs the opposite treatment - a
+ * strong rim to keep the aircraft off the backdrop, which a light ground does
+ * not need at all.
+ *
+ * `ambient` is the one that matters. It is the light that reaches every surface
+ * facing up, which is most of a paper aeroplane, so it is also the light that
+ * flattens one. At the tutorial's level the fleet rendered as three values
+ * spanning a darkest-to-brightest ratio of 0.87 - a printed sticker of an
+ * aircraft - and dropping it is what lets a fold read at all.
+ *
+ * Set for the ACES curve, NOT for a raw sum. ACES compresses hard at the top,
+ * so a rig totalling 1.0 renders 0.98 white paper as grey card; the brightest
+ * facet needs to reach about 2.4 to land near white.
+ */
+export const DISPLAY_RIG = {
+  key: 2.4,
+  fill: 0.35,
+  /** Off on the light ground: a rim there separates nothing. */
+  rim: 0,
+  ambient: 0.35,
+  /**
+   * How far light wraps past the terminator, standing in for the fact that a
+   * sheet of paper is thin enough to be translucent. 0 is an opaque surface;
+   * 0.5 washes the fold out entirely, because the terminator is exactly what
+   * tells a reader that two panels meet at an angle.
+   */
+  wrap: 0.18,
+} as const;
+
+/**
  * How high a finished aircraft floats on a display surface, as a fraction of
  * its own bounding radius.
  *

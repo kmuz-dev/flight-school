@@ -17,6 +17,7 @@ import {
   Color,
   DataTexture,
   DoubleSide,
+  RepeatWrapping,
   Group,
   LinearFilter,
   LineBasicMaterial,
@@ -27,10 +28,12 @@ import {
   PlaneGeometry,
   RGBAFormat,
   SRGBColorSpace,
+  ShaderChunk,
   ShaderMaterial,
   Vector3,
 } from "three";
 import type { Facet, FoldState, Vec2 } from "@/engine/core/types";
+import { DISPLAY_RIG } from "@/engine/view";
 import type { PoseMap } from "./coreApi";
 
 export type ThemeName = "paper" | "night";
@@ -59,6 +62,21 @@ export type StageTheme = {
   readonly keyIntensity: number;
   readonly fillColor: number;
   readonly fillIntensity: number;
+  /**
+   * The same two lamps on a DISPLAY stage, which is lit for a different job.
+   *
+   * A tutorial is a diagram: the sheet has to sit unmistakably on its floor at
+   * every step, including the first, where it is one flat rectangle lying on a
+   * flat plane and only its value separates the two. That wants generous
+   * ambient. A finished aircraft is a photograph of an object, and ambient is
+   * exactly what stops an object having form - a hemisphere adds the same value
+   * to every surface facing up, which is most of a paper aeroplane.
+   *
+   * Two settings rather than one compromise, because the compromise is what the
+   * fleet already looked like.
+   */
+  readonly displayHemiIntensity: number;
+  readonly displayFillIntensity: number;
   readonly rimColor: number;
   readonly rimIntensity: number;
   readonly crease: number;
@@ -95,6 +113,10 @@ export const STAGE_THEMES: Readonly<Record<ThemeName, StageTheme>> = {
     keyIntensity: 2.4,
     fillColor: 0xcfe0f0,
     fillIntensity: 0.75,
+    // The display rig is shared with the flat SVG - see `DISPLAY_RIG`, which
+    // carries the measurements behind these numbers.
+    displayHemiIntensity: DISPLAY_RIG.ambient,
+    displayFillIntensity: DISPLAY_RIG.fill,
     rimColor: 0xffffff,
     rimIntensity: 0,
     crease: 0xd64541,
@@ -120,6 +142,13 @@ export const STAGE_THEMES: Readonly<Record<ThemeName, StageTheme>> = {
     keyIntensity: 1.5,
     fillColor: 0x2a3a57,
     fillIntensity: 0.5,
+    /**
+     * Night Flight already lights for form rather than for legibility - a low
+     * hemisphere and a strong rim - so its display stage is its tutorial stage.
+     * It was never the scene that looked flat.
+     */
+    displayHemiIntensity: 0.45,
+    displayFillIntensity: 0.5,
     rimColor: 0xe8effa,
     rimIntensity: 2.6,
     crease: 0xe8615c,
@@ -135,18 +164,64 @@ export function stageTheme(name: ThemeName | undefined): StageTheme {
 }
 
 /**
- * One shared paper material for every facet. `DoubleSide` plus a tiny shader
+ * A tiling paper-fibre map, generated rather than shipped.
+ *
+ * Green carries the roughness, which is the channel `roughnessMap` reads. The
+ * noise is deliberately anisotropic: machine-made paper has its fibres aligned
+ * with the direction it came off the roll, which is why a sheet tears cleanly
+ * one way and raggedly the other, and it is that faint directional grain rather
+ * than random speckle that reads as paper instead of as stucco. What it buys is
+ * a broad specular from the key light that varies across a panel, so a large
+ * flat area stops being one printed value.
+ *
+ * Procedural, so it costs no asset budget and cannot become an AI-generated
+ * image, which the project's ground rules exclude outright.
+ */
+export function createFibreTexture(): DataTexture {
+  const size = 128;
+  const data = new Uint8Array(size * size * 4);
+  // Deterministic value noise from an integer hash, not `Math.random`, so the
+  // grain is identical in every session and every screenshot comparison.
+  const hash = (x: number, y: number): number => {
+    let h = (x * 374761393 + y * 668265263) | 0;
+    h = (h ^ (h >>> 13)) | 0;
+    h = Math.imul(h, 1274126177) | 0;
+    return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
+  };
+  for (let y = 0; y < size; y += 1) {
+    for (let x = 0; x < size; x += 1) {
+      // Stretched 6:1 along x, so the fibres run rather than speckle.
+      const n = hash(Math.floor(x / 6), y) * 0.65 + hash(Math.floor(x / 2), Math.floor(y / 3)) * 0.35;
+      const i = (y * size + x) * 4;
+      data[i] = 128;
+      // Roughness varies by a few percent around the material's own value.
+      data[i + 1] = Math.round(215 + n * 40);
+      data[i + 2] = 255;
+      data[i + 3] = 255;
+    }
+  }
+  const texture = new DataTexture(data, size, size, RGBAFormat);
+  texture.wrapS = RepeatWrapping;
+  texture.wrapT = RepeatWrapping;
+  // UVs are the sheet in units of A4, so this is 14 tiles across 210mm.
+  texture.repeat.set(14, 14);
+  texture.needsUpdate = true;
+  return texture;
+}
+
+/**
+ * One shared paper material for every facet. `DoubleSide` plus a small shader
  * patch gives the sheet a distinguishable reverse side, so a folded-over facet
- * reads as the back of the paper. Face parity comes for free: a pose with a
- * negative determinant (a reflection, i.e. face-down) makes Three flip the
- * winding, so `gl_FrontFacing` already encodes it.
+ * reads as the back of the paper, and a wrap term stands in for the light that
+ * passes through it.
  */
 export function createPaperMaterial(theme: StageTheme): MeshStandardMaterial {
   const material = new MeshStandardMaterial({
     color: new Color(theme.paperFront),
-    roughness: 0.94,
+    roughness: 0.9,
     metalness: 0,
     side: DoubleSide,
+    roughnessMap: createFibreTexture(),
   });
   // Thin sheets look wrong with single-sided shadow casting.
   material.shadowSide = DoubleSide;
@@ -154,6 +229,20 @@ export function createPaperMaterial(theme: StageTheme): MeshStandardMaterial {
   const back = new Color(theme.paperBack);
   material.onBeforeCompile = (shader) => {
     shader.uniforms.backColor = { value: back };
+    /**
+     * `String.replace` on a shader that no longer contains the anchor returns
+     * the shader unchanged and compiles perfectly, so a Three upgrade that
+     * renames a chunk would silently drop the paper's back face and its
+     * translucency and leave nothing to find but "it looks worse than it did".
+     * Every anchor below is a line lifted verbatim from Three's own chunks, so
+     * every one of them is exactly that fragile.
+     */
+    const patch = (source: string, anchor: string, replacement: string): string => {
+      if (!source.includes(anchor)) {
+        throw new Error(`paper shader patch: Three no longer contains \`${anchor}\``);
+      }
+      return source.replace(anchor, replacement);
+    };
     /**
      * Which side of the SHEET this fragment is on, in paper space.
      *
@@ -165,23 +254,54 @@ export function createPaperMaterial(theme: StageTheme): MeshStandardMaterial {
      * it. The sheet's own normal still knows which way it is looking, and it is
      * carried through the pose because it is the object normal.
      */
-    shader.vertexShader = shader.vertexShader
-      .replace("void main() {", "varying vec3 vPaperNormal;\nvoid main() {")
-      .replace(
-        "#include <beginnormal_vertex>",
-        "#include <beginnormal_vertex>\n\tvPaperNormal = objectNormal;",
-      );
-    shader.fragmentShader = shader.fragmentShader
-      .replace("void main() {", "uniform vec3 backColor;\nvarying vec3 vPaperNormal;\nvoid main() {")
-      .replace(
+    shader.vertexShader = patch(
+      patch(shader.vertexShader, "void main() {", "varying vec3 vPaperNormal;\nvoid main() {"),
+      "#include <beginnormal_vertex>",
+      "#include <beginnormal_vertex>\n\tvPaperNormal = objectNormal;",
+    );
+    shader.fragmentShader = patch(
+      patch(
+        patch(
+          shader.fragmentShader,
+          "void main() {",
+          "uniform vec3 backColor;\nvarying vec3 vPaperNormal;\nvoid main() {",
+        ),
         "#include <color_fragment>",
         // The chamfer bands sit near z=0 in paper space and belong to neither
         // side, so they keep the front colour rather than flickering between
         // the two as a facet turns.
         "#include <color_fragment>\n\tif ( vPaperNormal.z < -0.3 ) { diffuseColor.rgb = backColor; }",
-      );
+      ),
+      /**
+       * Wrap lighting, which is what paper's translucency looks like.
+       *
+       * A sheet is thin enough that light entering the lit side scatters
+       * through and leaves the other, so the terminator between lit and unlit
+       * is soft and the shadow side is never black. Replacing
+       * `saturate(dot(N,L))` with `(dot(N,L) + w) / (1 + w)` is the standard
+       * cheap stand-in for that, and it is the one thing about paper that no
+       * arrangement of lamps can imitate: a lamp can fill a shadow, but only
+       * translucency softens the terminator itself.
+       *
+       * Kept low. At 0.5 the fold washes out entirely - the terminator is what
+       * tells a cadet that two panels meet at an angle - so this softens the
+       * edge without erasing it.
+       *
+       * `onBeforeCompile` runs BEFORE Three resolves its `#include` directives,
+       * so the line this changes is not in the shader yet. The chunk has to be
+       * patched and spliced in over its own include - which is also why the
+       * guard above earns its keep: patching the resolved text compiles fine
+       * and simply does nothing.
+       */
+      "#include <lights_physical_pars_fragment>",
+      patch(
+        ShaderChunk.lights_physical_pars_fragment,
+        "float dotNL = saturate( dot( geometryNormal, directLight.direction ) );",
+        `float dotNL = saturate( ( dot( geometryNormal, directLight.direction ) + ${DISPLAY_RIG.wrap.toFixed(2)} ) / ${(1 + DISPLAY_RIG.wrap).toFixed(2)} );`,
+      ),
+    );
   };
-  material.customProgramCacheKey = () => "flightschool-paper-2side";
+  material.customProgramCacheKey = () => `flightschool-paper-2side-wrap-${DISPLAY_RIG.wrap}`;
   return material;
 }
 
@@ -289,12 +409,22 @@ export function facetGeometry(polygon: readonly Vec2[]): BufferGeometry {
 
   const positions: number[] = [];
   const normals: number[] = [];
+  const uvs: number[] = [];
   const indices: number[] = [];
 
+  /**
+   * A vertex, with its UV taken from its PAPER-space position in units of A4.
+   *
+   * The grain therefore belongs to the sheet rather than to a facet: two facets
+   * that were one piece of paper before a crease split them still show one
+   * continuous run of fibre, and the grain does not swim when a later fold
+   * subdivides them again.
+   */
   const push = (p: Vec2, z: number, nx: number, ny: number, nz: number): number => {
     const index = positions.length / 3;
     positions.push(p[0], p[1], z);
     normals.push(nx, ny, nz);
+    uvs.push(p[0] / 210, p[1] / 297);
     return index;
   };
 
@@ -340,6 +470,7 @@ export function facetGeometry(polygon: readonly Vec2[]): BufferGeometry {
   const geometry = new BufferGeometry();
   geometry.setAttribute("position", new BufferAttribute(new Float32Array(positions), 3));
   geometry.setAttribute("normal", new BufferAttribute(new Float32Array(normals), 3));
+  geometry.setAttribute("uv", new BufferAttribute(new Float32Array(uvs), 2));
   geometry.setIndex(indices);
   // Facets are placed by pose matrices, never by their own transform, so a
   // bounding sphere computed in paper space is all Three needs for culling.
@@ -552,6 +683,7 @@ export class SceneModel {
 
   dispose(): void {
     this.clearMeshes();
+    this.paperMaterial.roughnessMap?.dispose();
     this.paperMaterial.dispose();
     this.edgeMaterial.dispose();
     this.root.removeFromParent();
