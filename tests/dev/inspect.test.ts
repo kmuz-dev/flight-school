@@ -123,10 +123,16 @@ describe("stepDiagnostics", () => {
     expect(d.delta?.axis?.origin).toEqual(delta.axis?.origin);
   });
 
-  it("flattens layer changes in facet-id order", () => {
+  it("flattens layer changes in facet-id order, showing only the ones that moved", () => {
     const d = stepDiagnostics(dart, 0);
     const ids = d.layerChanges.map((c) => c.facetId);
     expect([...ids].sort((a, b) => a - b)).toEqual(ids);
+    // The delta records a span for every facet, because poseAtProgress needs a
+    // facet's starting layer to undo what the step's rotation does to its z
+    // offset even when the layer itself holds. A panel reading of "layer 3 ->
+    // layer 3" is noise, so the diagnostics drop those rows.
+    const delta = computeStepDelta(dart, 0)!;
+    expect(delta.layerChanges.size).toBeGreaterThan(d.layerChanges.length);
     for (const change of d.layerChanges) {
       expect(change.from).not.toBe(change.to);
     }

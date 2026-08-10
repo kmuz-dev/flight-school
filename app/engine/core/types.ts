@@ -138,6 +138,20 @@ export type StepDelta = {
   readonly angleDeg: number;
   readonly kind: FoldAction["type"];
   readonly layerChanges: ReadonlyMap<number, { readonly from: number; readonly to: number }>;
+  /**
+   * Millimetres the whole model rises at the midpoint of the step, on a
+   * sin(pi*t) profile that is exactly zero at both ends.
+   *
+   * A flip is a 180-degree turn about a line lying IN the table, so every point
+   * off that line passes through z < 0 on the way round and spends the
+   * animation inside an opaque floor. A hand does not do that: it picks the
+   * model up, turns it over in the air, and puts it back down. sin(pi*t) is not
+   * a shaping choice - a point at radial offset a traces z = -a*sin(180deg * t),
+   * so a lift of a*sin(pi*t) is its exact inverse, and the largest a in the
+   * model is therefore the exact height that clears the table. Derived per step
+   * and per plane; no plane carries a number for it.
+   */
+  readonly liftMm?: number;
 };
 
 export type PaperFormat = "letter" | "a4" | "square" | "index-4x6";

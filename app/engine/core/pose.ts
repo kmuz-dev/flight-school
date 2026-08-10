@@ -119,8 +119,8 @@ export function posesForState(state: FoldState): ReadonlyMap<number, Mat4> {
  * Poses part-way through a step. Moving facets are rotated about the step's axis
  * by `t * angle` from their PREVIOUS pose, so at t=0 the result equals the old
  * state and at t=1 it equals the new one (the 180-degree lemma). Stationary
- * facets keep their previous pose; their layer offset lerps so a restack does
- * not pop.
+ * facets keep their previous pose; every facet's layer offset lerps toward its
+ * settled layer, so a restack does not pop.
  *
  * The facets come from the delta, not from the state before the step, and that
  * distinction is the whole point of `startFacets`. A crease splits the facets it
@@ -137,21 +137,95 @@ export function poseAtProgress(delta: StepDelta, t: number): ReadonlyMap<number,
 
   for (const facet of delta.startFacets) {
     const base = poseForFacet(facet);
-    if (!moving.has(facet.id) || !delta.axis || delta.angleDeg === 0) {
-      out.set(facet.id, base);
+    const turns = moving.has(facet.id) && delta.axis !== null && delta.angleDeg !== 0;
+    const turned = turns ? delta.angleDeg * clamped : 0;
+    const dz = layerCorrection(delta.layerChanges.get(facet.id), delta.axis, turned, clamped);
+    const lift = arcLift(delta.liftMm, clamped);
+    const offset = dz + lift;
+
+    if (!turns) {
+      out.set(facet.id, offset === 0 ? base : multiply(translation(0, 0, offset), base));
       continue;
     }
-    const change = delta.layerChanges.get(facet.id);
-    const layerLerp = change
-      ? (change.to - change.from) * clamped * LAYER_THICKNESS
-      : 0;
     const rotated = multiply(
-      rotationAboutAxis(delta.axis.origin, delta.axis.dir, delta.angleDeg * clamped),
+      rotationAboutAxis(delta.axis!.origin, delta.axis!.dir, turned),
       base,
     );
-    out.set(facet.id, multiply(translation(0, 0, layerLerp), rotated));
+    out.set(facet.id, multiply(translation(0, 0, offset), rotated));
   }
   return out;
+}
+
+/**
+ * The z the step owes a facet, on top of whatever its rotation has done.
+ *
+ * `poseForFacet` puts the layer offset INSIDE the bends, so a rotation carries
+ * it along: turning a facet by `theta` about a table-space line leaves its
+ * layer offset at `from * cos(theta)`, and a 180-degree fold therefore lands it
+ * a full `2 * from` below where the settled state puts it. Reading the
+ * correction as `to - from` instead was worth up to 15.5mm on the Hammer,
+ * invisible only because the timeline snaps to the settled poses at t = 1.
+ *
+ * A rotation about the table normal keeps the offset whole, which is why the
+ * axis is read rather than assumed.
+ */
+function layerCorrection(
+  change: { readonly from: number; readonly to: number } | undefined,
+  axis: StepDelta["axis"],
+  turnedDeg: number,
+  t: number,
+): number {
+  if (!change) return 0;
+  const dz = axis ? axis.dir[2] ?? 0 : 0;
+  // Component of a pure z offset that survives a turn of `turnedDeg` about the
+  // axis: whole about the table normal, negated by a half turn in the table.
+  const kept = dz * dz + (1 - dz * dz) * Math.cos((turnedDeg * Math.PI) / 180);
+  const want = (change.from + (change.to - change.from) * t) * LAYER_THICKNESS;
+  return want - change.from * LAYER_THICKNESS * kept;
+}
+
+/**
+ * The whole-model rise that keeps a turn above the table, zero at both ends.
+ *
+ * Clamped rather than trusting `sin(pi)` to round to zero: the t=0 and t=1
+ * contract in `render/coreApi.ts` is absolute, and the renderer snaps to the
+ * settled poses on the strength of it.
+ */
+function arcLift(liftMm: number | undefined, t: number): number {
+  if (!liftMm || t <= 0 || t >= 1) return 0;
+  return liftMm * Math.sin(Math.PI * t);
+}
+
+/**
+ * How far a posed model reaches past a turning line, on the side that a
+ * positive turn about it carries downward.
+ *
+ * This is exactly the height the model has to be lifted to clear the table
+ * while it turns: a point at perpendicular offset `a` traces z = -a sin(theta),
+ * so the deepest point of a 180-degree turn is the largest `a` in the model.
+ * The stack's own thickness rides along underneath, so it is added.
+ */
+export function turnClearance(
+  facets: readonly Facet[],
+  axis: { readonly origin: readonly number[]; readonly dir: readonly number[] },
+): number {
+  // The in-table direction perpendicular to the axis, i.e. dir x zHat. For the
+  // flip's +Y axis this is +X, which is precisely the half that dives.
+  const ex = axis.dir[1] ?? 0;
+  const ey = -(axis.dir[0] ?? 0);
+  const ox = axis.origin[0] ?? 0;
+  const oy = axis.origin[1] ?? 0;
+  let reach = 0;
+  let topLayer = 0;
+  for (const facet of facets) {
+    const pose = poseForFacet(facet);
+    topLayer = Math.max(topLayer, facet.layer);
+    for (const p of facet.polygon) {
+      const w = transformPoint(pose, p);
+      reach = Math.max(reach, (w[0] - ox) * ex + (w[1] - oy) * ey);
+    }
+  }
+  return reach > 0 ? reach + (topLayer + 1) * LAYER_THICKNESS : 0;
 }
 
 /** Transform a paper-space point by a pose matrix (for tests and annotations). */

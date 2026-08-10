@@ -118,8 +118,12 @@ export function stepDiagnostics(structure: PlaneStructure, index: number): StepD
     .slice(0, clamped + 1)
     .some((s) => s.action.type === "cut");
 
+  // The delta records where EVERY facet's layer starts and ends, because
+  // `poseAtProgress` needs the start to undo what the rotation does to a layer
+  // offset. The panel wants the ones that actually moved.
   const layerChanges: LayerChangeRow[] = delta
     ? [...delta.layerChanges.entries()]
+        .filter(([, change]) => change.from !== change.to)
         .map(([facetId, change]) => ({ facetId, from: change.from, to: change.to }))
         .sort((a, b) => a.facetId - b.facetId)
     : [];

@@ -17,8 +17,12 @@ import type {
   PartialRotation,
   StepDelta,
   Vec2,
+  Vec3,
 } from "./types";
 import { EPS, cross, sub, toVec3 } from "./vec2";
+// The reducer asks the poser how far the paper reaches, never the other way
+// round: pose.ts imports only types and paper, so this edge stays acyclic.
+import { turnClearance } from "./pose";
 import {
   ISO_IDENTITY,
   isoApply,
@@ -169,6 +173,43 @@ function maxLayerOf(facets: readonly Facet[]): number {
   return facets.reduce((m, f) => Math.max(m, f.layer), 0);
 }
 
+/**
+ * Where every facet's layer starts and ends, over a step that REPLACES flat
+ * maps (a flat fold, a flip) rather than bending them.
+ *
+ * Three things were wrong with reading this off the movers alone, and all three
+ * showed up as paper below the table or a jump at the end of a step.
+ *
+ * The end layer has to be read AFTER `renormalizeLayers`. A mountain fold
+ * assigns its flap a negative layer and renormalization then lifts the whole
+ * stack back to 0, so reading it before meant the animation glided toward an
+ * index the settled state does not have - 20 layers, 5mm, on the Hammer.
+ *
+ * Stationary facets need an entry too. A flap tucking underneath lifts the
+ * stack it goes under, and if only the flap animated it would have to dive
+ * below the table to reach a gap that had not opened yet.
+ *
+ * And movers need one even when their layer does not change, because
+ * `poseForFacet` puts the layer offset INSIDE the rotation: turning a facet
+ * 180 degrees about a line in the table negates its z, so `poseAtProgress` has
+ * to know where it started to put it back. See `layerCorrection` in pose.ts.
+ *
+ * Partial folds get no entries at all, and must not: a bend is defined by the
+ * same rotation the animation applies, so it already lands exactly.
+ */
+function layerSpan(
+  start: readonly Facet[],
+  end: readonly Facet[],
+): Map<number, { from: number; to: number }> {
+  const settled = new Map(end.map((f) => [f.id, f.layer]));
+  const span = new Map<number, { from: number; to: number }>();
+  for (const f of start) {
+    const to = settled.get(f.id);
+    if (to !== undefined) span.set(f.id, { from: f.layer, to });
+  }
+  return span;
+}
+
 /** Lift a table-space crease to a 3D rotation axis in the z=0 plane. */
 function axisOf(crease: Line2) {
   const d = sub(crease.b, crease.a);
@@ -178,12 +219,34 @@ function axisOf(crease: Line2) {
 }
 
 /**
- * Orient the crease so that "left" is a stable, direction-independent notion:
- * left = positive cross(creaseDir, p - a). Callers author `side` against this.
+ * The signed angle the STORED bend turns through: valley +, mountain -.
+ *
+ * Only a partial fold stores one, and that sign IS the wing's V, so it is not
+ * free to change: `poseAtProgress` interpolates toward it and has to land on it
+ * at t = 1.
  */
-function signedAngle(angle: number, direction: "valley" | "mountain"): number {
-  // Valley rotates the moving side toward the viewer (+z), mountain away.
+function bendAngleDeg(angle: number, direction: "valley" | "mountain"): number {
   return direction === "valley" ? angle : -angle;
+}
+
+/**
+ * The signed angle the ANIMATION sweeps through.
+ *
+ * Rotating by +theta about a directed crease lifts the side with positive
+ * cross(creaseDir, p - a) - the side the authoring convention calls "left" -
+ * and carries the other one down through z = 0. A flat fold's endpoint is fixed
+ * by `isoReflection`, not by this angle, so for a flat fold the sign chooses
+ * only the ARC; and the arc that passes under the table is the wrong one every
+ * time, because the stage floor is opaque, so paper below the table does not
+ * look wrong, it disappears. A hand takes the flap OVER the crease whichever
+ * side it starts on. So does this.
+ *
+ * Deriving it from `direction` instead was worth 22 of the catalogue's 77
+ * steps, including the first fold of every plane, which swung half an A4 sheet
+ * 105mm under the floor and back.
+ */
+function sweepAngleDeg(angle: number, side: "left" | "right"): number {
+  return side === "left" ? angle : -angle;
 }
 
 const EMPTY_DELTA: StepDelta = {
@@ -233,10 +296,13 @@ export function applyStep(
       }
 
       const isFlat = Math.abs(action.angle - 180) <= EPS;
-      const angleDeg = signedAngle(action.angle, action.direction);
+      const bendDeg = bendAngleDeg(action.angle, action.direction);
+      // Flat only: the reflection owns the endpoint, so the arc is free to be
+      // the one that goes over the crease rather than under the table. A
+      // partial fold's angle is its stored bend and has to keep its sign.
+      const angleDeg = isFlat ? sweepAngleDeg(action.angle, action.side) : bendDeg;
 
       let updated: Facet[];
-      const layerChanges = new Map<number, { from: number; to: number }>();
 
       if (isFlat) {
         const reflection = isoReflection(action.crease);
@@ -259,7 +325,6 @@ export function applyStep(
               : action.direction === "valley"
                 ? top + 1 + (m1 - f.layer)
                 : bottom - 1 - (f.layer - m0);
-          layerChanges.set(f.id, { from: f.layer, to: newLayer });
           return {
             ...f,
             flatMap: isoCompose(reflection, f.flatMap),
@@ -268,7 +333,10 @@ export function applyStep(
         });
       } else {
         // Partial fold: the facet keeps its flat position and gains a 3D bend.
-        const rot: PartialRotation = { axis: axisOf(action.crease), angleDeg };
+        // `bendDeg`, not `angleDeg`, though they are equal on this branch: the
+        // stored bend never takes the sweep's sign, and saying so here is what
+        // stops someone unifying them again later.
+        const rot: PartialRotation = { axis: axisOf(action.crease), angleDeg: bendDeg };
         const movedSet = new Set(moverIds);
         updated = facets.map((f) =>
           movedSet.has(f.id) ? { ...f, bend: [...f.bend, rot] } : f,
@@ -288,7 +356,8 @@ export function applyStep(
           axis: axisOf(action.crease),
           angleDeg,
           kind: "fold",
-          layerChanges,
+          // Flat only. A bend already lands exactly; see `layerSpan`.
+          layerChanges: isFlat ? layerSpan(facets, normalized) : new Map(),
         },
         nextId: idAfterSplit,
       };
@@ -303,15 +372,17 @@ export function applyStep(
         layer: max - f.layer,
       }));
       const normalized = renormalizeLayers(facets);
+      const axis = { origin: [0, 0, 0] as Vec3, dir: [0, 1, 0] as Vec3 };
       return {
         state: { ...state, facets: normalized, maxLayer: maxLayerOf(normalized) },
         delta: {
           startFacets: state.facets,
           movingFacetIds: facets.map((f) => f.id),
-          axis: { origin: [0, 0, 0], dir: [0, 1, 0] },
+          axis,
           angleDeg: 180,
           kind: "flip",
-          layerChanges: new Map(),
+          layerChanges: layerSpan(state.facets, normalized),
+          liftMm: turnClearance(state.facets, axis),
         },
         nextId,
       };

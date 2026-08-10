@@ -10,7 +10,7 @@ import { describe, expect, it } from "vitest";
 import { PLANES } from "@/content";
 import { computeFoldState, computeStepDelta, totalArea, validateSequence } from "@/engine/core/state";
 import { facetInTable } from "@/engine/core/fold";
-import { PAPER_SIZES, formatForPlane } from "@/engine/core/paper";
+import { LAYER_THICKNESS, PAPER_SIZES, formatForPlane } from "@/engine/core/paper";
 import { boundingBox, area as polygonArea } from "@/engine/core/polygon";
 import { poseAtProgress, posesForState, transformPoint, type Mat4 } from "@/engine/core/pose";
 import type { Vec2 } from "@/engine/core/types";
@@ -189,7 +189,77 @@ describe.each(Object.entries(PLANES))("%s: the stage can pose every facet", (id,
       ).toEqual(silhouette(before.facets, posesForState(before)));
     }
   });
+
+  it("closes each step exactly on the settled state, with nothing left to snap", () => {
+    // The renderer snaps to `posesForState` at t=1 (render/timeline.ts), which
+    // is a correctness guarantee, not a licence: whatever gap it papers over is
+    // a jump the cadet sees on the last frame of every step. It was up to
+    // 15.5mm on the Hammer, because a facet's layer offset rides INSIDE the
+    // fold rotation and a half turn negates it, so the restack has to undo
+    // `2 * from`, not `to - from`.
+    //
+    // Unfold is excluded and is the one honest snap in the engine: it restores
+    // an earlier state's flat maps outright, so there is no rotation to
+    // interpolate and no axis on the delta to interpolate it about.
+    for (let n = 0; n < plane.steps.length; n += 1) {
+      if (plane.steps[n]?.action.type === "unfold") continue;
+      const delta = computeStepDelta(plane, n);
+      if (!delta) continue;
+      const settled = posesForState(computeFoldState(plane, n));
+      const landed = poseAtProgress(delta, 1);
+      for (const [facetId, want] of settled) {
+        const got = landed.get(facetId);
+        expect(got, `${plane.steps[n]?.id}: facet ${facetId} has no pose at t=1`).toBeDefined();
+        const drift = Math.max(...want.map((v, i) => Math.abs(v - (got![i] ?? 0))));
+        expect(drift, `${plane.steps[n]?.id}: facet ${facetId} lands ${drift}mm off`).toBeLessThan(
+          1e-9,
+        );
+      }
+    }
+  });
+
+  it("never sends paper below where the step starts or ends", () => {
+    // Invisible to every other test here, because they all look only at the two
+    // endpoints and the paper went under the table strictly between them: 49 of
+    // the catalogue's 77 steps swept as deep as -105mm, through a floor mesh at
+    // z=-1.5, so it did not look wrong, it disappeared.
+    for (let n = 0; n < plane.steps.length; n += 1) {
+      const delta = computeStepDelta(plane, n);
+      if (!delta) continue;
+      const floor = Math.min(lowestZ(delta, 0), lowestZ(delta, 1));
+      // One layer of paper is the only slack: the rotation arc and the linear
+      // layer lerp are different curves discretising the same quantum.
+      for (let i = 1; i < 32; i += 1) {
+        const t = i / 32;
+        expect(lowestZ(delta, t), `${plane.steps[n]?.id} at t=${t.toFixed(3)}`).toBeGreaterThan(
+          floor - LAYER_THICKNESS,
+        );
+      }
+    }
+  });
+
+  it("lifts the model off the table to turn it over", () => {
+    const n = plane.steps.findIndex((s) => s.action.type === "flip");
+    if (n < 0) return;
+    const delta = computeStepDelta(plane, n)!;
+    // Derived from the model's own reach past the turning line, so it is a
+    // different number for every plane and no plane carries it.
+    expect(delta.liftMm, `${plane.steps[n]?.id}: flip lift`).toBeGreaterThan(20);
+    expect(lowestZ(delta, 0.5)).toBeGreaterThan(-1e-6);
+  });
 });
+
+/** Lowest world-space z of everything the step is animating, at progress `t`. */
+function lowestZ(delta: NonNullable<ReturnType<typeof computeStepDelta>>, t: number): number {
+  const poses = poseAtProgress(delta, t);
+  let z = Infinity;
+  for (const facet of delta.startFacets) {
+    const pose = poses.get(facet.id);
+    if (!pose) continue;
+    for (const p of facet.polygon) z = Math.min(z, transformPoint(pose, p)[2]);
+  }
+  return z;
+}
 
 /** Rounded world-space bounding box of `facets` under `poses`, as a string. */
 function silhouette(

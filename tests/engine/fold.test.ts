@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { applyStep, facetInTable } from "@/engine/core/fold";
 import { computeFoldState, computeStepDelta, totalArea, validateSequence } from "@/engine/core/state";
-import { freshSheet, PAPER_SIZES } from "@/engine/core/paper";
+import { freshSheet, LAYER_THICKNESS, PAPER_SIZES } from "@/engine/core/paper";
 import { area } from "@/engine/core/polygon";
 import { isoDet } from "@/engine/core/iso2";
 import { posesForState, poseAtProgress, transformPoint } from "@/engine/core/pose";
@@ -118,6 +118,100 @@ describe("9. mountain versus valley", () => {
     const mountainStill = mountain.facets.find((f) => isoDet(f.flatMap) > 0);
     expect(valleyMoved!.layer).toBeGreaterThan(valleyStill!.layer);
     expect(mountainMoved!.layer).toBeLessThan(mountainStill!.layer);
+  });
+
+  it("decides where the flap lands by direction and how it travels by side", () => {
+    // These two signs used to be one sign, and that is what put 22 of the
+    // catalogue's 77 steps under the table. Where the flap LANDS is
+    // `direction`'s to decide. Which way it TRAVELS to get there is `side`'s,
+    // because rotating by +theta lifts the side with positive
+    // cross(creaseDir, p - a), and the table is opaque: paper under it does not
+    // look wrong, it disappears.
+    const sweep = (side: "left" | "right", direction: "valley" | "mountain") =>
+      computeStepDelta(
+        plan([step("s.step-01", { type: "fold", crease: V_CENTER, side, angle: 180, direction })]),
+        0,
+      )!.angleDeg;
+
+    expect(sweep("left", "valley")).toBe(180);
+    expect(sweep("left", "mountain")).toBe(180);
+    expect(sweep("right", "valley")).toBe(-180);
+    expect(sweep("right", "mountain")).toBe(-180);
+  });
+
+  it("keeps a partial fold's sign for its direction, because that sign is the V", () => {
+    // A 30-degree valley on the right half stores +30, even though a flat fold
+    // on that side sweeps -180. Flipping this would invert every wing in the
+    // catalogue, so the two signs must stay separate all the way down.
+    const partial = run([
+      step("p.step-01", { type: "fold", crease: V_CENTER, side: "right", angle: 30, direction: "valley" }),
+    ]);
+    const bent = partial.facets.filter((f) => f.bend.length > 0);
+    expect(bent.length).toBeGreaterThan(0);
+    for (const f of bent) expect(f.bend[0]!.angleDeg).toBe(30);
+  });
+});
+
+describe("9b. no frame of a step goes under the table", () => {
+  // The defect this pins was invisible to every other test in the file, because
+  // every other test looks only at t=0 and t=1 and the paper went below the
+  // table strictly between them. Measured across the real catalogue, 49 of 77
+  // steps swept paper as deep as -105mm through a floor mesh at z=-1.5, so it
+  // did not look wrong, it disappeared.
+  const lowestZ = (delta: ReturnType<typeof computeStepDelta>, t: number): number => {
+    const poses = poseAtProgress(delta!, t);
+    let z = Infinity;
+    for (const facet of delta!.startFacets) {
+      const pose = poses.get(facet.id);
+      if (!pose) continue;
+      for (const p of facet.polygon) z = Math.min(z, transformPoint(pose, p)[2]);
+    }
+    return z;
+  };
+
+  it("never dips below the lower of the step's own two endpoints", () => {
+    for (let n = 0; n < dart.steps.length; n += 1) {
+      const delta = computeStepDelta(dart, n);
+      if (!delta) continue;
+      const floor = Math.min(lowestZ(delta, 0), lowestZ(delta, 1));
+      // The only slack is one layer of paper: the rotation arc and the linear
+      // layer lerp are different curves discretising the same quantum.
+      for (let i = 1; i < 32; i += 1) {
+        const t = i / 32;
+        expect(lowestZ(delta, t), `${dart.steps[n]?.id} at t=${t.toFixed(3)}`).toBeGreaterThan(
+          floor - LAYER_THICKNESS,
+        );
+      }
+    }
+  });
+
+  it("lifts the model off the table to turn it over, by its own reach", () => {
+    // A4 folded left-onto-right occupies x in [0,105] and the flip turns about
+    // x = 0, so the lift is 105mm plus the stack. Derived, never authored: no
+    // plane carries this number and none may.
+    const half = plan([
+      step("f.step-01", { type: "fold", crease: V_CENTER, side: "left", angle: 180, direction: "valley" }),
+      step("f.step-02", { type: "flip" }),
+    ]);
+    const delta = computeStepDelta(half, 1)!;
+    expect(delta.liftMm).toBeGreaterThan(105);
+    expect(delta.liftMm).toBeLessThan(107);
+    expect(lowestZ(delta, 0.5)).toBeGreaterThan(-1e-6);
+  });
+
+  it("puts the lift away again at both ends, exactly", () => {
+    // "Close enough" is not available: the renderer snaps to the settled poses
+    // at t=1 on the strength of this, so any residue is a visible jump.
+    const half = plan([
+      step("f.step-01", { type: "fold", crease: V_CENTER, side: "left", angle: 180, direction: "valley" }),
+      step("f.step-02", { type: "flip" }),
+    ]);
+    const delta = computeStepDelta(half, 1)!;
+    const settled = posesForState(computeFoldState(half, 1));
+    for (const [id, pose] of poseAtProgress(delta, 1)) {
+      const want = settled.get(id)!;
+      for (let i = 0; i < 16; i += 1) expect(near(pose[i]!, want[i]!, 1e-9)).toBe(true);
+    }
   });
 });
 
