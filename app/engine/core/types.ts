@@ -186,5 +186,14 @@ export type EngineOptions = {
    * and by the no-WebGL fallback, which has no camera.
    */
   readonly autoRotate?: boolean;
+  /**
+   * How much the stage is worth spending on. "full" is the tutorial stage: the
+   * cadet is reading a fold off it. "preview" is a hangar card - a decorative
+   * 3:2 thumbnail behind a bob animation - and drops multisampling, shadows and
+   * the retina pixel ratio, which is what the frame budget actually goes on.
+   * Measured on an emulated Pixel 7 under 4x CPU throttling with the two-scene
+   * ceiling awake: 67ms per frame at "full", 17ms at "preview".
+   */
+  readonly quality?: "full" | "preview";
   readonly onReady?: () => void;
 };

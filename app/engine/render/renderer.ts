@@ -156,24 +156,42 @@ export type ControlsLike = {
 
 export type FoldEngineDeps = {
   readonly core: CoreApi;
-  readonly rendererFactory?: (canvas: HTMLCanvasElement) => RendererLike;
+  readonly rendererFactory?: (canvas: HTMLCanvasElement, quality: StageQuality) => RendererLike;
   readonly controlsFactory?: (camera: PerspectiveCamera, dom: HTMLElement) => ControlsLike;
 };
 
 const FOV_DEG = 34;
 const CAMERA_TWEEN_SECONDS = 0.7;
 
-export function createDefaultRenderer(canvas: HTMLCanvasElement): RendererLike {
+export type StageQuality = NonNullable<EngineOptions["quality"]>;
+
+/**
+ * The cost knobs, in one table so the two tiers can be compared at a glance.
+ * Everything here is fill-rate: at the two-scene ceiling on a throttled phone,
+ * frame time tracked pixel count almost linearly, so the pixel ratio is the
+ * lever that matters and multisampling and shadow mapping ride along with it.
+ */
+const QUALITY: Record<StageQuality, { antialias: boolean; shadows: boolean; maxPixelRatio: number }> =
+  {
+    full: { antialias: true, shadows: true, maxPixelRatio: 2 },
+    preview: { antialias: false, shadows: false, maxPixelRatio: 1 },
+  };
+
+export function createDefaultRenderer(
+  canvas: HTMLCanvasElement,
+  quality: StageQuality = "full",
+): RendererLike {
+  const tier = QUALITY[quality];
   const renderer = new WebGLRenderer({
     canvas,
-    antialias: true,
+    antialias: tier.antialias,
     alpha: false,
     powerPreference: "high-performance",
   });
   renderer.outputColorSpace = SRGBColorSpace;
   renderer.toneMapping = ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
-  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.enabled = tier.shadows;
   renderer.shadowMap.type = PCFSoftShadowMap;
   return renderer;
 }
@@ -201,6 +219,7 @@ export class FoldEngine implements FoldEngineHandle {
   private readonly structure: PlaneStructure;
   private readonly theme: StageTheme;
   private readonly themeName: ThemeName;
+  private readonly quality: StageQuality;
 
   private readonly container: HTMLElement;
   private readonly view: (Window & typeof globalThis) | null;
@@ -265,7 +284,8 @@ export class FoldEngine implements FoldEngineHandle {
 
     const canvas = doc.createElement("canvas");
     canvas.style.cssText = "display:block;width:100%;height:100%;touch-action:none";
-    this.renderer = (deps.rendererFactory ?? createDefaultRenderer)(canvas);
+    this.quality = opts.quality === "preview" ? "preview" : "full";
+    this.renderer = (deps.rendererFactory ?? createDefaultRenderer)(canvas, this.quality);
     container.appendChild(this.renderer.domElement);
 
     this.scene.background = new Color(this.theme.background);
@@ -294,7 +314,7 @@ export class FoldEngine implements FoldEngineHandle {
       this.theme.hemiIntensity,
     );
     this.keyLight = new DirectionalLight(new Color(this.theme.keyColor), this.theme.keyIntensity);
-    this.keyLight.castShadow = true;
+    this.keyLight.castShadow = QUALITY[this.quality].shadows;
     this.keyLight.shadow.mapSize.set(1024, 1024);
     this.keyLight.shadow.bias = -0.0008;
     this.keyLight.shadow.normalBias = 0.6;
@@ -399,7 +419,9 @@ export class FoldEngine implements FoldEngineHandle {
     this.height = height;
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
-    this.renderer.setPixelRatio(Math.min(this.view?.devicePixelRatio ?? 1, 2));
+    this.renderer.setPixelRatio(
+      Math.min(this.view?.devicePixelRatio ?? 1, QUALITY[this.quality].maxPixelRatio),
+    );
     this.renderer.setSize(width, height, false);
     this.refit();
   }
