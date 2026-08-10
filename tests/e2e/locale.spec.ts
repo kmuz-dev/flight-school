@@ -37,6 +37,13 @@ test("arabic does not spill sideways", async ({ page }) => {
     const limit = root.clientWidth;
     const offenders: string[] = [];
     for (const el of document.querySelectorAll<HTMLElement>("body *")) {
+      // Anything inside an <svg> is drawn in user space and clipped by the
+      // SVG's own viewport, so its client rect routinely reads far outside the
+      // page while nothing moves on screen: a plane drawn to the edges of its
+      // viewBox reported a <g> at -15..434 in a 412px window with the page's
+      // scrollWidth still exactly 412. The <svg> element itself is the layout
+      // box that can actually push a page sideways, and it is still checked.
+      if (el.closest("svg")) continue;
       const r = el.getBoundingClientRect();
       // In RTL the overflow escapes to the left, so both edges matter.
       const out = r.right > limit + 1 || r.left < -1;
@@ -45,9 +52,15 @@ test("arabic does not spill sideways", async ({ page }) => {
       if (parent && (parent.right > limit + 1 || parent.left < -1)) continue;
       offenders.push(`${el.tagName} left=${Math.round(r.left)} right=${Math.round(r.right)}`);
     }
-    return { limit, offenders };
+    return { limit, scrollWidth: root.scrollWidth, offenders };
   });
 
+  // The page's own scroll width is the symptom a cadet would feel; the element
+  // list is what makes it fixable in a minute rather than an afternoon.
+  expect(
+    spill.scrollWidth,
+    `the page is ${spill.scrollWidth - spill.limit}px wider than its ${spill.limit}px viewport`,
+  ).toBeLessThanOrEqual(spill.limit);
   expect(spill.offenders, `elements outside the ${spill.limit}px viewport`).toEqual([]);
 });
 
