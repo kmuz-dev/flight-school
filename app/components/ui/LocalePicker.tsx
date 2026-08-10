@@ -26,10 +26,12 @@ export type LocalePickerProps = {
 
 export function LocalePicker({ locale, a11yLabel }: LocalePickerProps) {
   return (
-    <label className="relative inline-flex items-center">
-      <span className="sr-only">{a11yLabel}</span>
+    // A wrapping <label> would fold the arrow glyph into the accessible name
+    // ("Choose a language ▾"), so the name goes straight on the control.
+    <span className="relative inline-flex items-center">
       <select
         data-testid="locale-picker"
+        aria-label={a11yLabel}
         value={locale}
         onChange={(event) => {
           const next = event.target.value;
@@ -52,6 +54,6 @@ export function LocalePicker({ locale, a11yLabel }: LocalePickerProps) {
       >
         ▾
       </span>
-    </label>
+    </span>
   );
 }
