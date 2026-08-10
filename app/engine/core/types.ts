@@ -231,5 +231,34 @@ export type EngineOptions = {
    * they sit behind, so the handover to the live stage no longer jumps.
    */
   readonly cameraPreset?: NonNullable<CameraHint["preset"]>;
+  /**
+   * Stand the model up as soon as it has a bend, instead of leaving it in the
+   * frame its creases were authored in.
+   *
+   * Table space is where creases are stated, and it stops describing the object
+   * the moment the wings open: the engine leaves the finished V lying on its
+   * side, half of it below the table. `restFrame` is exactly the identity until
+   * the first partial fold, so switching this on costs a tutorial nothing for
+   * the flat half of its sequence and then stands the plane up at the moment it
+   * becomes one - which is also when a person would pick it up to open the
+   * wings.
+   */
+  readonly rest?: boolean;
+  /**
+   * Dress the stage to present a finished aircraft rather than teach a fold: no
+   * graph-paper floor, a graded backdrop, a soft contact shadow, the plane
+   * lifted clear of the ground and breathing.
+   *
+   * One flag rather than four, because the parts are not independently
+   * meaningful - a backdrop with the floor still there is two grounds, a lift
+   * with no shadow is a plane hanging over nothing - and they share one derived
+   * quantity, the lift height, that all of them read. A caller cannot assemble
+   * a half-dressed stage by accident.
+   *
+   * Implies the catalogue's hero angle, which is not a `cameraPreset` and
+   * cannot be asked for by a fold step. Ignored by the no-WebGL fallback, which
+   * has no stage to dress.
+   */
+  readonly display?: boolean;
   readonly onReady?: () => void;
 };

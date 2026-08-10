@@ -48,9 +48,29 @@ export interface CoreApi {
    * `t` is the eased 0..1 progress supplied by GSAP. The function must be pure:
    * the engine snaps to `posesForState(to)` on completion so interpolation can
    * never accumulate into state.
+   *
+   * Two more the animation relies on, and both were once false:
+   * - t=1 lands on the settled poses EXACTLY. The snap is a correctness
+   *   guarantee, not a licence: whatever gap it papers over is a jump the cadet
+   *   sees on the last frame of the step.
+   * - no frame puts paper lower than the lower of the step's two endpoint
+   *   states, give or take a layer of thickness. The stage floor is opaque, so
+   *   paper below the table does not look wrong, it disappears.
    */
   poseAtProgress(structure: PlaneStructure, n: number, t: number): PoseMap;
 
+  /**
+   * The rigid transform that stands a settled state up on the table, to be
+   * LEFT-multiplied onto its poses. Exactly the identity for a state with no
+   * bends, so a caller may apply it unconditionally from step one.
+   *
+   * Exposed rather than folded into `posesForState`, because it differs between
+   * a step's two endpoint states: baking it in would stop `poseAtProgress(n, 0)`
+   * rendering the state before step n, and that contract is what the whole
+   * animation hangs from.
+   */
+  restTransform(state: FoldState): readonly number[];
+
   /** Flat 2D fallback rendering of a state, used with no WebGL and for thumbnails. */
-  renderStateToSvg(state: FoldState): string;
+  renderStateToSvg(state: FoldState, options?: { readonly rest?: boolean }): string;
 }

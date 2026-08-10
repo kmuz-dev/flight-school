@@ -283,6 +283,27 @@ export class SceneModel {
     return true;
   }
 
+  /**
+   * Stand the model up, as the model group's own matrix.
+   *
+   * This is the one slot on `root` that nothing else writes, and it is the only
+   * place a whole-model transform may live. The core's fold axes are TABLE-space
+   * lines and `poseAtProgress` left-multiplies its rotation onto each facet's
+   * pose, so a rest transform composed INWARD would leave the facet in rest
+   * space while its fold axis stayed in table space, and every fold would turn
+   * about the wrong line. A group matrix is outside all of that by construction
+   * rather than by discipline.
+   *
+   * `computeBounds` already forces a world-matrix update and walks posed
+   * vertices, so camera framing, the shadow extent and the annotation anchor
+   * follow this for free.
+   */
+  setRest(matrix: readonly number[] | null): void {
+    if (matrix && matrix.length >= 16) this.root.matrix.fromArray(matrix as number[]);
+    else this.root.matrix.identity();
+    this.root.matrixWorldNeedsUpdate = true;
+  }
+
   /** Per-frame hot path: write matrices, touch nothing else. */
   applyPoses(poses: PoseMap): void {
     for (const [id, mesh] of this.meshes) {

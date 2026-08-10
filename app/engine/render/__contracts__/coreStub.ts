@@ -59,6 +59,7 @@ export type CoreStubCall =
   | { readonly fn: "posesForState"; readonly facets: number }
   | { readonly fn: "poseAtProgress"; readonly t: number }
   | { readonly fn: "renderStateToSvg" }
+  | { readonly fn: "restTransform" }
   | { readonly fn: "validateSequence" };
 
 export type CoreStub = CoreApi & {
@@ -111,6 +112,15 @@ export function createCoreStub(): CoreStub {
         map.set(facet.id, translation(t * 100, 0, facet.layer * LAYER_Z_MM));
       }
       return map;
+    },
+
+    restTransform(): readonly number[] {
+      // Identity: the stub's facets never bend, and the real transform is
+      // exactly the identity for a state with no bends. A render test that
+      // wants to prove the stage APPLIES the transform has to supply its own
+      // matrix rather than lean on this.
+      calls.push({ fn: "restTransform" });
+      return [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
     },
 
     renderStateToSvg(state: FoldState): string {

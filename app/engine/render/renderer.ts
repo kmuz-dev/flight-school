@@ -40,6 +40,7 @@ import type {
   FoldStep,
 } from "@/engine/core/types";
 import type { PlaneStructure } from "@/content/types";
+import { HERO_VIEW } from "@/engine/view";
 import type { CoreApi, PoseMap } from "./coreApi";
 import { Annotations, annotationChanged } from "./annotations";
 import {
@@ -264,6 +265,10 @@ export class FoldEngine implements FoldEngineHandle {
   private orbit: Orbit;
   /** Set on a display surface; overrides every step's own camera hint. */
   private readonly pinnedPreset: CameraPreset | undefined;
+  /** Stand the model up once it has a bend. See EngineOptions.rest. */
+  private readonly rest: boolean;
+  /** Present a finished aircraft rather than a table. See EngineOptions.display. */
+  private readonly display: boolean;
   private readonly target = new Vector3();
   /** What the current step spans, so a resize re-frames the same geometry. */
   private stepBounds: ModelBounds | null = null;
@@ -315,9 +320,15 @@ export class FoldEngine implements FoldEngineHandle {
     this.camera = new PerspectiveCamera(FOV_DEG, 1, 1, 20000);
     // Table space is z=0 with +Z up; tell Three before OrbitControls is built.
     this.camera.up.set(0, 0, 1);
+    this.rest = opts.rest === true;
+    this.display = opts.display === true;
     this.pinnedPreset = opts.cameraPreset;
+    // A display surface opens on the catalogue's hero angle, which is not a
+    // preset and cannot be asked for by a fold step.
     this.orbit = {
-      ...CAMERA_PRESETS[this.pinnedPreset ?? DEFAULT_PRESET],
+      ...(this.display && !this.pinnedPreset
+        ? HERO_VIEW
+        : CAMERA_PRESETS[this.pinnedPreset ?? DEFAULT_PRESET]),
       distance: this.defaultDistance,
     };
 
@@ -520,6 +531,10 @@ export class FoldEngine implements FoldEngineHandle {
     // Build meshes from the post-step state: splits happen up front so the mesh
     // set never changes mid-animation, and pose keys stay stable.
     this.model.sync(to);
+    // Before the measurements below, so the camera frames the model as it will
+    // actually stand. Computed once per step and held for the whole step: it is
+    // a property of the settled state, not of the frame.
+    this.model.setRest(this.rest ? this.core.restTransform(to) : null);
 
     // Measure where the step ENDS before building the timeline, because building
     // it leaves the meshes posed where the step BEGINS. The camera is placed
@@ -556,7 +571,13 @@ export class FoldEngine implements FoldEngineHandle {
     if (mode === "end") this.stepTimeline.complete();
     else if (mode === "play") this.stepTimeline.play();
 
-    const hint = this.pinnedPreset ? { preset: this.pinnedPreset } : step?.camera;
+    // A display surface holds the hero angle whatever the step asked for; a
+    // pinned preset beats both, and a tutorial follows the step's own hint.
+    const hint: CameraHint | undefined = this.pinnedPreset
+      ? { preset: this.pinnedPreset }
+      : this.display
+        ? { ...HERO_VIEW, distance: this.defaultDistance }
+        : step?.camera;
     const next = resolveCameraHint(hint, this.orbit, this.defaultDistance);
     this.tweenCamera(next, mode !== "start");
   }

@@ -11,6 +11,7 @@
 import { computeFoldState, computeStepDelta, totalArea, validateSequence } from "@/engine/core/state";
 import { poseAtProgress, posesForState } from "@/engine/core/pose";
 import { renderStateToSvg } from "@/engine/core/svgRender";
+import { restTransform } from "@/engine/core/rest";
 
 import type { EngineOptions, FoldEngineHandle } from "@/engine/core/types";
 import type { PlaneStructure } from "@/content/types";
@@ -35,6 +36,7 @@ export const core: CoreApi = {
     if (!delta) return posesForState(computeFoldState(structure, n - 1));
     return poseAtProgress(delta, t);
   },
+  restTransform,
   renderStateToSvg,
 };
 
