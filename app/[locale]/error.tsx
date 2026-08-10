@@ -51,7 +51,7 @@ export default function LocaleError({
         <button
           type="button"
           onClick={reset}
-          className={`bg-red px-md py-sm font-semibold text-white ${FOCUS_RING}`}
+          className={`bg-red-ink px-md py-sm font-semibold text-on-red ${FOCUS_RING}`}
         >
           {strings.errorRetry}
         </button>

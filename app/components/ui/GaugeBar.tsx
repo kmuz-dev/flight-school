@@ -48,7 +48,7 @@ export function GaugeBar({
     <div className={`flex gap-sm ${LAYOUT[layout]} ${className}`}>
       <span
         aria-hidden="true"
-        className="font-mono text-micro font-medium tracking-[0.1em] text-ink-60 uppercase"
+        className="font-mono text-micro font-medium tracking-[0.1em] text-ink-muted uppercase"
       >
         {label}
       </span>

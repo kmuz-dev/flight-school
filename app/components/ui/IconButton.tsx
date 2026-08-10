@@ -21,7 +21,7 @@ export function IconButton({
       type="button"
       aria-label={label}
       className={`inline-flex size-10 items-center justify-center rounded-input border transition-colors duration-150 ease-move disabled:opacity-38 ${
-        active ? "border-red bg-red text-white" : "border-ink-38 text-ink hover:bg-ink-12"
+        active ? "border-red-ink bg-red-ink text-on-red" : "border-ink-38 text-ink hover:bg-ink-12"
       } ${FOCUS_RING} ${className}`}
       {...rest}
     >

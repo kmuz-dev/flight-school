@@ -40,7 +40,7 @@ export function PaperPicker({
     <section className="mt-md" aria-labelledby="paper-picker">
       <h2
         id="paper-picker"
-        className="font-mono text-micro font-semibold tracking-[0.14em] text-ink-60 uppercase"
+        className="font-mono text-micro font-semibold tracking-[0.14em] text-ink-muted uppercase"
       >
         {strings.question}
       </h2>
@@ -64,7 +64,7 @@ export function PaperPicker({
           );
         })}
       </div>
-      <p className="mt-sm font-mono text-micro text-ink-60">
+      <p className="mt-sm font-mono text-micro text-ink-muted">
         {needsPrep(structure, chosen)
           ? format(strings.needsPrep, { count: prepStepCount(structure, chosen) })
           : strings.noPrep}

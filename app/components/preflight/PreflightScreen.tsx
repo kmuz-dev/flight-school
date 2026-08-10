@@ -73,7 +73,7 @@ export function PreflightScreen({
           {ui.backToHangar}
         </a>
         <span aria-hidden="true" className="h-[16px] w-px bg-ink-12" />
-        <p className="font-mono text-micro tracking-[0.14em] text-ink-60 uppercase">{ui.eyebrow}</p>
+        <p className="font-mono text-micro tracking-[0.14em] text-ink-muted uppercase">{ui.eyebrow}</p>
         {/* The last chance to change language before a fold begins: the
             tutorial header is packed tight enough that a phone cannot wrap it
             (see TutorialScreen), so the switch belongs here. */}
@@ -133,7 +133,7 @@ export function PreflightScreen({
                   key={spec.label}
                   className="flex items-baseline justify-between gap-md border-b border-ink-12 py-sm last:border-b-0"
                 >
-                  <dt className="text-small text-ink-60">{spec.label}</dt>
+                  <dt className="text-small text-ink-muted">{spec.label}</dt>
                   <dd className="text-end font-mono text-small text-ink">{spec.value}</dd>
                 </div>
               ))}
@@ -149,7 +149,7 @@ export function PreflightScreen({
           <section className="mt-md flex gap-md rounded-card border border-ink-12 bg-raised p-md">
             <span aria-hidden="true" className="w-[4px] flex-none bg-red" />
             <div>
-              <h2 className="font-mono text-micro font-semibold tracking-[0.14em] text-red uppercase">
+              <h2 className="font-mono text-micro font-semibold tracking-[0.14em] text-red-ink uppercase">
                 {ui.throwTip}
               </h2>
               <p className="mt-sm leading-relaxed text-ink-87">{view.throwTip}</p>
@@ -159,19 +159,19 @@ export function PreflightScreen({
           <a
             href={tutorialHref}
             data-testid="preflight-primary"
-            className={`mt-lg block rounded-input border-2 border-ink bg-red px-lg py-md text-center font-display text-h3 font-bold tracking-[0.02em] text-white uppercase shadow-[4px_4px_0_0_var(--color-ink)] transition-[transform,box-shadow] duration-150 ease-move hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] ${FOCUS_RING}`}
+            className={`mt-lg block rounded-input border-2 border-ink bg-red-ink px-lg py-md text-center font-display text-h3 font-bold tracking-[0.02em] text-on-red uppercase shadow-[4px_4px_0_0_var(--color-ink)] transition-[transform,box-shadow] duration-150 ease-move hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] ${FOCUS_RING}`}
           >
             {primaryLabel}
           </a>
 
           {view.tip ? (
-            <p className="mt-md font-mono text-micro leading-relaxed text-ink-60 italic">
+            <p className="mt-md font-mono text-micro leading-relaxed text-ink-muted italic">
               <span className="not-italic">{ui.tipLabel} </span>
               {view.tip}
             </p>
           ) : null}
 
-          <p className="mt-lg text-center font-mono text-micro tracking-[0.1em] text-ink-38 uppercase">
+          <p className="mt-lg text-center font-mono text-micro tracking-[0.1em] text-ink-muted uppercase">
             {format(ui.manifestLine, { index: view.index, total: view.total })}
           </p>
         </div>

@@ -9,7 +9,7 @@ import { FOCUS_RING } from "./focus";
 export type StampButtonVariant = "primary" | "secondary";
 
 const VARIANTS: Record<StampButtonVariant, string> = {
-  primary: "bg-red text-white hover:brightness-95",
+  primary: "bg-red-ink text-on-red hover:brightness-95",
   secondary: "border-2 border-ink text-ink hover:bg-ink-12",
 };
 

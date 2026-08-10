@@ -28,6 +28,26 @@
   --color-ink-38: rgb(26 43 74 / 0.38);
   --color-ink-12: rgb(26 43 74 / 0.12);
 
+  /*
+   * Text-weight variants of the palette above.
+   *
+   * DESIGN.md asks for two things that the raw hexes cannot both satisfy: the
+   * accents are fixed (#D64541, #7FA8C9), and every text pair must clear WCAG
+   * AA. At body size neither accent does - airmail red reaches 4.39 against
+   * white and sky blue only 2.52 - and the 60%/38% ink steps reach 3.99/2.18,
+   * which is why DESIGN.md assigns those steps to "borders, rules, and icons"
+   * rather than to prose. So the accents keep their hexes wherever they are a
+   * surface or a mark, and darken here for the one job they are too light to
+   * do. Night Flight already establishes that an accent shifts to suit its
+   * ground; this is the same move towards a light one.
+   *
+   * Ratios are measured against both light grounds, white and paper cream.
+   */
+  --color-red-ink: #c0362f; /* 5.51 on white, 4.97 on paper */
+  --color-on-red: #ffffff; /* 5.51 on red-ink */
+  --color-sky-ink: #456f93; /* 5.32 on white, 4.80 on paper */
+  --color-ink-muted: rgb(26 43 74 / 0.7); /* 5.41 on white, 5.15 on paper */
+
   /* Typography (families wired to next/font variables in the root layout) */
   --font-display: var(--font-archivo-narrow);
   --font-body: var(--font-instrument-sans);
@@ -89,6 +109,18 @@
   --color-ink-60: rgb(247 243 233 / 0.6);
   --color-ink-38: rgb(247 243 233 / 0.38);
   --color-ink-12: rgb(247 243 233 / 0.12);
+
+  /*
+   * In the dark scene the lifted accents are already legible as text - red
+   * reaches 5.42 on the deep navy, sky 7.19 - so the text variants are simply
+   * the accents themselves. What flips is the label on a red surface: a
+   * lifted red is a light colour, so it carries deep navy the way ink sits on
+   * a rubber stamp, and white on it would fail at 3.10.
+   */
+  --color-red-ink: #e8615c; /* 5.42 on night, 4.75 on raised */
+  --color-on-red: #0e1626; /* 5.42 on red-ink */
+  --color-sky-ink: #7fa8c9; /* 7.19 on night, 6.30 on raised */
+  --color-ink-muted: rgb(247 243 233 / 0.7); /* 8.40 on night, 7.66 on raised */
 }
 
 body {

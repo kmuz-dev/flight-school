@@ -175,7 +175,7 @@ export function TutorialScreen({
           </span>
         </div>
         <div className="flex shrink-0 items-center gap-md">
-          <p className="font-mono text-micro text-[color:var(--color-ink-60)]">
+          <p className="font-mono text-micro text-[color:var(--color-ink-muted)]">
             {format(ui.progressLabel, { current: pad2(stepIndex + 1), total: pad2(total) })}
           </p>
           <div
@@ -241,7 +241,7 @@ export function TutorialScreen({
 
       {step.tip ? (
         <footer className="border-t border-[color:var(--color-ink-12)] bg-[color:var(--color-raised)] px-lg py-sm">
-          <p className="font-mono text-micro italic text-[color:var(--color-ink-60)]">
+          <p className="font-mono text-micro italic text-[color:var(--color-ink-muted)]">
             <span className="not-italic">{ui.tipLabel} </span>
             {step.tip}
           </p>

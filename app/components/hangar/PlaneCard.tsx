@@ -166,12 +166,12 @@ export function PlaneCard({
 
       <div className="flex flex-1 flex-col gap-sm p-md">
         <h2 className="font-display text-h3 leading-none font-bold tracking-tight uppercase">
-          <a href={view.href} className={`hover:text-red ${FOCUS_RING}`}>
+          <a href={view.href} className={`hover:text-red-ink ${FOCUS_RING}`}>
             {view.name}
           </a>
         </h2>
 
-        <p className="flex items-center justify-between font-mono text-micro tracking-[0.1em] text-ink-60 uppercase">
+        <p className="flex items-center justify-between font-mono text-micro tracking-[0.1em] text-ink-muted uppercase">
           <span>{ui.steps}</span>
           <span className="tabular-nums">{pad2(view.stepCount)}</span>
         </p>

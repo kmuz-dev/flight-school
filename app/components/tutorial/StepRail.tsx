@@ -37,7 +37,7 @@ export function StepRail({
       aria-label={ui.stepRegionLabel}
       className="flex flex-col gap-md border-[color:var(--color-ink-12)] bg-[color:var(--color-paper)] p-lg lg:border-s"
     >
-      <p className="font-mono text-micro tracking-[0.08em] text-[color:var(--color-red)]">
+      <p className="font-mono text-micro tracking-[0.08em] text-[color:var(--color-red-ink)]">
         {format(ui.stepLabel, { current: pad2(current), total: pad2(totalSteps) })}
       </p>
 
@@ -51,7 +51,7 @@ export function StepRail({
 
       {step.why ? (
         <aside className="border-s-4 border-[color:var(--color-sky)] bg-[color:var(--color-raised)] p-md">
-          <p className="font-mono text-micro tracking-[0.08em] text-[color:var(--color-sky)]">
+          <p className="font-mono text-micro tracking-[0.08em] text-[color:var(--color-sky-ink)]">
             {ui.why}
           </p>
           <p className="mt-xs text-small leading-relaxed text-[color:var(--color-ink-87)]">
@@ -62,19 +62,24 @@ export function StepRail({
 
       {step.glossary.length > 0 ? (
         <div>
-          <p className="font-mono text-micro tracking-[0.08em] text-[color:var(--color-ink-60)]">
+          <p className="font-mono text-micro tracking-[0.08em] text-[color:var(--color-ink-muted)]">
             {ui.foldTerms}
           </p>
           <dl className="mt-xs flex flex-col gap-sm">
             {step.glossary.map((item) => (
-              <div key={item.key} className="flex gap-sm">
+              /*
+                A <dl> may wrap each term/definition pair in one div and no
+                more, so the icon and the two halves of the pair are siblings
+                in a two-column grid rather than the icon-plus-nested-div a
+                flex row would want. The definition is pinned to the second
+                column so it sits under its term instead of under the mark.
+              */
+              <div key={item.key} className="grid grid-cols-[auto_1fr] gap-x-sm">
                 <CreaseIcon variant={item.icon} />
-                <div>
-                  <dt className="font-medium text-small">{item.term}</dt>
-                  <dd className="text-small leading-snug text-[color:var(--color-ink-60)]">
-                    {item.definition}
-                  </dd>
-                </div>
+                <dt className="font-medium text-small">{item.term}</dt>
+                <dd className="col-start-2 text-small leading-snug text-[color:var(--color-ink-muted)]">
+                  {item.definition}
+                </dd>
               </div>
             ))}
           </dl>
@@ -91,7 +96,7 @@ export function StepRail({
         {ui.selfCheck}
       </label>
 
-      <p className="font-mono text-micro tracking-[0.08em] text-[color:var(--color-ink-38)]">
+      <p className="font-mono text-micro tracking-[0.08em] text-[color:var(--color-ink-muted)]">
         {format(ui.foldsToWings, { count: remaining })}
       </p>
 
@@ -117,7 +122,7 @@ export function StepRail({
         <button
           type="button"
           onClick={onNext}
-          className={`flex-[2] bg-[color:var(--color-red)] px-md py-sm font-semibold text-white ${FOCUS_RING}`}
+          className={`flex-[2] bg-[color:var(--color-red-ink)] px-md py-sm font-semibold text-[color:var(--color-on-red)] ${FOCUS_RING}`}
         >
           {isLastStep ? ui.finish : ui.nextFold}
         </button>

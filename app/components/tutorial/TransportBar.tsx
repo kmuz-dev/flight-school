@@ -113,7 +113,7 @@ export function TransportBar({
         />
       </label>
 
-      <p className="font-mono text-micro text-[color:var(--color-ink-60)]">
+      <p className="font-mono text-micro text-[color:var(--color-ink-muted)]">
         {format(ui.timeReadout, {
           elapsed: formatTime(elapsed),
           total: formatTime(durationSeconds),

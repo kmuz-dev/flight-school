@@ -50,7 +50,7 @@ export function LocalePicker({ locale, a11yLabel }: LocalePickerProps) {
       </select>
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute end-[10px] text-micro text-ink-60"
+        className="pointer-events-none absolute end-[10px] text-micro text-ink-muted"
       >
         ▾
       </span>

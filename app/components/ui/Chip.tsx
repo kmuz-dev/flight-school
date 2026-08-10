@@ -10,8 +10,8 @@ export type ChipVariant = "outline" | "ink" | "red" | "quiet";
 const VARIANTS: Record<ChipVariant, string> = {
   outline: "border border-ink-38 text-ink",
   ink: "bg-ink text-paper",
-  red: "bg-red text-white",
-  quiet: "border border-ink-12 text-ink-60",
+  red: "bg-red-ink text-on-red",
+  quiet: "border border-ink-12 text-ink-muted",
 };
 
 export function Chip({

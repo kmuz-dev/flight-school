@@ -94,7 +94,7 @@ export function CompletionScreen({
           </div>
 
           <div className="flex flex-col">
-            <p className="flex items-center gap-sm font-mono text-micro font-semibold tracking-[0.18em] text-red uppercase">
+            <p className="flex items-center gap-sm font-mono text-micro font-semibold tracking-[0.18em] text-red-ink uppercase">
               <span
                 aria-hidden="true"
                 className="block h-[14px] w-[28px] bg-red"
@@ -126,7 +126,7 @@ export function CompletionScreen({
                 />
               </span>
               <span>
-                <span className="block font-mono text-micro tracking-[0.14em] text-ink-60 uppercase">
+                <span className="block font-mono text-micro tracking-[0.14em] text-ink-muted uppercase">
                   {ui.rewardIssued}
                 </span>
                 <span className="block font-mono text-small font-semibold tracking-[0.08em] uppercase">
@@ -164,25 +164,25 @@ export function CompletionScreen({
       {next ? (
         <section className="mt-lg flex flex-wrap items-center justify-between gap-md rounded-card border border-ink-12 bg-raised p-md">
           <div>
-            <p className="font-mono text-micro tracking-[0.14em] text-ink-60 uppercase">
+            <p className="font-mono text-micro tracking-[0.14em] text-ink-muted uppercase">
               {ui.nextInHangar}
             </p>
             <p className="mt-xs font-display text-h3 font-bold tracking-tight uppercase">
               {next.name}
             </p>
-            <p className="mt-xs text-small text-ink-60">
+            <p className="mt-xs text-small text-ink-muted">
               {format(ui.nextMeta, { folds: next.stepCount, license: ui.license[next.tier] })}
             </p>
           </div>
           <a
             href={next.href}
-            className={`rounded-input bg-red px-lg py-sm font-semibold text-white ${FOCUS_RING}`}
+            className={`rounded-input bg-red-ink px-lg py-sm font-semibold text-on-red ${FOCUS_RING}`}
           >
             {ui.foldNextPlane}
           </a>
         </section>
       ) : (
-        <p className="mt-lg font-mono text-small text-ink-60">{ui.allComplete}</p>
+        <p className="mt-lg font-mono text-small text-ink-muted">{ui.allComplete}</p>
       )}
     </main>
   );
@@ -202,7 +202,7 @@ function Stat({
       className={`rounded-card border bg-raised p-md ${tone === "green" ? "border-green/45" : "border-ink-12"}`}
     >
       <p
-        className={`font-mono text-micro tracking-[0.1em] uppercase ${tone === "green" ? "text-green" : "text-ink-60"}`}
+        className={`font-mono text-micro tracking-[0.1em] uppercase ${tone === "green" ? "text-green" : "text-ink-muted"}`}
       >
         {label}
       </p>

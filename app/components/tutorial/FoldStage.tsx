@@ -127,14 +127,14 @@ export function FoldStage({
       {showAnnotation ? (
         <div
           data-testid="fold-annotation"
-          className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full font-mono text-micro font-semibold tracking-[0.14em] text-red uppercase"
+          className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full font-mono text-micro font-semibold tracking-[0.14em] text-red-ink uppercase"
           style={{ left: `${anchor.x}px`, top: `${anchor.y}px` }}
         >
           {annotationLabel}
         </div>
       ) : null}
 
-      <p className="pointer-events-none absolute top-md start-md font-mono text-micro tracking-[0.12em] text-ink-60 uppercase">
+      <p className="pointer-events-none absolute top-md start-md font-mono text-micro tracking-[0.12em] text-ink-muted uppercase">
         {ui.viewHint}
       </p>
 
@@ -175,7 +175,7 @@ export function FoldStage({
         </Chip>
       </div>
 
-      <p className="pointer-events-none absolute end-md bottom-md font-mono text-micro tracking-[0.12em] text-ink-38 uppercase">
+      <p className="pointer-events-none absolute end-md bottom-md font-mono text-micro tracking-[0.12em] text-ink-muted uppercase">
         {ui.paper[paperFormat]}
       </p>
     </section>

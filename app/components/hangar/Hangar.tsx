@@ -118,7 +118,7 @@ export function Hangar({ ui, planes, locale, createEngine }: HangarProps) {
             </span>
             {/* The logbook screen is not in this build; shown inactive rather than
                 as a link that would land on a 404. */}
-            <span className="font-display text-small font-bold tracking-[0.06em] text-ink-38 uppercase">
+            <span className="font-display text-small font-bold tracking-[0.06em] text-ink-muted uppercase">
               {ui.navLogbook}
             </span>
             <Chip variant="outline" className="gap-sm">
@@ -137,14 +137,14 @@ export function Hangar({ ui, planes, locale, createEngine }: HangarProps) {
 
       <main className="mx-auto w-full max-w-[1200px] flex-1 px-lg py-2xl">
         <header>
-          <p className="font-mono text-micro font-semibold tracking-[0.18em] text-red uppercase">
+          <p className="font-mono text-micro font-semibold tracking-[0.18em] text-red-ink uppercase">
             {format(ui.eyebrow, { count: planes.length })}
           </p>
           <div className="mt-md flex flex-wrap items-end justify-between gap-md">
             <h1 className="font-display text-display leading-none font-bold tracking-tight uppercase">
               {ui.title}
             </h1>
-            <p className="flex items-center gap-sm font-mono text-micro tracking-[0.1em] text-ink-60 uppercase">
+            <p className="flex items-center gap-sm font-mono text-micro tracking-[0.1em] text-ink-muted uppercase">
               {ui.fleetOverview}
             </p>
           </div>
@@ -174,7 +174,7 @@ export function Hangar({ ui, planes, locale, createEngine }: HangarProps) {
         </div>
 
         {visible.length === 0 ? (
-          <p className="mt-2xl font-mono text-small text-ink-60">{ui.empty}</p>
+          <p className="mt-2xl font-mono text-small text-ink-muted">{ui.empty}</p>
         ) : (
           <div className="mt-lg grid grid-cols-1 gap-lg md:grid-cols-2 lg:grid-cols-3">
             {visible.map((view) => (
@@ -197,7 +197,7 @@ export function Hangar({ ui, planes, locale, createEngine }: HangarProps) {
 
       <footer className="border-t border-ink-12">
         <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-sm px-lg py-lg">
-          <p className="font-mono text-micro tracking-[0.1em] text-ink-38 uppercase">
+          <p className="font-mono text-micro tracking-[0.1em] text-ink-muted uppercase">
             {ui.footerLine}
           </p>
           <span aria-hidden="true" className="flex gap-xs">

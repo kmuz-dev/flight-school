@@ -95,11 +95,11 @@ export function OrbitViewer({
 
       <div ref={mountRef} data-testid="preflight-stage" aria-hidden="true" className="absolute inset-0" />
 
-      <p className="pointer-events-none absolute top-md start-md font-mono text-micro tracking-[0.12em] text-ink-60 uppercase">
+      <p className="pointer-events-none absolute top-md start-md font-mono text-micro tracking-[0.12em] text-ink-muted uppercase">
         {orbitHint}
       </p>
 
-      <p className="pointer-events-none absolute end-md bottom-md border border-ink-12 bg-paper/90 px-sm py-xs font-mono text-micro tracking-[0.12em] text-ink-60 uppercase">
+      <p className="pointer-events-none absolute end-md bottom-md border border-ink-12 bg-paper/90 px-sm py-xs font-mono text-micro tracking-[0.12em] text-ink-muted uppercase">
         {specimen}
       </p>
     </section>
