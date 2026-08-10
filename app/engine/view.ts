@@ -86,3 +86,52 @@ export function project(basis: ViewBasis, p: Vec3): [number, number] {
 export function closeness(basis: ViewBasis, p: Vec3): number {
   return p[0] * basis.eye[0] + p[1] * basis.eye[1] + p[2] * basis.eye[2];
 }
+
+/**
+ * The one lighting convention, for the same reason there is one camera.
+ *
+ * Directions point FROM the model TOWARD each lamp, in table space, unit
+ * length. The 3D stage places its three `DirectionalLight`s along these and the
+ * flat SVG shades its facets with them, so a hangar card and the live scene
+ * that wakes over it are lit alike as well as seen alike.
+ *
+ * Three lamps, doing three jobs, which is the standard portrait rig and is why
+ * paper reads as an object rather than as a cut-out:
+ *
+ *   - `key` high and over the viewer's left shoulder, warm. It does the
+ *     modelling: it is what makes two facets meeting at a crease take
+ *     noticeably different values.
+ *   - `fill` low and opposite, cool and weaker. It keeps the shadow side from
+ *     going dead, and the warm/cool split across a fold is most of what makes
+ *     the result look like paper in a room rather than grey card.
+ *   - `rim` from behind, to separate the silhouette from the backdrop. Off in
+ *     the paper theme, which has a light ground and needs no help; strong in
+ *     Night Flight, where the aircraft would otherwise dissolve into it.
+ */
+export const LIGHT_RIG = {
+  key: [-0.55, -0.75, 1.2] as Vec3,
+  fill: [0.9, 0.3, 0.5] as Vec3,
+  rim: [0.2, 1.1, 0.25] as Vec3,
+} as const;
+
+/**
+ * How high a finished aircraft floats on a display surface, as a fraction of
+ * its own bounding radius.
+ *
+ * A fraction rather than millimetres because the camera distance is fitted to
+ * that same radius, so a height expressed this way subtends the same angle on a
+ * 179mm Square Cruiser as on a 310mm Dart. Shared with the flat SVG so the
+ * static card and the live scene that wakes over it compose identically: the
+ * plane does not drop or jump at the moment the renderer changes.
+ */
+export const DISPLAY_LIFT = 0.3;
+
+/** `v` scaled to unit length; a zero vector is returned unchanged. */
+export function normalize(v: Vec3): Vec3 {
+  const n = Math.hypot(v[0], v[1], v[2]);
+  return n < 1e-12 ? v : [v[0] / n, v[1] / n, v[2] / n];
+}
+
+export function dot(a: Vec3, b: Vec3): number {
+  return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}

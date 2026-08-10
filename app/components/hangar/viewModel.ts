@@ -23,10 +23,16 @@ export function finishedPlaneSvg(
   size: { width: number; height: number } = CARD_RENDER,
 ): string {
   const finished = computeFoldState(structure, structure.steps.length - 1);
-  // `rest` because this is an aircraft, not a step of a fold: it stands up
-  // instead of lying on its side with half of it below the table. One edit
-  // covers the hangar cards, the preflight hero and the wings certificate.
-  return renderStateToSvg(finished, { ...size, showCreaseMarks: false, rest: true });
+  // `display` because this is an aircraft, not a step of a fold: it stands up
+  // instead of lying on its side with half of it below the table, it is lit
+  // rather than flat-filled, and it floats over its own contact shadow at the
+  // same height the live stage floats it. That last part is why the shadow
+  // belongs in the SVG and not in the card's CSS - a fixed ellipse behind the
+  // picture cannot know where a particular aircraft's keel actually is, and on
+  // the Dart it sat well aft of the nose that was nearest the ground.
+  // One edit covers the hangar cards, the preflight hero and the wings
+  // certificate.
+  return renderStateToSvg(finished, { ...size, showCreaseMarks: false, display: true });
 }
 
 export function buildHangarPlanes(

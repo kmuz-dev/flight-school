@@ -119,9 +119,12 @@ export function PlaneCard({
           onClick={() => onToggleSelect(view.id)}
           className={`relative block aspect-[3/2] w-full overflow-hidden rounded-t-[7px] bg-paper ${FOCUS_RING}`}
         >
-          {/* The same two stops the live stage paints as its backdrop, and a
-              soft pool where its contact shadow lands, so waking a card adds
-              depth and motion rather than changing the scene. */}
+          {/* The same two stops the live stage paints as its backdrop, so
+              waking a card adds depth and motion rather than changing the
+              scene. The contact shadow is NOT here: it is drawn inside the SVG
+              from the aircraft's own footprint, because a fixed ellipse in CSS
+              cannot know where a given plane's keel is and sat visibly adrift
+              of it. */}
           <span
             aria-hidden="true"
             className="absolute inset-0"
@@ -129,11 +132,6 @@ export function PlaneCard({
               backgroundImage:
                 "linear-gradient(170deg, var(--color-raised), var(--color-paper))",
             }}
-          />
-          <span
-            aria-hidden="true"
-            className="absolute inset-x-[18%] bottom-[14%] h-[12%] rounded-[50%] blur-[10px]"
-            style={{ background: "var(--color-ink-12)" }}
           />
           <EngineSvg svg={view.svg} className="absolute inset-0 flex items-center justify-center" />
           {live ? (

@@ -14,7 +14,7 @@ The build is specified before the code: read [docs/PRD.md](docs/PRD.md) (product
 - The fold engine (`app/engine/` once it exists) stays React-free; React calls into it.
 - Structure and prose never mix: geometry/ids/ratings in content files, all human-readable text in i18n dictionaries.
 - No AI image generation assets; every visual is an engine render.
-- Deploys to Cloudflare Pages free tier; keep all asset paths basePath-safe for the GitHub Pages fallback.
+- Deploys to Cloudflare free tier as Workers static assets (`wrangler.jsonc`, no Worker script), not Pages; keep all asset paths basePath-safe for the GitHub Pages fallback.
 
 ## Design System
 
@@ -33,11 +33,13 @@ npm run lint             # eslint
 npm run test             # vitest, both projects (unit = node, components = jsdom)
 npm run test:e2e         # Playwright against the export; run `npm run build` first
 npm run validate:content # content rules only
-npm run i18n:audit       # key parity across locales (fails until Phase 3 lands them)
+npm run i18n:audit -- --strict   # key parity across all 12 locales; --strict is what CI runs
+npx wrangler deploy      # ships out/ to Cloudflare; needs `wrangler login` or CLOUDFLARE_API_TOKEN
 ```
 
 Single test: `npx vitest run tests/engine/fold.test.ts -t "name of the case"`.
 Single E2E: `npx playwright test --project=chromium tests/e2e/journey.spec.ts -g "bulldog"`.
+Against the deployed site: `E2E_BASE_URL=https://flight-school.kudakw-mutasa.workers.dev npx playwright test tests/e2e`.
 
 E2E specs are `*.spec.ts` under `tests/`; vitest owns `*.test.ts`. Playwright's
 default match would otherwise pull the vitest files in and fail on Vitest's

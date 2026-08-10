@@ -46,3 +46,45 @@ for (const route of ROUTES) {
     ).toBeLessThanOrEqual(overflow.limit);
   });
 }
+
+/**
+ * Fitting the viewport is not the same as being legible in it. The tutorial's
+ * top bar passed the check above while the plane name was truncated to zero
+ * width and the licence placard ran straight through the step counter: nothing
+ * overflowed, and nothing told the cadet which aircraft was on the table.
+ */
+test("the tutorial says which plane is on the table, at any width", async ({ page }) => {
+  await page.goto("/en/plane/dart/fold/");
+  const name = page.getByRole("heading", { level: 1 });
+  await expect(name).toBeVisible();
+
+  const box = await name.boundingBox();
+  expect(box, "the plane name has no box").not.toBeNull();
+  // Wide enough for more than an ellipsis. The Dart's name is the shortest in
+  // the fleet, so anything that fits it fits the rest.
+  expect(box!.width, `the name is ${box!.width}px wide`).toBeGreaterThan(60);
+
+  // And nothing in the bar sits on top of anything else.
+  const rects = await page.locator("header > div > *, header > div").evaluateAll((els) =>
+    els
+      .filter((el) => (el as HTMLElement).offsetParent !== null)
+      .map((el) => {
+        const r = el.getBoundingClientRect();
+        return { tag: el.tagName, text: (el.textContent ?? "").slice(0, 24), r };
+      }),
+  );
+  for (let i = 0; i < rects.length; i += 1) {
+    for (let j = i + 1; j < rects.length; j += 1) {
+      const a = rects[i]!;
+      const b = rects[j]!;
+      // Containers legitimately contain their children; only siblings that
+      // neither nest nor touch are compared.
+      const nested =
+        (a.r.left <= b.r.left && a.r.right >= b.r.right) ||
+        (b.r.left <= a.r.left && b.r.right >= a.r.right);
+      if (nested) continue;
+      const overlap = Math.min(a.r.right, b.r.right) - Math.max(a.r.left, b.r.left);
+      expect(overlap, `"${a.text}" overlaps "${b.text}" by ${overlap}px`).toBeLessThanOrEqual(0);
+    }
+  }
+});

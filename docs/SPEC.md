@@ -15,9 +15,9 @@ Where this spec references the anatomy repo, it means [thebuggeddev/anatomy](htt
 
 ## 2. Deployment
 
-- **Primary**: Cloudflare Pages, free tier. Build command produces the static export directory; Pages serves it. PR preview deployments enabled.
+- **Primary**: Cloudflare, free tier, as Workers static assets rather than Pages. `npm run build` writes the static export to `out/` and `wrangler.jsonc` points a Worker's asset directory at it; there is no Worker script, so requests are served straight from the CDN. Live at `https://flight-school.kudakw-mutasa.workers.dev/`. The choice over Pages is the asset limit: Pages caps a deployment at 25 MiB per file and 20,000 files, and static assets is the surface Cloudflare is still building on.
 - **Fallback**: GitHub Pages via Actions. Must work with a `basePath` when served from a project subpath; keep all asset references basePath-safe from day one.
-- **CI**: GitHub Actions runs typecheck, lint, tests, translation audit, and build on every PR.
+- **CI**: GitHub Actions runs typecheck, lint, unit and component tests, content validation, the translation audit in `--strict` mode, the build, and the full Playwright suite against the export on every push and PR. `.github/workflows/deploy.yml` ships `out/` on a push to `main`, and stays inert until the repository carries a `CLOUDFLARE_API_TOKEN` secret.
 
 ## 3. Architecture overview
 
@@ -125,12 +125,13 @@ All reads guarded for SSR/export (no `window` at module scope).
 - **Content validation test**: every plane's sequence type-checks, every step id has instruction text in English, every `hasWhy` step has a why-line, every prep table covers all three source papers or declares pass-through.
 - **i18n audit** in CI (anatomy repo has this exact script shape).
 - **Build test**: static export succeeds and key routes exist for every locale (anatomy's rendered-html test pattern).
-- No browser-automation suite required for V1; the acceptance bar in the PRD (fold every plane from the site with real paper) is a manual gate.
+- **Playwright against the exported build**, which supersedes this section's original "no browser-automation suite required for V1". The owner asked for end-to-end checks to gate every phase, so the suite is in from Phase 0: every plane folded start to finish, resume and badges, the paper-prep cut flow, RTL and CJK locales, a no-WebGL run, keyboard completion, axe-core over four screens in both themes, layout stability, and a console-error sweep. The same specs run against the deployed URL by setting `E2E_BASE_URL`.
+- The PRD's physical acceptance bar (fold every plane from the site with real paper) remains a manual gate that no suite replaces.
 
 ## 8. Build order (milestones)
 
 1. **M1 - Vertical slice**: engine core + step UI + The Dart end-to-end in English. Proves ADR 0001 before anything fans out. Exit: a person folds a flying Dart from the site.
 2. **M2 - Catalog fan-out**: remaining 5 planes authored via the fold editor; catalog page, flight profiles, Paper Prep including the Square Cruiser cutting flow, localStorage resume/completion.
-3. **M3 - Locales and hardening**: 11 translated dictionaries, RTL pass, WebGL fallback, thumbnail pipeline, CI, Cloudflare Pages deploy.
+3. **M3 - Locales and hardening**: 11 translated dictionaries, RTL pass, WebGL fallback, thumbnail pipeline, CI, Cloudflare deploy.
 
 M1 is the risk gate: if the engine proves unworkable at full quality, fall back to static SVG step diagrams behind the same step UI and data model (the `FoldStep` schema still drives diagram generation), without renegotiating the rest of the product.

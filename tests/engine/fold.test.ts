@@ -481,6 +481,54 @@ describe("18. svg projection", () => {
     const svg = renderStateToSvg(freshSheet("a4"));
     expect(svg.match(/<polygon/g)).toHaveLength(1);
   });
+
+  /**
+   * The catalogue used to look like a two-tone paper cut-out, and this is why:
+   * every facet took one of exactly TWO flat fills, white if its front face was
+   * up and a beige if not. A finished plane presents a dozen panels at a dozen
+   * angles and they all came out the same value, so the only thing separating
+   * them was a hairline stroke - a diagram of a fold rather than a picture of
+   * one.
+   *
+   * Counting distinct fills is a crude measure and deliberately so: it cannot
+   * be satisfied by anything except actually varying the fill with the geometry.
+   */
+  it("shades a finished plane by the light, not with two flat fills", () => {
+    const finished = computeFoldState(dart, dart.steps.length - 1);
+    const fills = new Set(
+      [...renderStateToSvg(finished, { rest: true }).matchAll(/fill="(#[0-9a-f]{6})"/gi)].map(
+        (m) => m[1]!.toLowerCase(),
+      ),
+    );
+    expect(fills.size).toBeGreaterThan(4);
+
+    // And the values stay in paper's range. Paper in a lit room occupies a
+    // narrower band than intuition suggests; anything darker than this reads as
+    // grey card, and it is what the first attempt at the lighting produced.
+    const lightness = [...fills].map((hex) => parseInt(hex.slice(1, 3), 16) / 255);
+    expect(Math.max(...lightness)).toBeGreaterThan(0.9);
+    expect(Math.min(...lightness)).toBeGreaterThan(0.6);
+  });
+
+  it("grounds a display render on a shadow it derives from the aircraft", () => {
+    const finished = computeFoldState(dart, dart.steps.length - 1);
+    const plain = renderStateToSvg(finished, { rest: true });
+    const shown = renderStateToSvg(finished, { display: true });
+
+    // The shadow belongs to the picture, not to the card's CSS: a fixed ellipse
+    // behind the SVG cannot know where a given aircraft's keel is.
+    expect(plain).not.toContain("radialGradient");
+    expect(shown).toContain("radialGradient");
+    expect(shown).toContain("<circle");
+
+    // `display` implies `rest`, so it never draws a plane lying on its side.
+    expect(renderStateToSvg(finished, { display: true, rest: false })).toContain("radialGradient");
+
+    // The frame grows to hold the ground the aircraft floats over, rather than
+    // cropping its own shadow away.
+    const viewBox = (svg: string) => svg.match(/viewBox="([^"]+)"/)![1]!.split(" ").map(Number);
+    expect(viewBox(shown)[3]!).toBeGreaterThan(viewBox(plain)[3]!);
+  });
 });
 
 describe("area helper", () => {

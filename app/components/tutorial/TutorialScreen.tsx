@@ -170,7 +170,15 @@ export function TutorialScreen({
           <h1 className="truncate font-display text-h3 font-bold uppercase tracking-tight">
             {planeName}
           </h1>
-          <span className="shrink-0 border border-[color:var(--color-ink)] px-sm py-[2px] font-mono text-micro tracking-[0.08em]">
+          {/*
+            The licence placard is the first thing to go on a narrow screen.
+            It is 148px of a 412px row that never shrinks, and with it there
+            the plane name - the one element that says which aircraft is on the
+            table - truncated to nothing and the placard ran straight through
+            the step counter. The tier was already read on the way in, from the
+            hangar card and the preflight header; the name was not.
+          */}
+          <span className="hidden shrink-0 border border-[color:var(--color-ink)] px-sm py-[2px] font-mono text-micro tracking-[0.08em] sm:inline-block">
             {ui.license[tier]}
           </span>
         </div>
