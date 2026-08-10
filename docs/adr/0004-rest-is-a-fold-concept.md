@@ -63,12 +63,28 @@ The flat SVG projection applies it the same way, as `multiply(restTransform(stat
 Per state:
 
 1. **Hinge** - group facets by the axis of their *last* bend and pick the axis carrying the most **area**. Area rather than facet count, so a wing that a later crease happened to subdivide does not lose the vote. The Harrier bends its fins before its wings, so its wing facets carry `bend = [fin, wing]` and only the last entry identifies the hinge.
-2. **Bisector** - the area-weighted mean of the bent facets' posed centroids, taken perpendicular to the hinge. Area-weighted rather than vertex-averaged, so re-siting one crease endpoint cannot move the whole aircraft's roll.
+2. **Bisector** - the area-weighted mean **attitude** of the bent facets. Each contributes the direction lying in its own plane and running perpendicular to the hinge, away from it: the direction that wing is heading.
 3. **Roll** - the signed rotation about the hinge carrying that bisector onto the perpendicular component of `+Z`.
 4. **Seat** - a translation putting the lowest posed vertex at `z = 0`.
 
 No plane carries a rest angle.
-Measured across the catalog the derivation returns 84.6 to 88.3 degrees, and afterwards every plane is longer than it is wide and wider than it is tall - which is the axis assignment ADR 0002 will read, now true rather than assumed.
+The derivation returns exactly 90 degrees for every plane in the catalog, which is the sign it is right rather than a coincidence: a sequence is authored with the sheet flat on the table, so a finished aircraft is that sheet stood on edge and standing it back up is a quarter turn.
+Afterwards every plane is longer than it is wide and wider than it is tall, which is the axis assignment ADR 0002 will read, now true rather than assumed.
+
+### Step 2 measures attitude, and it must not measure position
+
+The first version of this took the area-weighted mean of the bent facets' posed **centroids**, which is wrong in a way that is invisible in every aggregate check and glaring on screen.
+
+A wing pair is authored as two folds on one crease with `layers: "top"` and `layers: "bottom"`, so the two wings sit on different layers of the stack and `poseForFacet` offsets each by `layer * LAYER_THICKNESS`.
+Those sub-millimetre offsets displace the two wings' centroids by different amounts, and over an arm of a centimetre that is worth two to five degrees.
+Levelling the centroids therefore rolled the whole aircraft to cancel a paper-thickness artefact, and left the wings themselves off level by half the error: on the Hammer they finished 8.00 degrees apart, and the model read as broken.
+
+A plane's normal cannot be changed by a translation, so measuring attitude is immune to the entire effect by construction.
+With it, all six planes come out with their wings level to within 0.0001 degrees and sitting at exactly the dihedral the fold sequence authored - the Dart's 82-degree wing folds give 8.00 degrees above horizontal, the Hammer's 86 give 4.00.
+
+The lesson generalises past this bug: every other assertion in `tests/engine/rest.test.ts` passed throughout.
+The roll was inside its band, the bounding box came out longer than wide than tall, the motion was rigid, and the transform was still exactly the identity for flat states.
+None of those compares the two wings **to each other**, and that comparison is the only thing that says whether the aircraft looks level.
 
 ### Two properties that are the point of the design
 

@@ -120,14 +120,54 @@ export function wingHinge(state: FoldState): Hinge | null {
 }
 
 /**
- * Which way the V opens: the area-weighted mean offset of the bent facets from
- * the hinge, taken perpendicular to it.
+ * The unit normal of a posed facet, by Newell's method.
  *
- * Area-weighted over facet centroids rather than averaged over vertices, for
- * the same reason the hinge vote is: vertex-averaging weights a wing by how
- * many pieces the creases happened to cut it into, so moving one crease
- * endpoint could roll the whole aircraft. An affine map carries a polygon's
- * centroid to its image's centroid, so posing the centroid is exact.
+ * Newell rather than a cross product of the first three vertices: it is the
+ * area-weighted average of every vertex triple, so a facet with a near-collinear
+ * corner - which crease subdivision produces constantly - still yields the
+ * normal of the polygon as a whole rather than the normal of its worst corner.
+ */
+function facetNormal(facet: Facet): Vec3 | null {
+  const pose = poseForFacet(facet);
+  const p = facet.polygon.map((v) => transformPoint(pose, v));
+  let n: Vec3 = [0, 0, 0];
+  for (let i = 0; i < p.length; i += 1) {
+    const a = p[i]!;
+    const b = p[(i + 1) % p.length]!;
+    n = [
+      n[0] + (a[1] - b[1]) * (a[2] + b[2]),
+      n[1] + (a[2] - b[2]) * (a[0] + b[0]),
+      n[2] + (a[0] - b[0]) * (a[1] + b[1]),
+    ];
+  }
+  return unit3(n);
+}
+
+/**
+ * Which way the V opens: the area-weighted mean ATTITUDE of the bent facets,
+ * not their mean position.
+ *
+ * Each bent facet contributes the direction that lies in its own plane and runs
+ * perpendicular to the hinge, pointing away from it - the direction the wing
+ * itself is heading. Averaging those and rolling the mean onto +Z leaves the
+ * two wings at equal and opposite angles from horizontal, which is what a
+ * person means by a plane sitting level.
+ *
+ * It must be attitude and NOT position, and the difference is paper thickness.
+ * A wing pair is authored as two folds on the same crease with `layers: "top"`
+ * and `layers: "bottom"`, so the two wings sit on different layers of the
+ * stack, and `poseForFacet` offsets each by `layer * LAYER_THICKNESS`. Those
+ * sub-millimetre offsets displace the two wings' centroids unequally, and over
+ * an arm of a centimetre or so that is worth two to five degrees. Levelling the
+ * centroids therefore rolled the aircraft to cancel a thickness artefact and
+ * tipped the actual wings off level by half the error, which is visible: on the
+ * Hammer the two wings sat 8 degrees apart. A plane normal cannot be changed by
+ * a translation, so measuring attitude is immune to the whole effect by
+ * construction.
+ *
+ * Area-weighted, for the same reason the hinge vote is: a wing that a later
+ * crease happened to cut into four pieces must not out-vote the whole wing on
+ * the other side.
  */
 function openingDirection(state: FoldState, hinge: Hinge): Vec3 | null {
   const dir = unit3(hinge.dir);
@@ -138,9 +178,20 @@ function openingDirection(state: FoldState, hinge: Hinge): Vec3 | null {
     if (facet.bend.length === 0) continue;
     const a = area(facet.polygon);
     if (a <= EPS) continue;
+    const normal = facetNormal(facet);
+    if (!normal) continue;
+    // In the facet's plane and across the hinge. Undefined for a facet lying in
+    // the hinge's own plane, which has no side to open toward.
+    const across = unit3(cross3(normal, dir));
+    if (!across) continue;
+    // `across` has an arbitrary sign; the centroid says which way is outward.
+    // Position is fit to decide a SIGN even though it is too coarse to decide
+    // an angle, because a wing's centroid is never within a paper thickness of
+    // its hinge.
     const c = transformPoint(poseForFacet(facet), centroid(facet.polygon));
     const arm = perpTo([c[0] - hinge.origin[0], c[1] - hinge.origin[1], c[2] - hinge.origin[2]], dir);
-    sum = [sum[0] + arm[0] * a, sum[1] + arm[1] * a, sum[2] + arm[2] * a];
+    const s = dot3(across, arm) >= 0 ? a : -a;
+    sum = [sum[0] + across[0] * s, sum[1] + across[1] * s, sum[2] + across[2] * s];
     weight += a;
   }
   // A perfectly symmetric 180-degree V has no opening direction and needs no

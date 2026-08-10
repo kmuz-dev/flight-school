@@ -3,7 +3,8 @@
  *
  * These pin the derivation, not just the outcome. "The result is above zero"
  * would pass for a transform that shoved the model up by a hardcoded 50mm; "the
- * roll is 87 degrees about the wing hinge and the model then touches the table"
+ * roll is a quarter turn about the wing hinge, the model then touches the table,
+ * and its two wings come out at the same angle as each other"
  * only passes for one that worked it out.
  */
 import { describe, expect, it } from "vitest";
@@ -62,18 +63,120 @@ describe("rest is the identity until a plane becomes one", () => {
   });
 });
 
+/**
+ * The angle each bent facet's own plane makes with horizontal, area-weighted
+ * per side of the hinge.
+ *
+ * Attitude, not position: a facet's normal is what decides whether a wing looks
+ * level, and unlike a centroid it cannot be moved by the layer offsets that a
+ * `top`/`bottom` wing pair puts between the two sides.
+ */
+function wingTilts(state: FoldState, rest: Mat4, hingeX: number, onlyBends?: number) {
+  const acc: Record<"port" | "starboard", { tilt: number; area: number }> = {
+    port: { tilt: 0, area: 0 },
+    starboard: { tilt: 0, area: 0 },
+  };
+  for (const facet of state.facets) {
+    if (facet.bend.length === 0) continue;
+    // `onlyBends` isolates the plain wing. The Harrier creases its fin tips
+    // before its wings and then carries them along, so those facets end up with
+    // two bends and sit at the fin's angle rather than the wing's.
+    if (onlyBends !== undefined && facet.bend.length !== onlyBends) continue;
+    const pose = multiply(rest, poseForFacet(facet));
+    const p = facet.polygon.map((v) => transformPoint(pose, v));
+    let n = [0, 0, 0];
+    let cx = 0;
+    for (let i = 0; i < p.length; i += 1) {
+      const a = p[i]!;
+      const b = p[(i + 1) % p.length]!;
+      n = [
+        n[0]! + (a[1] - b[1]) * (a[2] + b[2]),
+        n[1]! + (a[2] - b[2]) * (a[0] + b[0]),
+        n[2]! + (a[0] - b[0]) * (a[1] + b[1]),
+      ];
+      cx += a[0];
+    }
+    const len = Math.hypot(n[0]!, n[1]!, n[2]!);
+    if (len < 1e-9) continue;
+    const weight = len / 2; // Newell's magnitude is twice the polygon's area.
+    const tilt = (Math.acos(Math.min(1, Math.abs(n[2]! / len))) * 180) / Math.PI;
+    const side = cx / p.length >= hingeX ? "starboard" : "port";
+    acc[side].tilt += tilt * weight;
+    acc[side].area += weight;
+  }
+  return {
+    port: acc.port.tilt / (acc.port.area || 1),
+    starboard: acc.starboard.tilt / (acc.starboard.area || 1),
+  };
+}
+
 describe.each(Object.entries(PLANES))("%s: stands up on its own hinge", (id, plane) => {
   const state = computeFoldState(plane, plane.steps.length - 1);
   const frame = restFrame(state);
 
+  /**
+   * The gate that the first version of this transform walked straight past.
+   *
+   * `restFrame` used to roll the aircraft until the bent facets' mean CENTROID
+   * sat above the hinge. A wing pair is two folds on one crease with
+   * `layers: "top"` and `layers: "bottom"`, so the two wings live on different
+   * layers of the stack and `poseForFacet` offsets them by
+   * `layer * LAYER_THICKNESS`. Those sub-millimetre offsets move the two
+   * centroids by different amounts, and over an arm of a centimetre that is
+   * worth two to five degrees - so the roll turned the whole aircraft to cancel
+   * a paper-thickness artefact and left the wings themselves off level. On the
+   * Hammer they sat 8.00 degrees apart and it read, correctly, as a broken
+   * model.
+   *
+   * Every other assertion in this file passed throughout: the roll was inside
+   * its 60-120 band, the box still came out longer than wide than tall, and the
+   * motion was still rigid. Only measuring the wings against each other says
+   * anything about whether the plane looks level.
+   */
+  it("finishes with its two wings at the same angle", () => {
+    const tilts = wingTilts(state, frame.matrix, frame.hinge!.origin[0]);
+    const gap = Math.abs(tilts.port - tilts.starboard);
+    expect(
+      gap,
+      `${id} port ${tilts.port.toFixed(2)} deg, starboard ${tilts.starboard.toFixed(2)} deg`,
+    ).toBeLessThan(0.05);
+  });
+
+  it("leaves the wings at the dihedral the fold sequence authored", () => {
+    // Not merely equal to each other - equal to what the content asked for. A
+    // roll that levelled the wings by splitting the difference wrongly would
+    // pass the test above and fail this one, and the two together pin the
+    // attitude rather than just its symmetry.
+    const wingStep = [...plane.steps]
+      .reverse()
+      .find((s) => s.action.type === "fold" && s.action.layers !== undefined);
+    const action = wingStep?.action;
+    if (!action || action.type !== "fold") return;
+    // The angle is per wing measured from CLOSED, where a wing stands square to
+    // the table, so a fold of `angle` leaves it `90 - angle` above horizontal.
+    const expected = Math.abs(90 - action.angle);
+    const tilts = wingTilts(state, frame.matrix, frame.hinge!.origin[0], 1);
+    expect(tilts.port, `${id} port, authored ${action.angle} deg`).toBeCloseTo(expected, 1);
+    expect(tilts.starboard, `${id} starboard, authored ${action.angle} deg`).toBeCloseTo(
+      expected,
+      1,
+    );
+  });
+
   it("rolls onto the wing hinge rather than tipping over", () => {
     expect(frame.hinge, "a finished plane must have a wing to rest on").not.toBeNull();
-    // Every plane in the catalogue lands between 84 and 89 degrees. The band is
-    // wide because the roll is DERIVED - it is whatever puts this aircraft's V
-    // upright - but it is bounded because a value outside it would mean the
-    // hinge vote had picked the wrong axis. The Harrier is the case that makes
-    // this worth asserting: it bends its fins before its wings, so a vote by
-    // facet count instead of paper area could pick a fin.
+    // Every plane in the catalogue lands on exactly 90 degrees, which is the
+    // sign the derivation is right rather than a coincidence: a fold sequence
+    // is authored with the sheet flat on the table, so a finished aircraft is
+    // that sheet stood on edge, and standing it back up is a quarter turn.
+    //
+    // The band is nevertheless kept wide, because the roll is DERIVED - it is
+    // whatever puts THIS aircraft's V upright, and a future plane whose spine
+    // is not the authored fold line is entitled to a different number. It is
+    // bounded at all because a value outside it would mean the hinge vote had
+    // picked the wrong axis; the Harrier is the case that makes that worth
+    // asserting, since it bends its fins before its wings and a vote by facet
+    // count instead of paper area could pick a fin.
     expect(Math.abs(frame.rollDeg), `${id} rolled ${frame.rollDeg.toFixed(1)}`).toBeGreaterThan(60);
     expect(Math.abs(frame.rollDeg), `${id} rolled ${frame.rollDeg.toFixed(1)}`).toBeLessThan(120);
   });
