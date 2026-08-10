@@ -46,6 +46,8 @@ import {
   SceneModel,
   createStageFloorMaterial,
   stageTheme,
+  unionBounds,
+  type ModelBounds,
   type StageTheme,
   type ThemeName,
 } from "./sceneModel";
@@ -127,7 +129,22 @@ export function resolveCameraHint(
   };
 }
 
-/** Distance at which a sphere of `radius` fills the frame with a little air. */
+/**
+ * Distance at which a sphere of `radius` fills the frame with a little air.
+ *
+ * A sphere, not the model's box, because every stage here says DRAG TO ORBIT: a
+ * distance fitted to the silhouette at one angle clips as soon as the cadet
+ * turns the plane, and a dart is 57mm across and 310mm long, so nose-on and
+ * side-on differ by more than five times. Framing the bounding sphere is the
+ * only answer that is safe from every angle.
+ *
+ * It costs some frame. The tightest orbit-safe distance - the cylinder the model
+ * sweeps as it turns, solved across the whole elevation band - came out 12%
+ * nearer than this on the finished Dart, which is not worth solving for. What it
+ * does mean is that a preset looking down the long axis (the Dart's last steps
+ * ask for `front`, to show the wing V) shows a small plane, and no framing maths
+ * fixes that: it is the shape, seen end-on.
+ */
 export function framingDistance(radius: number, fovDeg: number, aspect: number): number {
   const vertical = radius / Math.sin(MathUtils.degToRad(fovDeg) / 2);
   const widen = aspect < 1 ? 1 / Math.max(aspect, 0.35) : 1;
@@ -245,7 +262,11 @@ export class FoldEngine implements FoldEngineHandle {
   private stepTimeline: StepTimeline | null = null;
   private cameraTween: ReturnType<typeof gsap.to> | null = null;
   private orbit: Orbit;
+  /** Set on a display surface; overrides every step's own camera hint. */
+  private readonly pinnedPreset: CameraPreset | undefined;
   private readonly target = new Vector3();
+  /** What the current step spans, so a resize re-frames the same geometry. */
+  private stepBounds: ModelBounds | null = null;
   private defaultDistance = 420;
   private modelRadius = 150;
   private modelTopZ = 0;
@@ -294,7 +315,11 @@ export class FoldEngine implements FoldEngineHandle {
     this.camera = new PerspectiveCamera(FOV_DEG, 1, 1, 20000);
     // Table space is z=0 with +Z up; tell Three before OrbitControls is built.
     this.camera.up.set(0, 0, 1);
-    this.orbit = { ...CAMERA_PRESETS[DEFAULT_PRESET], distance: this.defaultDistance };
+    this.pinnedPreset = opts.cameraPreset;
+    this.orbit = {
+      ...CAMERA_PRESETS[this.pinnedPreset ?? DEFAULT_PRESET],
+      distance: this.defaultDistance,
+    };
 
     this.model = new SceneModel(this.theme);
     this.annotations = new Annotations(this.theme);
@@ -496,6 +521,15 @@ export class FoldEngine implements FoldEngineHandle {
     // set never changes mid-animation, and pose keys stay stable.
     this.model.sync(to);
 
+    // Measure where the step ENDS before building the timeline, because building
+    // it leaves the meshes posed where the step BEGINS. The camera is placed
+    // once and holds for the whole step, so it has to frame both: measuring only
+    // the start leaves the finished plane small (the Dart's last step starts
+    // with the wings shut), and measuring only the end crops the larger sheet
+    // the step opens on.
+    this.model.applyPoses(this.core.posesForState(to));
+    const settledBounds = this.model.computeBounds();
+
     const apply = (poses: PoseMap): void => this.model.applyPoses(poses);
     this.stepTimeline = createStepTimeline({
       core: this.core,
@@ -515,24 +549,28 @@ export class FoldEngine implements FoldEngineHandle {
       },
     });
 
-    this.refit();
+    this.refit(unionBounds(this.model.computeBounds(), settledBounds));
     this.setTargetCrease(step);
     this.annotations.setVisible(mode !== "end");
 
     if (mode === "end") this.stepTimeline.complete();
     else if (mode === "play") this.stepTimeline.play();
 
-    const next = resolveCameraHint(step?.camera, this.orbit, this.defaultDistance);
+    const hint = this.pinnedPreset ? { preset: this.pinnedPreset } : step?.camera;
+    const next = resolveCameraHint(hint, this.orbit, this.defaultDistance);
     this.tweenCamera(next, mode !== "start");
   }
 
-  /** Re-measure the model and re-aim the lights, floor fade and camera framing. */
-  private refit(): void {
-    const bounds = this.model.computeBounds();
+  /**
+   * Re-aim the lights, floor fade and camera framing at `bounds`. A resize keeps
+   * the step's own bounds and only re-solves the distance for the new aspect;
+   * re-measuring there would frame whatever mid-fold pose happened to be showing.
+   */
+  private refit(bounds: ModelBounds = this.stepBounds ?? this.model.computeBounds()): void {
+    this.stepBounds = bounds;
     this.target.copy(bounds.center);
-    this.target.z = Math.max(bounds.maxZ * 0.5, 0);
     this.modelRadius = bounds.radius;
-    this.modelTopZ = bounds.maxZ;
+    this.modelTopZ = bounds.max.z;
     this.defaultDistance = framingDistance(bounds.radius, FOV_DEG, this.camera.aspect);
     this.controls.target.copy(this.target);
 

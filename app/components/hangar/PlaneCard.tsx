@@ -66,7 +66,13 @@ export function PlaneCard({
     // A hangar card is a display surface: the plane turns slowly on the spot so
     // you can read its shape. The engine drops the rotation under
     // prefers-reduced-motion, which is also where the bob is dropped.
-    const handle = createEngine(mount, view.structure, { autoRotate: true, quality: "preview" });
+    const handle = createEngine(mount, view.structure, {
+      autoRotate: true,
+      quality: "preview",
+      // Start from the hero angle rather than from wherever the last fold step
+      // pointed the camera; the rotation carries on from there.
+      cameraPreset: "threeQuarter",
+    });
     // The catalog shows the aircraft, not the folding of it.
     handle.gotoStep(view.stepCount - 1, { animate: false });
     const onResize = (): void => handle.resize();

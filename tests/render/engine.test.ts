@@ -8,7 +8,7 @@ import { gsap } from "gsap";
 import { BufferGeometry, LineSegments, Mesh, Vector3 } from "three";
 import { CAMERA_PRESETS, FoldEngine, orbitToPosition } from "@/engine/render/renderer";
 import { createCoreStub, makeStructure } from "@/engine/render/__contracts__/coreStub";
-import type { AnnotationAnchor } from "@/engine/core/types";
+import type { AnnotationAnchor, CameraHint, EngineOptions } from "@/engine/core/types";
 import type { PlaneStructure } from "@/content/types";
 import {
   createFakeControls,
@@ -38,12 +38,19 @@ type Mounted = {
 
 const live: Mounted[] = [];
 
-function mount(options: { reducedMotion?: boolean; steps?: number } = {}): Mounted {
+function mount(
+  options: {
+    reducedMotion?: boolean;
+    steps?: number;
+    structure?: PlaneStructure;
+    engine?: EngineOptions;
+  } = {},
+): Mounted {
   const { container, doc, view } = createFakeDom(800, 600);
   if (options.reducedMotion === true) view.matchMedia = () => ({ matches: true });
 
   const core = createCoreStub();
-  const structure = makeStructure(options.steps ?? 4);
+  const structure = options.structure ?? makeStructure(options.steps ?? 4);
   let canvas: FakeNode | null = null;
   const controls = createFakeControls();
   let renderer: ReturnType<typeof createFakeRenderer> | null = null;
@@ -51,7 +58,7 @@ function mount(options: { reducedMotion?: boolean; steps?: number } = {}): Mount
   const engine = new FoldEngine(
     container as unknown as HTMLElement,
     structure,
-    {},
+    options.engine ?? {},
     {
       core,
       rendererFactory: (c) => {
@@ -217,6 +224,56 @@ describe("FoldEngine camera", () => {
   it("keeps up as +Z so table-space poses need no re-basing", () => {
     const { engine } = mount();
     expect(engine["camera"].up.toArray()).toEqual([0, 0, 1]);
+  });
+
+  /**
+   * A display surface shows the finished aircraft, and the last step's camera
+   * hint is authored for the fold, not for the result - the Dart's is `top`-like
+   * nose-on `front`, where a dart is a sliver. Pinning is what keeps the hangar
+   * card and the preflight hero on the catalogue's 3/4 angle.
+   */
+  it("pins the camera to the given preset instead of following step hints", () => {
+    const withTopLastStep = (): PlaneStructure => {
+      const base = makeStructure(2);
+      const camera: CameraHint = { preset: "top" };
+      return { ...base, steps: base.steps.map((step) => ({ ...step, camera })) };
+    };
+    const direction = (m: Mounted): Vector3 =>
+      m.engine["camera"].position.clone().sub(m.controls.target).normalize();
+    const unit = (preset: "top" | "threeQuarter"): Vector3 =>
+      orbitToPosition({ ...CAMERA_PRESETS[preset], distance: 1 }, new Vector3()).normalize();
+
+    const free = mount({ reducedMotion: true, structure: withTopLastStep() });
+    free.engine.gotoStep(1, { animate: false });
+    expect(direction(free).z).toBeCloseTo(unit("top").z, 4);
+
+    const pinned = mount({
+      reducedMotion: true,
+      structure: withTopLastStep(),
+      engine: { cameraPreset: "threeQuarter" },
+    });
+    pinned.engine.gotoStep(1, { animate: false });
+    const expected = unit("threeQuarter");
+    const actual = direction(pinned);
+    expect(actual.x).toBeCloseTo(expected.x, 4);
+    expect(actual.y).toBeCloseTo(expected.y, 4);
+    expect(actual.z).toBeCloseTo(expected.z, 4);
+  });
+
+  /**
+   * The camera is placed once per step and holds while the paper moves, so the
+   * framing has to cover both ends of the step. Measuring only where the meshes
+   * happen to sit when the timeline is built means measuring the step's START,
+   * which is why a finished plane came out framed for the state before it.
+   */
+  it("frames the whole step, not the pose the timeline was built on", () => {
+    const { engine } = mount();
+    engine.gotoStep(1, { animate: false });
+    // The stub parks the settled state at x=1000 and the step's start near x=0.
+    const bounds = engine["stepBounds"];
+    expect(bounds).not.toBeNull();
+    expect(bounds?.min.x).toBeLessThan(100);
+    expect(bounds?.max.x).toBeGreaterThan(1000);
   });
 });
 

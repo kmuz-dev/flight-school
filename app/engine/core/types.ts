@@ -195,5 +195,17 @@ export type EngineOptions = {
    * ceiling awake: 67ms per frame at "full", 17ms at "preview".
    */
   readonly quality?: "full" | "preview";
+  /**
+   * Pin the camera to one preset and ignore the steps' own camera hints.
+   *
+   * A step's hint is authored for the fold being taught, not for looking at the
+   * result: the Dart's last step asks for `front` because that is where you can
+   * see the wing crease open. A display surface inherits whatever the last step
+   * asked for, and for a dart `front` is nose-on - the finished plane fills 18%
+   * of the frame width there against 67% from `threeQuarter`. Display surfaces
+   * pin the catalogue's hero angle instead; it also matches the build-time SVG
+   * they sit behind, so the handover to the live stage no longer jumps.
+   */
+  readonly cameraPreset?: NonNullable<CameraHint["preset"]>;
   readonly onReady?: () => void;
 };

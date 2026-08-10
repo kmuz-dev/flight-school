@@ -46,7 +46,14 @@ export function OrbitViewer({
     const mount = mountRef.current;
     if (!mount) return;
 
-    const handle = createEngine(mount, structure, { onReady: () => setLive(true) });
+    // 3/4 is the catalogue's hero angle (SCREENS.md) and the angle the SVG
+    // underneath is drawn from. Without pinning it the stage inherits the last
+    // fold step's camera hint, which is authored for that fold rather than for
+    // looking at the result - on the Dart that is nose-on.
+    const handle = createEngine(mount, structure, {
+      cameraPreset: "threeQuarter",
+      onReady: () => setLive(true),
+    });
     handle.gotoStep(stepCount - 1, { animate: false });
     const onResize = (): void => handle.resize();
     window.addEventListener("resize", onResize);

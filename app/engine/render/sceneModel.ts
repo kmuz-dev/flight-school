@@ -20,7 +20,6 @@ import {
   LineSegments,
   Mesh,
   MeshStandardMaterial,
-  Sphere,
   Vector3,
 } from "three";
 import type { Facet, FoldState, Vec2 } from "@/engine/core/types";
@@ -218,11 +217,32 @@ export function facetSignature(state: FoldState): string {
 }
 
 export type ModelBounds = {
+  readonly min: Vector3;
+  readonly max: Vector3;
   readonly center: Vector3;
   readonly radius: number;
-  /** Highest z reached by the paper, in millimetres - the annotation float height. */
-  readonly maxZ: number;
 };
+
+function boundsFromBox(box: Box3): ModelBounds {
+  const min = box.min.clone();
+  const max = box.max.clone();
+  return {
+    min,
+    max,
+    center: min.clone().add(max).multiplyScalar(0.5),
+    radius: Math.max(min.distanceTo(max) * 0.5, 1),
+  };
+}
+
+/**
+ * The box that holds both, for framing a step rather than one end of it: the
+ * camera is placed once and holds while the paper sweeps between two states.
+ */
+export function unionBounds(a: ModelBounds, b: ModelBounds): ModelBounds {
+  // Cloned, because Box3 keeps the vectors it is handed and union() writes into
+  // them - the operands would come back mutated.
+  return boundsFromBox(new Box3(a.min.clone(), a.max.clone()).union(new Box3(b.min, b.max)));
+}
 
 /**
  * The paper itself: a `Group` of facet meshes, rebuilt only on facet-set change.
@@ -237,7 +257,6 @@ export class SceneModel {
   private readonly box = new Box3();
   /** Scratch for the per-vertex bounds walk; avoids an allocation per vertex. */
   private readonly point = new Vector3();
-  private readonly sphere = new Sphere();
 
   constructor(theme: StageTheme) {
     this.root.name = "fold-model";
@@ -305,14 +324,9 @@ export class SceneModel {
       }
     }
     if (this.box.isEmpty()) {
-      return { center: new Vector3(), radius: 100, maxZ: 0 };
+      return boundsFromBox(new Box3(new Vector3(-100, -100, 0), new Vector3(100, 100, 0)));
     }
-    this.box.getBoundingSphere(this.sphere);
-    return {
-      center: this.sphere.center.clone(),
-      radius: Math.max(this.sphere.radius, 1),
-      maxZ: this.box.max.z,
-    };
+    return boundsFromBox(this.box);
   }
 
   dispose(): void {

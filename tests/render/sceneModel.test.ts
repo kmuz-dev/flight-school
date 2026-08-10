@@ -1,10 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { BufferGeometry, LineSegments, Material, Mesh } from "three";
+import { BufferGeometry, LineSegments, Material, Mesh, Vector3 } from "three";
 import {
   SceneModel,
   facetGeometry,
   facetSignature,
   stageTheme,
+  unionBounds,
 } from "@/engine/render/sceneModel";
 import { createCoreStub, LAYER_Z_MM, makeStructure } from "@/engine/render/__contracts__/coreStub";
 import type { Vec2 } from "@/engine/core/types";
@@ -47,6 +48,29 @@ describe("facetSignature", () => {
     const c = core.computeFoldState(structure, 1);
     expect(facetSignature(a)).toBe(facetSignature(b));
     expect(facetSignature(a)).not.toBe(facetSignature(c));
+  });
+});
+
+describe("unionBounds", () => {
+  const bounds = (min: [number, number, number], max: [number, number, number]) => ({
+    min: new Vector3(...min),
+    max: new Vector3(...max),
+    center: new Vector3(),
+    radius: 1,
+  });
+
+  it("covers both boxes and leaves its operands alone", () => {
+    const a = bounds([-10, 0, 0], [10, 5, 1]);
+    const b = bounds([-2, -30, -4], [2, 30, 4]);
+    const union = unionBounds(a, b);
+
+    expect(union.min.toArray()).toEqual([-10, -30, -4]);
+    expect(union.max.toArray()).toEqual([10, 30, 4]);
+    expect(union.center.toArray()).toEqual([0, 0, 0]);
+    // Three's Box3 keeps the vectors it is handed, so a careless union writes
+    // through to the caller's bounds.
+    expect(a.min.toArray()).toEqual([-10, 0, 0]);
+    expect(b.max.toArray()).toEqual([2, 30, 4]);
   });
 });
 
@@ -116,7 +140,7 @@ describe("SceneModel", () => {
 
     const bounds = model.computeBounds();
     expect(bounds.radius).toBeGreaterThan(50);
-    expect(bounds.maxZ).toBeCloseTo(LAYER_Z_MM, 5);
+    expect(bounds.max.z).toBeCloseTo(LAYER_Z_MM, 5);
 
     model.dispose();
   });
