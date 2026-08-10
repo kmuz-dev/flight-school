@@ -26,8 +26,9 @@ function block(name: "@theme" | ".night"): Record<string, string> {
   // brace ends the block.
   const body = CSS.slice(open + 1, CSS.indexOf("}", open));
   const out: Record<string, string> = {};
-  for (const [, key, value] of body.matchAll(/(--color-[\w-]+)\s*:\s*([^;]+);/g)) {
-    out[key] = value.trim();
+  for (const match of body.matchAll(/(--color-[\w-]+)\s*:\s*([^;]+);/g)) {
+    const [, key, value] = match;
+    if (key && value) out[key] = value.trim();
   }
   return out;
 }

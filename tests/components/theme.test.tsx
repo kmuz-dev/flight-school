@@ -88,6 +88,17 @@ describe("ThemeToggle", () => {
     expect(JSON.parse(window.localStorage.getItem(KEY) ?? "{}").theme).toBe("paper");
   });
 
+  it("names itself with the words printed on it", () => {
+    // WCAG 2.5.3, Label in Name. The placard reads "Day flight", so that is
+    // what someone driving the page by voice will say; an accessible name
+    // that opens with "Switch between..." leaves them nothing to speak. The
+    // purpose still follows, because a placard does not look pressable.
+    render(<ThemeToggle {...labels} />);
+    expect(screen.getByTestId("theme-toggle")).toHaveAccessibleName(
+      `${labels.dayLabel}. ${labels.a11yLabel}`,
+    );
+  });
+
   it("starts in the scene the cadet last chose", () => {
     window.localStorage.setItem(KEY, JSON.stringify({ progress: {}, completed: {}, theme: "night" }));
     __resetProgressCache();

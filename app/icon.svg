@@ -1,0 +1,13 @@
+<!--
+  The academy's mark, which is the same rotated diamond the hangar header and
+  the error screen already use. At 16px a mark has room for one idea, so this
+  is the airmail diamond alone: red plate, ink border, cream fold line running
+  nose to tail. Hand-authored rather than rendered - a favicon is chrome, not
+  a plane, so the "every visual is an engine render" rule does not reach it.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <rect width="32" height="32" fill="#F7F3E9" />
+  <path d="M16 2 30 16 16 30 2 16Z" fill="#D64541" stroke="#1A2B4A" stroke-width="2.5" stroke-linejoin="round" />
+  <path d="M9 16 23 16" stroke="#F7F3E9" stroke-width="2.5" stroke-linecap="round" />
+  <path d="M16 9 16 23" stroke="#F7F3E9" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="3 3" />
+</svg>

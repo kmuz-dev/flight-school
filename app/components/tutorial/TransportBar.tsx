@@ -88,13 +88,22 @@ export function TransportBar({
               : "bg-[color:var(--color-ink-12)]";
           return (
             <li key={i} className="h-[6px] flex-1">
+              {/*
+                The bar is 6px because it is a readout first; the pseudo-element
+                lifts the touch target to 24px tall without moving a pixel of
+                it. Width is still a segment wide - twelve 24px-wide targets do
+                not fit across a phone - which is why WCAG 2.5.8 is met here
+                through its Equivalent exception rather than by geometry: every
+                step this strip reaches is also reachable from the transport's
+                back and next buttons, which are full-size.
+              */}
               <button
                 type="button"
                 aria-label={format(ui.goToStep, { step: pad2(i + 1) })}
                 aria-current={active ? "step" : undefined}
                 data-state={done ? "done" : active ? "active" : "pending"}
                 onClick={() => onSeekStep(i)}
-                className={`block h-full w-full ${tone} ${FOCUS_RING}`}
+                className={`relative block h-full w-full ${tone} after:absolute after:-top-[9px] after:-bottom-[9px] after:inset-x-0 after:content-[''] ${FOCUS_RING}`}
               />
             </li>
           );
