@@ -37,6 +37,17 @@ import zhUi from "./ui/zh";
 import arUi from "./ui/ar";
 
 import enPlanes from "./planes/en";
+import esPlanes from "./planes/es";
+import frPlanes from "./planes/fr";
+import dePlanes from "./planes/de";
+import ptPlanes from "./planes/pt";
+import ruPlanes from "./planes/ru";
+import hiPlanes from "./planes/hi";
+import idPlanes from "./planes/id";
+import jaPlanes from "./planes/ja";
+import koPlanes from "./planes/ko";
+import zhPlanes from "./planes/zh";
+import arPlanes from "./planes/ar";
 
 const UI: Partial<Record<Locale, UiDictionary>> = {
   en: enUi,
@@ -55,6 +66,17 @@ const UI: Partial<Record<Locale, UiDictionary>> = {
 
 const PLANES: Partial<Record<Locale, PlanesDictionary>> = {
   en: enPlanes,
+  es: esPlanes,
+  fr: frPlanes,
+  de: dePlanes,
+  pt: ptPlanes,
+  ru: ruPlanes,
+  hi: hiPlanes,
+  id: idPlanes,
+  ja: jaPlanes,
+  ko: koPlanes,
+  zh: zhPlanes,
+  ar: arPlanes,
 };
 
 /** Site chrome for `locale`, with any untranslated key filled from English. */
