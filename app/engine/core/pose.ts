@@ -121,17 +121,21 @@ export function posesForState(state: FoldState): ReadonlyMap<number, Mat4> {
  * state and at t=1 it equals the new one (the 180-degree lemma). Stationary
  * facets keep their previous pose; their layer offset lerps so a restack does
  * not pop.
+ *
+ * The facets come from the delta, not from the state before the step, and that
+ * distinction is the whole point of `startFacets`. A crease splits the facets it
+ * crosses, and the pieces it creates do not exist in the previous state, so
+ * iterating that state returns a map with no entry for them - and the render
+ * layer, which builds its meshes from the state AFTER the step, would leave
+ * those meshes wherever they last were for the length of the animation. It was
+ * half the paper on the Dart's step 8.
  */
-export function poseAtProgress(
-  prevState: FoldState,
-  delta: StepDelta,
-  t: number,
-): ReadonlyMap<number, Mat4> {
+export function poseAtProgress(delta: StepDelta, t: number): ReadonlyMap<number, Mat4> {
   const clamped = Math.max(0, Math.min(1, t));
   const moving = new Set(delta.movingFacetIds);
   const out = new Map<number, Mat4>();
 
-  for (const facet of prevState.facets) {
+  for (const facet of delta.startFacets) {
     const base = poseForFacet(facet);
     if (!moving.has(facet.id) || !delta.axis || delta.angleDeg === 0) {
       out.set(facet.id, base);

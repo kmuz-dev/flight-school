@@ -12,7 +12,8 @@ import { computeFoldState, computeStepDelta, totalArea, validateSequence } from 
 import { facetInTable } from "@/engine/core/fold";
 import { PAPER_SIZES, formatForPlane } from "@/engine/core/paper";
 import { boundingBox, area as polygonArea } from "@/engine/core/polygon";
-import { posesForState, transformPoint } from "@/engine/core/pose";
+import { poseAtProgress, posesForState, transformPoint, type Mat4 } from "@/engine/core/pose";
+import type { Vec2 } from "@/engine/core/types";
 import type { PlaneStructure } from "@/content/types";
 
 describe.each(Object.entries(PLANES))("%s: authored sequence", (id, plane) => {
@@ -145,4 +146,69 @@ function wingSpreadDegrees(plane: PlaneStructure): number {
   const dot = a.reduce((sum, v, i) => sum + v * (b[i] ?? 0), 0);
   const norm = (v: readonly number[]) => Math.hypot(...v);
   return (Math.acos(Math.max(-1, Math.min(1, dot / (norm(a) * norm(b))))) * 180) / Math.PI;
+}
+
+/**
+ * The animation and the state have to agree, and the join between them is the
+ * pose map's keys.
+ *
+ * The render layer builds its meshes from the state AFTER a step (so the mesh
+ * set is stable while the paper moves) and then asks the core for poses from
+ * t=0. A crease splits every facet it crosses, and the pieces it makes are new
+ * facets that do not exist in the state before the step, so a pose map built
+ * from that state simply has no entry for them - and the meshes that got no
+ * matrix sat wherever they last were for the length of the fold. It was 8 of 16
+ * facets on the Dart's step 8 and 32 of 64 on the Hammer's step 10, on every
+ * plane in the catalog, and nothing caught it: the render tests run against a
+ * core stub that never splits, and the core's own t=0 test only walked the keys
+ * the map already had, so a missing key was invisible to it.
+ */
+describe.each(Object.entries(PLANES))("%s: the stage can pose every facet", (id, plane) => {
+  it("gives every facet of the post-step state a pose from the very first frame", () => {
+    for (let n = 0; n < plane.steps.length; n += 1) {
+      const delta = computeStepDelta(plane, n);
+      if (!delta) continue;
+      const poses = poseAtProgress(delta, 0);
+      const unposed = computeFoldState(plane, n)
+        .facets.filter((f) => !poses.has(f.id))
+        .map((f) => f.id);
+      expect(unposed, `${plane.steps[n]?.id}: facets with no pose at t=0`).toEqual([]);
+    }
+  });
+
+  it("opens each step on the previous step's silhouette", () => {
+    for (let n = 0; n < plane.steps.length; n += 1) {
+      const delta = computeStepDelta(plane, n);
+      if (!delta) continue;
+      const before = computeFoldState(plane, n - 1);
+      // Compared as silhouettes rather than facet-by-facet, because the split
+      // that makes them differ in COUNT must not make them differ in SHAPE.
+      expect(
+        silhouette(computeFoldState(plane, n).facets, poseAtProgress(delta, 0)),
+        `${plane.steps[n]?.id}: the stage at t=0 against the state before the step`,
+      ).toEqual(silhouette(before.facets, posesForState(before)));
+    }
+  });
+});
+
+/** Rounded world-space bounding box of `facets` under `poses`, as a string. */
+function silhouette(
+  facets: readonly { readonly id: number; readonly polygon: readonly Vec2[] }[],
+  poses: ReadonlyMap<number, readonly number[]>,
+): string {
+  const min = [Infinity, Infinity, Infinity];
+  const max = [-Infinity, -Infinity, -Infinity];
+  for (const facet of facets) {
+    const pose = poses.get(facet.id);
+    if (!pose) continue;
+    for (const point of facet.polygon) {
+      const world = transformPoint(pose as Mat4, point);
+      for (let i = 0; i < 3; i += 1) {
+        min[i] = Math.min(min[i]!, world[i]!);
+        max[i] = Math.max(max[i]!, world[i]!);
+      }
+    }
+  }
+  const round = (v: number): number => Math.round(v * 100) / 100;
+  return `[${min.map(round).join(", ")}] .. [${max.map(round).join(", ")}]`;
 }

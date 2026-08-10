@@ -31,10 +31,9 @@ export const core: CoreApi = {
   validateSequence,
   posesForState,
   poseAtProgress: (structure, n, t) => {
-    const previous = computeFoldState(structure, n - 1);
     const delta = computeStepDelta(structure, n);
-    if (!delta) return posesForState(previous);
-    return poseAtProgress(previous, delta, t);
+    if (!delta) return posesForState(computeFoldState(structure, n - 1));
+    return poseAtProgress(delta, t);
   },
   renderStateToSvg,
 };

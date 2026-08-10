@@ -7,6 +7,13 @@
  * signatures, the same key/return shapes, the same purity guarantees the
  * renderer relies on. If this stub and T1's modules ever disagree, this file is
  * the written statement of what the render layer assumed.
+ *
+ * Known blind spot: facet ids here are a simple 0..n-1 run and a "split" only
+ * ever appends, so every id in step n also exists in step n-1. Real creases
+ * split facets and mint ids that the previous state has never seen, and a bug
+ * that only appears for those ids is invisible to every test in tests/render.
+ * One lived here for a while. Anything about pose-key coverage has to be tested
+ * against the real core - see tests/integration/geometry.test.ts.
  */
 import type { Facet, FoldState, Iso2, Vec2 } from "@/engine/core/types";
 import type { PlaneId, PlaneStructure } from "@/content/types";

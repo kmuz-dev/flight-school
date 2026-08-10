@@ -187,6 +187,9 @@ function signedAngle(angle: number, direction: "valley" | "mountain"): number {
 }
 
 const EMPTY_DELTA: StepDelta = {
+  // Every site that spreads this supplies its own startFacets: an empty one
+  // would leave the whole mesh set without a pose for the length of the step.
+  startFacets: [],
   movingFacetIds: [],
   axis: null,
   angleDeg: 0,
@@ -224,7 +227,7 @@ export function applyStep(
       if (movers.length === 0) {
         return {
           state: { ...state, facets, creaseMarks: [...state.creaseMarks, ...marks] },
-          delta: { ...EMPTY_DELTA, kind: "fold" },
+          delta: { ...EMPTY_DELTA, kind: "fold", startFacets: facets },
           nextId: idAfterSplit,
         };
       }
@@ -280,6 +283,7 @@ export function applyStep(
           maxLayer: maxLayerOf(normalized),
         },
         delta: {
+          startFacets: facets,
           movingFacetIds: moverIds,
           axis: axisOf(action.crease),
           angleDeg,
@@ -302,6 +306,7 @@ export function applyStep(
       return {
         state: { ...state, facets: normalized, maxLayer: maxLayerOf(normalized) },
         delta: {
+          startFacets: state.facets,
           movingFacetIds: facets.map((f) => f.id),
           axis: { origin: [0, 0, 0], dir: [0, 1, 0] },
           angleDeg: 180,
@@ -318,6 +323,7 @@ export function applyStep(
       return {
         state: { ...state, facets },
         delta: {
+          startFacets: state.facets,
           movingFacetIds: facets.map((f) => f.id),
           axis: { origin: [0, 0, 0], dir: [0, 0, 1] },
           angleDeg: action.degrees,
@@ -344,6 +350,7 @@ export function applyStep(
           maxLayer: maxLayerOf(normalized),
         },
         delta: {
+          startFacets: facets,
           movingFacetIds: discarded.map((f) => f.id),
           axis: axisOf(action.line),
           angleDeg: 0,
@@ -358,7 +365,11 @@ export function applyStep(
       const target = history.get(action.toStep);
       if (!target) {
         // Validation reports this; at runtime the state is left untouched.
-        return { state, delta: { ...EMPTY_DELTA, kind: "unfold" }, nextId };
+        return {
+          state,
+          delta: { ...EMPTY_DELTA, kind: "unfold", startFacets: state.facets },
+          nextId,
+        };
       }
       // Revert pose to the target state, keeping the splits made since then.
       // Children inherit their ancestor's pose because the split preserved ids
@@ -384,6 +395,7 @@ export function applyStep(
           maxLayer: maxLayerOf(normalized),
         },
         delta: {
+          startFacets: state.facets,
           movingFacetIds: moved,
           axis: null,
           angleDeg: 0,

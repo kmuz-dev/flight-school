@@ -328,13 +328,14 @@ describe("17. pose interpolation", () => {
   it("equals the previous state at t = 0", () => {
     const prev = computeFoldState(structure, -1);
     const delta = {
+      startFacets: prev.facets,
       movingFacetIds: [0],
       axis: { origin: [0, 0, 0] as const, dir: [0, 1, 0] as const },
       angleDeg: 180,
       kind: "fold" as const,
       layerChanges: new Map<number, { from: number; to: number }>(),
     };
-    const at0 = poseAtProgress(prev, delta, 0);
+    const at0 = poseAtProgress(delta, 0);
     const base = posesForState(prev);
     for (const [id, m] of at0) {
       const b = base.get(id)!;
@@ -345,13 +346,14 @@ describe("17. pose interpolation", () => {
   it("keeps facets rigid mid-fold", () => {
     const prev = computeFoldState(structure, -1);
     const delta = {
+      startFacets: prev.facets,
       movingFacetIds: [0],
       axis: { origin: [0, 0, 0] as const, dir: [0, 1, 0] as const },
       angleDeg: 180,
       kind: "fold" as const,
       layerChanges: new Map<number, { from: number; to: number }>(),
     };
-    const mid = poseAtProgress(prev, delta, 0.5);
+    const mid = poseAtProgress(delta, 0.5);
     const facet = prev.facets[0]!;
     const pose = mid.get(facet.id)!;
     for (let i = 0; i < facet.polygon.length; i++) {

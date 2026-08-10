@@ -122,6 +122,16 @@ export type FoldStep = {
 
 /** Everything the animator needs to interpolate one step. */
 export type StepDelta = {
+  /**
+   * The facets the step starts from, already split by this step's own crease.
+   *
+   * This is the state before the fold rendered on the decomposition after it, so
+   * its ids match the post-step state one-for-one. That is what the animation
+   * needs: the render layer builds its meshes from the post-step state and then
+   * asks for poses from t=0, and a facet that a split brought into existence has
+   * no pose at all in the state before the step.
+   */
+  readonly startFacets: readonly Facet[];
   readonly movingFacetIds: readonly number[];
   /** Rotation axis in table space (z=0), when the action rotates geometry. */
   readonly axis: { readonly origin: Vec3; readonly dir: Vec3 } | null;
