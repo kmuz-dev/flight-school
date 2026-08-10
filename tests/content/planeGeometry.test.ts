@@ -13,7 +13,8 @@ import { computeFoldState, computeStepDelta } from "@/engine/core/state";
 import { applyStep, facetInTable } from "@/engine/core/fold";
 import { freshSheet, PAPER_SIZES } from "@/engine/core/paper";
 import { area, boundingBox } from "@/engine/core/polygon";
-import { poseForFacet, transformPoint } from "@/engine/core/pose";
+import { multiply, poseForFacet, transformPoint } from "@/engine/core/pose";
+import { restFrame } from "@/engine/core/rest";
 import type { FoldState, PaperFormat, Vec2 } from "@/engine/core/types";
 import type { PlaneStructure } from "@/content/types";
 
@@ -136,24 +137,46 @@ describe.each(Object.entries(PLANES))("%s: authored geometry", (id, plane) => {
     expect(Math.abs(paperNear - paperFar) / paperNear).toBeLessThan(1e-9);
   });
 
-  it("sends its wings to opposite sides of the body", () => {
-    // A V, not a tilt: in the finished pose the table plane is the plane of
-    // symmetry, so the two wings must end up on opposite sides of z = 0.
+  it("sends its wings to opposite sides of the body, and rests on them", () => {
+    // A V, not a tilt: the two wings must reach out to opposite sides of the
+    // body. This used to be measured about the table's z = 0, where the wings
+    // straddled only because the fold engine leaves the finished V lying on its
+    // side - so the test literally required half the aircraft to be under the
+    // table. In the frame the aircraft rests in, the claim is about x.
     const wings = partialFoldSteps(plane).slice(-2);
     const final = computeFoldState(plane, plane.steps.length - 1);
+    const frame = restFrame(final);
+    const at = (f: (typeof final.facets)[number], p: Vec2) =>
+      transformPoint(multiply(frame.matrix, poseForFacet(f)), p);
+
+    // Measured from the keel, which IS the wing hinge, rather than from x = 0.
+    // Rest rolls the model about that hinge and never slides it sideways, so
+    // the fuselage sits wherever table space left the crease - 25mm off centre
+    // on the Dart. The hinge is the honest origin for "opposite sides of the
+    // body" in any case: it is the body.
+    const keel = frame.hinge!.origin[0];
     const spanOf = (n: number) => {
       const ids = computeStepDelta(plane, n)?.movingFacetIds ?? [];
-      const zs = final.facets
+      const xs = final.facets
         .filter((f) => ids.includes(f.id))
-        .flatMap((f) => f.polygon.map((p) => transformPoint(poseForFacet(f), p)[2]));
-      return { min: Math.min(...zs), max: Math.max(...zs) };
+        .flatMap((f) => f.polygon.map((p) => at(f, p)[0] - keel));
+      return { min: Math.min(...xs), max: Math.max(...xs) };
     };
-    const near = spanOf(wings[0]!.index);
-    const far = spanOf(wings[1]!.index);
-    expect(near.min, "near wing should reach well past the body").toBeLessThan(-10);
-    expect(far.max, "far wing should reach well past the body").toBeGreaterThan(10);
+    // Which of the pair ends up to port is an artefact of authoring order, so
+    // the claim is that they are on opposite sides, not which side each takes.
+    const [port, starboard] = [spanOf(wings[0]!.index), spanOf(wings[1]!.index)].sort(
+      (a, b) => a.min - b.min,
+    );
+    expect(port!.min, "one wing well out to port").toBeLessThan(-10);
+    expect(starboard!.max, "the other well out to starboard").toBeGreaterThan(10);
     // Symmetric to within the stack's own thickness.
-    expect(Math.abs(Math.abs(near.min) - far.max)).toBeLessThan(5);
+    expect(Math.abs(Math.abs(port!.min) - starboard!.max)).toBeLessThan(5);
+
+    // ...and the aircraft sits ON the table: touching it, not through it and
+    // not hovering above it. Height off the ground is the display layer's to
+    // decide, not the geometry's.
+    const zs = final.facets.flatMap((f) => f.polygon.map((p) => at(f, p)[2]));
+    expect(Math.min(...zs)).toBeCloseTo(0, 6);
   });
 
   it("carries far more paper in the nose than in the tail", () => {
@@ -195,16 +218,23 @@ describe("the Harrier's tip fins", () => {
     // The fins are bent before the wings and carried along by them, so the fin
     // has to turn the OPPOSITE way from its own wing to finish pointing up.
     // Getting this backwards still validates and still renders; it just builds
-    // a plane with drooping tips. x is the finished plane's up axis.
+    // a plane with drooping tips. Measured in the rest frame, where +z is up by
+    // construction rather than by knowing which table axis happens to be up -
+    // this used to read the lift off x, and the codebase held three different
+    // opinions about which axis that was.
     const final = computeFoldState(harrier, harrier.steps.length - 1);
+    const rest = restFrame(final).matrix;
     const fins = final.facets.filter((f) => f.bend.length === 2);
     expect(fins.length).toBeGreaterThan(0);
     for (const fin of fins) {
-      const withFin = poseForFacet(fin);
-      const wingOnly = poseForFacet({ ...fin, bend: [fin.bend[fin.bend.length - 1]!] });
+      const withFin = multiply(rest, poseForFacet(fin));
+      const wingOnly = multiply(
+        rest,
+        poseForFacet({ ...fin, bend: [fin.bend[fin.bend.length - 1]!] }),
+      );
       const lift =
         fin.polygon.reduce(
-          (sum, p) => sum + transformPoint(withFin, p)[0] - transformPoint(wingOnly, p)[0],
+          (sum, p) => sum + transformPoint(withFin, p)[2] - transformPoint(wingOnly, p)[2],
           0,
         ) / fin.polygon.length;
       expect(lift, `fin facet ${fin.id} droops`).toBeGreaterThan(1);
