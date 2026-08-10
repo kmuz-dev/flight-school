@@ -7,7 +7,7 @@ import type { EngineOptions, FoldEngineHandle } from "@/engine/core/types";
 import type { PlaneStructure } from "@/content/types";
 
 export type FakeEngineLog = {
-  readonly created: { structure: PlaneStructure }[];
+  readonly created: { structure: PlaneStructure; opts: EngineOptions }[];
   readonly steps: number[];
   disposed: number;
 };
@@ -27,7 +27,7 @@ export function createFakeEngineFactory(): {
     structure: PlaneStructure,
     opts?: EngineOptions,
   ): FoldEngineHandle => {
-    log.created.push({ structure });
+    log.created.push({ structure, opts: opts ?? {} });
     opts?.onReady?.();
     return {
       gotoStep(n: number): void {

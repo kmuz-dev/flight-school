@@ -12,6 +12,7 @@ import { useEffect, useRef, useState } from "react";
 import type { AnnotationAnchor, FoldEngineHandle, PaperFormat } from "@/engine/core/types";
 import type { PlaneStructure } from "@/content/types";
 import { createFoldEngine } from "@/engine";
+import { useTheme, type Theme } from "@/lib/theme";
 import { Chip } from "@/components/ui/Chip";
 import { FOCUS_RING } from "@/components/ui/focus";
 import {
@@ -48,7 +49,8 @@ export type FoldStageProps = {
   onSelectPreset: (preset: CameraPreset) => void;
   onEngineChange: (handle: FoldEngineHandle | null) => void;
   createEngine?: EngineFactory;
-  theme?: "paper" | "night";
+  /** Overrides the cadet's stored scene; tests pin it, the app does not. */
+  theme?: Theme;
 };
 
 export function FoldStage({
@@ -63,8 +65,10 @@ export function FoldStage({
   onSelectPreset,
   onEngineChange,
   createEngine = createFoldEngine,
-  theme = "paper",
+  theme,
 }: FoldStageProps) {
+  const scene = useTheme();
+  const activeTheme = theme ?? scene;
   const mountRef = useRef<HTMLDivElement>(null);
   const onEngineChangeRef = useRef(onEngineChange);
   const [engineAnchor, setEngineAnchor] = useState<AnnotationAnchor | null>(null);
@@ -77,7 +81,7 @@ export function FoldStage({
     const mount = mountRef.current;
     if (!mount) return;
 
-    const handle = createEngine(mount, structure, { theme });
+    const handle = createEngine(mount, structure, { theme: activeTheme });
     const offAnnotation = handle.on("annotation", (payload) => {
       setEngineAnchor(toAnchor(payload));
     });
@@ -92,7 +96,7 @@ export function FoldStage({
       setEngineAnchor(null);
       handle.dispose();
     };
-  }, [createEngine, structure, theme]);
+  }, [createEngine, structure, activeTheme]);
 
   const anchor = engineAnchor ?? annotation ?? null;
   const showAnnotation = annotationLabel !== undefined && anchor !== null && anchor.visible;

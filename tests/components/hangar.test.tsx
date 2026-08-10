@@ -116,6 +116,23 @@ describe("the Hangar", () => {
     expect(log.disposed).toBe(1);
   });
 
+  /**
+   * A card is a decorative 3:2 thumbnail behind a bob animation, and six of them
+   * share one phone. Both of these are what keeps that affordable, and neither
+   * is visible in anything the card renders, so nothing else would catch their
+   * removal until the hangar was slow on a real device.
+   */
+  it("wakes cards as cheap display surfaces, not as tutorial stages", () => {
+    const { log } = renderHangar();
+    fireEvent.click(screen.getByRole("button", { name: `Preview ${planes[0]!.name} in 3D` }));
+
+    const opts = log.created[0]?.opts;
+    expect(opts?.quality).toBe("preview");
+    // The hero angle, not wherever the plane's last fold step left the camera.
+    expect(opts?.cameraPreset).toBe("threeQuarter");
+    expect(opts?.autoRotate).toBe(true);
+  });
+
   it("never keeps more than two scenes live at once", () => {
     if (planes.length < 3) return;
     const { container } = renderHangar();

@@ -34,6 +34,8 @@ type Mounted = {
   readonly controls: ReturnType<typeof createFakeControls>;
   readonly canvas: FakeNode;
   readonly renderer: ReturnType<typeof createFakeRenderer>;
+  /** Quality tier the renderer factory was asked for. */
+  readonly quality: string;
 };
 
 const live: Mounted[] = [];
@@ -54,6 +56,7 @@ function mount(
   let canvas: FakeNode | null = null;
   const controls = createFakeControls();
   let renderer: ReturnType<typeof createFakeRenderer> | null = null;
+  const qualities: string[] = [];
 
   const engine = new FoldEngine(
     container as unknown as HTMLElement,
@@ -61,8 +64,9 @@ function mount(
     options.engine ?? {},
     {
       core,
-      rendererFactory: (c) => {
+      rendererFactory: (c, quality) => {
         canvas = c as unknown as FakeNode;
+        qualities.push(quality);
         renderer = createFakeRenderer(canvas);
         return renderer;
       },
@@ -85,6 +89,11 @@ function mount(
     get renderer(): ReturnType<typeof createFakeRenderer> {
       if (!renderer) throw new Error("renderer factory never ran");
       return renderer;
+    },
+    get quality(): string {
+      const tier = qualities[0];
+      if (tier === undefined) throw new Error("renderer factory never ran");
+      return tier;
     },
   };
   live.push(mounted);
@@ -127,6 +136,29 @@ describe("FoldEngine construction", () => {
     );
     expect(onReady).toHaveBeenCalledTimes(1);
     engine.dispose();
+  });
+
+  /**
+   * The hangar's frame budget, gated where it is deterministic.
+   *
+   * Waking two live scenes cost 67ms a frame on a throttled phone before the
+   * previews got their own tier and 17ms after, and the whole difference is
+   * pixels: a preview draws at one device pixel with no multisampling and no
+   * shadow map. Measuring that as wall-clock in CI turned out to measure the
+   * runner (see tests/e2e/hangar-perf.spec.ts), so the mechanism is pinned here
+   * instead, where it is three exact values rather than a number that drifts.
+   */
+  it("spends a hangar preview's pixels differently from the tutorial stage's", () => {
+    const full = mount();
+    expect(full.quality).toBe("full");
+    expect(full.renderer.setPixelRatio).toHaveBeenCalledWith(2);
+    expect(full.engine["keyLight"].castShadow).toBe(true);
+
+    const preview = mount({ engine: { quality: "preview" } });
+    expect(preview.quality).toBe("preview");
+    // One device pixel per CSS pixel: on a 3x phone that is a ninth of the fill.
+    expect(preview.renderer.setPixelRatio).toHaveBeenCalledWith(1);
+    expect(preview.engine["keyLight"].castShadow).toBe(false);
   });
 
   it("lands on step 0 paused at progress 0, not mid-fold", () => {

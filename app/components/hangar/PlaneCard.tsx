@@ -15,6 +15,7 @@ import type { EngineOptions, FoldEngineHandle } from "@/engine/core/types";
 import type { PlaneStructure } from "@/content/types";
 import { Chip } from "@/components/ui/Chip";
 import { EngineSvg } from "@/components/ui/EngineSvg";
+import { useTheme } from "@/lib/theme";
 import { GaugeBar } from "@/components/ui/GaugeBar";
 import { FOCUS_RING } from "@/components/ui/focus";
 import { TIER_CHIP } from "@/components/ui/tier";
@@ -57,6 +58,7 @@ export function PlaneCard({
   createEngine = createFoldEngine,
 }: PlaneCardProps) {
   const mountRef = useRef<HTMLDivElement>(null);
+  const theme = useTheme();
 
   useEffect(() => {
     if (!live) return;
@@ -69,6 +71,7 @@ export function PlaneCard({
     const handle = createEngine(mount, view.structure, {
       autoRotate: true,
       quality: "preview",
+      theme,
       // Start from the hero angle rather than from wherever the last fold step
       // pointed the camera; the rotation carries on from there.
       cameraPreset: "threeQuarter",
@@ -82,7 +85,7 @@ export function PlaneCard({
       window.removeEventListener("resize", onResize);
       handle.dispose();
     };
-  }, [live, createEngine, view.structure, view.stepCount]);
+  }, [live, createEngine, view.structure, view.stepCount, theme]);
 
   return (
     <article
@@ -111,7 +114,7 @@ export function PlaneCard({
             className="absolute inset-0"
             style={{
               backgroundImage:
-                "repeating-linear-gradient(-45deg, rgb(26 43 74 / 0.055) 0 6px, transparent 6px 12px)",
+                "repeating-linear-gradient(-45deg, var(--hatch) 0 6px, transparent 6px 12px)",
             }}
           />
           <EngineSvg svg={view.svg} className="absolute inset-0 flex items-center justify-center" />

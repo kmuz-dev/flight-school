@@ -30,6 +30,13 @@ function invalidate(): void {
   for (const listener of listeners) listener();
 }
 
+/**
+ * Tell every subscriber the stored blob changed. Progress owns the snapshot, so
+ * anything else that writes the same key (the theme) has to say so through here
+ * or its own screen would be the last to know.
+ */
+export const invalidateStored = invalidate;
+
 function subscribe(listener: () => void): () => void {
   if (!windowBound && typeof window !== "undefined") {
     windowBound = true;

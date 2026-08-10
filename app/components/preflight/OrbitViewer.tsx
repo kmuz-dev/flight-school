@@ -12,6 +12,7 @@ import { createFoldEngine } from "@/engine";
 import type { EngineOptions, FoldEngineHandle } from "@/engine/core/types";
 import type { PlaneStructure } from "@/content/types";
 import { EngineSvg } from "@/components/ui/EngineSvg";
+import { useTheme } from "@/lib/theme";
 
 export type ViewerEngineFactory = (
   container: HTMLElement,
@@ -41,6 +42,7 @@ export function OrbitViewer({
 }: OrbitViewerProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const [live, setLive] = useState(false);
+  const theme = useTheme();
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -52,6 +54,7 @@ export function OrbitViewer({
     // looking at the result - on the Dart that is nose-on.
     const handle = createEngine(mount, structure, {
       cameraPreset: "threeQuarter",
+      theme,
       onReady: () => setLive(true),
     });
     handle.gotoStep(stepCount - 1, { animate: false });
@@ -63,7 +66,7 @@ export function OrbitViewer({
       setLive(false);
       handle.dispose();
     };
-  }, [createEngine, structure, stepCount]);
+  }, [createEngine, structure, stepCount, theme]);
 
   return (
     <section

@@ -11,6 +11,8 @@ const ui: UiDictionary = {
   "nav.logbook": "My Logbook",
   "nav.wings": "Wings: {count}",
   "nav.backToHangar": "Back to the hangar",
+  "nav.dayFlight": "Day flight",
+  "nav.nightFlight": "Night flight",
 
   "hangar.title": "The Hangar",
   "hangar.subtitle": "Pick an aircraft. Every fold is shown in 3D, from flat paper to first flight.",

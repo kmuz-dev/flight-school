@@ -20,6 +20,7 @@ import { Chip } from "@/components/ui/Chip";
 import { FOCUS_RING } from "@/components/ui/focus";
 import { TIERS } from "@/components/ui/tier";
 import { format } from "@/components/ui/format";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { PlaneCard, type CardEngineFactory } from "./PlaneCard";
 import type { HangarPlaneView, HangarUiStrings } from "./types";
 
@@ -96,14 +97,20 @@ export function Hangar({ ui, planes, locale, createEngine }: HangarProps) {
       <div className="chevron-bar" aria-hidden="true" />
 
       <nav className="border-b border-ink-12">
-        <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-md px-lg py-md">
+        {/*
+          Wraps rather than overflows. Four controls plus the wordmark do not fit
+          a 412px phone on one line, and a nav that does not fit is not a nav
+          that scrolls - mobile Chrome zooms the whole page out to make it fit,
+          and every tap after that lands off its target (tests/e2e/layout.spec.ts).
+        */}
+        <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-md px-lg py-md">
           <a href={hangarHref(locale)} className={`flex items-center gap-sm ${FOCUS_RING}`}>
             <span aria-hidden="true" className="size-[18px] rotate-45 bg-red" />
             <span className="font-display text-h3 font-bold tracking-tight uppercase">
               {ui.brand}
             </span>
           </a>
-          <div className="flex items-center gap-lg">
+          <div className="flex flex-wrap items-center gap-md sm:gap-lg">
             <span className="border-b-2 border-ink pb-[2px] font-display text-small font-bold tracking-[0.06em] uppercase">
               {ui.navHangar}
             </span>
@@ -116,6 +123,11 @@ export function Hangar({ ui, planes, locale, createEngine }: HangarProps) {
               <span aria-hidden="true" className="size-[10px] rounded-full border-2 border-green" />
               <span data-testid="wings-counter">{format(ui.navWings, { count: wings })}</span>
             </Chip>
+            <ThemeToggle
+              dayLabel={ui.navDayFlight}
+              nightLabel={ui.navNightFlight}
+              a11yLabel={ui.themeToggleLabel}
+            />
           </div>
         </div>
       </nav>

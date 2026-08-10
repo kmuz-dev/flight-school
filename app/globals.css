@@ -64,8 +64,22 @@
   --ease-stamp: cubic-bezier(0.2, 0.8, 0.3, 1);
 }
 
+/*
+ * Patterns that are drawn in ink rather than filled with it: the diagonal hatch
+ * behind a hangar card's plane, and the sky band in the airmail chevron. Both
+ * are outside the token set because neither is a surface or a text colour, and
+ * both have to flip with the scene.
+ */
+:root {
+  --hatch: rgb(26 43 74 / 0.055);
+  --chevron-band: #1a2b4a;
+}
+
 /* Night Flight is a class toggle on <html>, a scene change rather than inversion. */
 .night {
+  /* 1e: the navy band reads as ink here, so the third stripe becomes sky. */
+  --hatch: rgb(247 243 233 / 0.045);
+  --chevron-band: #7fa8c9;
   --color-paper: #0e1626;
   --color-raised: #16223a;
   --color-red: #e8615c;
@@ -97,20 +111,16 @@ html.night body {
   background: repeating-linear-gradient(
     45deg,
     var(--color-red) 0 14px,
-    #f7f3e9 14px 28px,
-    #1a2b4a 28px 42px,
-    #f7f3e9 42px 56px
+    var(--color-paper) 14px 28px,
+    var(--chevron-band) 28px 42px,
+    var(--color-paper) 42px 56px
   );
 }
 
 /* Dashed section rule */
 .dashed-rule {
   height: 1px;
-  background: repeating-linear-gradient(
-    90deg,
-    rgb(26 43 74 / 0.4) 0 5px,
-    transparent 5px 10px
-  );
+  background: repeating-linear-gradient(90deg, var(--color-ink-38) 0 5px, transparent 5px 10px);
 }
 
 /*
@@ -163,19 +173,7 @@ html.night body {
 /* Boarding-pass perforation across a card. */
 .perforation {
   height: 1px;
-  background: repeating-linear-gradient(
-    90deg,
-    rgb(26 43 74 / 0.35) 0 4px,
-    transparent 4px 9px
-  );
-}
-
-.night .perforation {
-  background: repeating-linear-gradient(
-    90deg,
-    rgb(247 243 233 / 0.35) 0 4px,
-    transparent 4px 9px
-  );
+  background: repeating-linear-gradient(90deg, var(--color-ink-38) 0 4px, transparent 4px 9px);
 }
 
 @media (prefers-reduced-motion: reduce) {
