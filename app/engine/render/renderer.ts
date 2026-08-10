@@ -172,6 +172,9 @@ export type ControlsLike = {
   enabled: boolean;
   autoRotate?: boolean;
   autoRotateSpeed?: number;
+  /** How close and how far the cadet may dolly; refit binds both to the model. */
+  minDistance?: number;
+  maxDistance?: number;
   update(delta?: number): boolean | void;
   dispose(): void;
 };
@@ -724,6 +727,27 @@ export class FoldEngine implements FoldEngineHandle {
     this.modelTopZ = bounds.max.z;
     this.defaultDistance = framingDistance(bounds.radius, FOV_DEG, this.camera.aspect);
     this.controls.target.copy(this.target);
+
+    /**
+     * The depth range, bound to the one object on the stage.
+     *
+     * A fixed 1mm-to-20000mm frustum spends almost all of its depth precision
+     * on empty space in front of a model 600mm away, leaving about 0.02mm of
+     * resolution where the paper actually is - and stacked layers are 0.08mm
+     * apart, so the keel of a plane with six layers in its nose dissolved into
+     * a stipple of two surfaces trading places. Fitting the frustum to the
+     * bounding sphere buys back two orders of magnitude, which is the
+     * difference between four depth steps between layers and four hundred.
+     *
+     * The orbit range is clamped to match rather than left open: a near plane
+     * this tight would otherwise slice the model open the moment a cadet
+     * scrolled far enough in.
+     */
+    this.controls.minDistance = bounds.radius * 1.15;
+    this.controls.maxDistance = this.defaultDistance * 2.5;
+    this.camera.near = Math.max(bounds.radius * 0.1, 0.5);
+    this.camera.far = this.controls.maxDistance + bounds.radius * 2;
+    this.camera.updateProjectionMatrix();
 
     const d = bounds.radius * 4;
     this.keyLight.position.set(
