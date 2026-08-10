@@ -128,7 +128,7 @@ export function PlaneCard({
           ) : null}
         </button>
 
-        <Chip variant={TIER_CHIP[view.tier]} className="absolute top-sm right-sm">
+        <Chip variant={TIER_CHIP[view.tier]} className="absolute top-sm end-sm">
           {ui.tier[view.tier]}
         </Chip>
 

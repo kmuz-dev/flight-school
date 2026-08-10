@@ -34,6 +34,7 @@ export default async function PreflightPage({
     <PreflightScreen
       ui={preflightUiFromDictionary(getUi(locale))}
       view={view}
+      locale={locale}
       hangarHref={hangarHref(locale)}
       tutorialHref={tutorialHref(locale, planeId)}
     />

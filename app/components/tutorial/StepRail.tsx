@@ -35,7 +35,7 @@ export function StepRail({
   return (
     <section
       aria-label={ui.stepRegionLabel}
-      className="flex flex-col gap-md border-[color:var(--color-ink-12)] bg-[color:var(--color-paper)] p-lg lg:border-l"
+      className="flex flex-col gap-md border-[color:var(--color-ink-12)] bg-[color:var(--color-paper)] p-lg lg:border-s"
     >
       <p className="font-mono text-micro tracking-[0.08em] text-[color:var(--color-red)]">
         {format(ui.stepLabel, { current: pad2(current), total: pad2(totalSteps) })}
@@ -50,7 +50,7 @@ export function StepRail({
       </p>
 
       {step.why ? (
-        <aside className="border-l-4 border-[color:var(--color-sky)] bg-[color:var(--color-raised)] p-md">
+        <aside className="border-s-4 border-[color:var(--color-sky)] bg-[color:var(--color-raised)] p-md">
           <p className="font-mono text-micro tracking-[0.08em] text-[color:var(--color-sky)]">
             {ui.why}
           </p>

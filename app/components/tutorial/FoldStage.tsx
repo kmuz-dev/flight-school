@@ -131,14 +131,14 @@ export function FoldStage({
         </div>
       ) : null}
 
-      <p className="pointer-events-none absolute top-md left-md font-mono text-micro tracking-[0.12em] text-ink-60 uppercase">
+      <p className="pointer-events-none absolute top-md start-md font-mono text-micro tracking-[0.12em] text-ink-60 uppercase">
         {ui.viewHint}
       </p>
 
       <div
         role="group"
         aria-label={ui.cameraGroupLabel}
-        className="absolute top-md right-md flex gap-xs"
+        className="absolute top-md end-md flex gap-xs"
       >
         {CAMERA_PRESETS.map((preset) => {
           const active = preset === activePreset;
@@ -160,7 +160,7 @@ export function FoldStage({
         })}
       </div>
 
-      <div className="absolute bottom-md left-md">
+      <div className="absolute bottom-md start-md">
         <Chip variant="quiet" className="bg-paper/90 text-ink">
           <span
             aria-hidden="true"
@@ -172,7 +172,7 @@ export function FoldStage({
         </Chip>
       </div>
 
-      <p className="pointer-events-none absolute right-md bottom-md font-mono text-micro tracking-[0.12em] text-ink-38 uppercase">
+      <p className="pointer-events-none absolute end-md bottom-md font-mono text-micro tracking-[0.12em] text-ink-38 uppercase">
         {ui.paper[paperFormat]}
       </p>
     </section>

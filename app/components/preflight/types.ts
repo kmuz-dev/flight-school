@@ -41,6 +41,7 @@ export type PreflightView = {
 export type PreflightUiStrings = {
   readonly backToHangar: string;
   readonly eyebrow: string;
+  readonly localePickerLabel: string;
   readonly orbitHint: string;
   readonly specimen: string;
   readonly viewerLabel: string;
@@ -74,6 +75,7 @@ export type PreflightUiStrings = {
 export const PREFLIGHT_UI_KEYS = [
   "nav.backToHangar",
   "preflight.eyebrow",
+  "a11y.localePicker",
   "preflight.orbitHint",
   "preflight.specimen",
   "preflight.viewerLabel",
@@ -116,6 +118,7 @@ export function preflightUiFromDictionary(ui: UiDictionary): PreflightUiStrings 
   return {
     backToHangar: t("nav.backToHangar"),
     eyebrow: t("preflight.eyebrow"),
+    localePickerLabel: t("a11y.localePicker"),
     orbitHint: t("preflight.orbitHint"),
     specimen: t("preflight.specimen"),
     viewerLabel: t("preflight.viewerLabel"),

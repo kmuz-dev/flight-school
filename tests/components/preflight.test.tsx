@@ -31,6 +31,7 @@ function renderPreflight() {
     <PreflightScreen
       ui={strings}
       view={view}
+      locale="en"
       hangarHref="/en/"
       tutorialHref={`/en/plane/${view.id}/fold/`}
       createEngine={factory}

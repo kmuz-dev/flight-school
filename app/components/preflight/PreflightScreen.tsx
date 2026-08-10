@@ -13,6 +13,8 @@ import type { PlaneId } from "@/content/types";
 import { Chip } from "@/components/ui/Chip";
 import { GaugeBar, type GaugeTone } from "@/components/ui/GaugeBar";
 import { FOCUS_RING } from "@/components/ui/focus";
+import { LocalePicker } from "@/components/ui/LocalePicker";
+import type { Locale } from "@/i18n/config";
 import { TIER_CHIP } from "@/components/ui/tier";
 import { format } from "@/components/ui/format";
 import { RATING_KEYS, type RatingKey } from "@/components/hangar/types";
@@ -31,6 +33,7 @@ const GAUGE_TONE: Readonly<Record<RatingKey, GaugeTone>> = {
 export type PreflightScreenProps = {
   ui: PreflightUiStrings;
   view: PreflightView;
+  locale: Locale;
   hangarHref: string;
   tutorialHref: string;
   createEngine?: ViewerEngineFactory;
@@ -39,6 +42,7 @@ export type PreflightScreenProps = {
 export function PreflightScreen({
   ui,
   view,
+  locale,
   hangarHref,
   tutorialHref,
   createEngine,
@@ -70,6 +74,12 @@ export function PreflightScreen({
         </a>
         <span aria-hidden="true" className="h-[16px] w-px bg-ink-12" />
         <p className="font-mono text-micro tracking-[0.14em] text-ink-60 uppercase">{ui.eyebrow}</p>
+        {/* The last chance to change language before a fold begins: the
+            tutorial header is packed tight enough that a phone cannot wrap it
+            (see TutorialScreen), so the switch belongs here. */}
+        <span className="ms-auto">
+          <LocalePicker locale={locale} a11yLabel={ui.localePickerLabel} />
+        </span>
       </header>
 
       <main className="mx-auto grid w-full max-w-[1360px] flex-1 grid-cols-1 gap-2xl px-lg py-2xl lg:grid-cols-[minmax(0,1fr)_460px]">
@@ -124,7 +134,7 @@ export function PreflightScreen({
                   className="flex items-baseline justify-between gap-md border-b border-ink-12 py-sm last:border-b-0"
                 >
                   <dt className="text-small text-ink-60">{spec.label}</dt>
-                  <dd className="text-right font-mono text-small text-ink">{spec.value}</dd>
+                  <dd className="text-end font-mono text-small text-ink">{spec.value}</dd>
                 </div>
               ))}
             </dl>
