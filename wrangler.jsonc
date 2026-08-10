@@ -1,0 +1,26 @@
+{
+  // Flight School is a static export with no backend of any kind (SPEC.md).
+  // This file exists to say so: without a wrangler config, `wrangler deploy`
+  // detects "Next.js", assumes a server-rendered app, and rewrites the project
+  // to run on OpenNext - which then fails, because `output: "export"` never
+  // produces the `.next/standalone` server bundle it looks for. Declaring the
+  // assets directory is what keeps the deploy honest about what this site is.
+  //
+  // No `main`: there is no Worker script, only files. Requests are served
+  // straight from the CDN.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "flight-school",
+  "compatibility_date": "2026-08-10",
+  "assets": {
+    "directory": "./out",
+    // `trailingSlash: true` in next.config.ts means every route is a directory
+    // with an index.html. Auto handling serves those and redirects the
+    // slashless form to them, which is the same shape `npx serve out` gives
+    // the Playwright suite.
+    "html_handling": "auto-trailing-slash",
+    // Next's static export writes the app's own 404 page to out/404.html.
+    // Not "single-page-application": this site has real routes for every page,
+    // and rewriting unknown paths to the index would hide broken links.
+    "not_found_handling": "404-page"
+  }
+}

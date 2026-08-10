@@ -12,3 +12,5 @@ dist/
 *.tsbuildinfo
 next-env.d.ts
 .claude/worktrees/
+.wrangler/
+.dev.vars
