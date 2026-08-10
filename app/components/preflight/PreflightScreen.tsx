@@ -18,7 +18,8 @@ import type { Locale } from "@/i18n/config";
 import { TIER_CHIP } from "@/components/ui/tier";
 import { format } from "@/components/ui/format";
 import { RATING_KEYS, type RatingKey } from "@/components/hangar/types";
-import { OrbitViewer, type ViewerEngineFactory } from "./OrbitViewer";
+import { OrbitViewer } from "./OrbitViewer";
+import type { FoldEngineFactory } from "@/engine";
 import type { PreflightUiStrings, PreflightView } from "./types";
 import { formatForPlane } from "@/engine/core/paper";
 import { PaperPicker } from "./PaperPicker";
@@ -36,7 +37,7 @@ export type PreflightScreenProps = {
   locale: Locale;
   hangarHref: string;
   tutorialHref: string;
-  createEngine?: ViewerEngineFactory;
+  createEngine?: FoldEngineFactory;
 };
 
 export function PreflightScreen({

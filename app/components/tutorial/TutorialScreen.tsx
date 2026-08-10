@@ -6,6 +6,7 @@
  * Owns the step index, playback state, and the localStorage progress write.
  * The engine is a child concern: FoldStage creates it and hands the handle up.
  */
+import type { FoldEngineFactory } from "@/engine";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FoldEngineHandle, PaperFormat } from "@/engine/core/types";
 import type { PlaneStructure, Tier } from "@/content/types";
@@ -18,7 +19,6 @@ import {
   format,
   pad2,
   type CameraPreset,
-  type EngineFactory,
   type TutorialStepView,
   type TutorialUiStrings,
 } from "./types";
@@ -32,7 +32,7 @@ export type TutorialScreenProps = {
   paperFormat: PaperFormat;
   hangarHref: string;
   initialStep?: number;
-  createEngine?: EngineFactory;
+  createEngine?: FoldEngineFactory;
   onComplete?: () => void;
 };
 

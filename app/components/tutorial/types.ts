@@ -84,12 +84,6 @@ export type TutorialUiStrings = {
   readonly tipLabel: string;
 };
 
-export type EngineFactory = (
-  container: HTMLElement,
-  structure: PlaneStructure,
-  opts?: EngineOptions,
-) => FoldEngineHandle;
-
 // Interpolation and counter padding live in components/ui/format: one copy,
 // used by every screen.
 export { format, pad2 } from "@/components/ui/format";

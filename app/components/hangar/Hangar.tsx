@@ -23,7 +23,8 @@ import { TIERS } from "@/components/ui/tier";
 import { format } from "@/components/ui/format";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { LocalePicker } from "@/components/ui/LocalePicker";
-import { PlaneCard, type CardEngineFactory } from "./PlaneCard";
+import { PlaneCard } from "./PlaneCard";
+import type { FoldEngineFactory } from "@/engine";
 import type { HangarPlaneView, HangarUiStrings } from "./types";
 
 /** Two live WebGL scenes is the ceiling a mid-range phone holds comfortably. */
@@ -35,7 +36,7 @@ export type HangarProps = {
   ui: HangarUiStrings;
   planes: readonly HangarPlaneView[];
   locale: Locale;
-  createEngine?: CardEngineFactory;
+  createEngine?: FoldEngineFactory;
 };
 
 export function Hangar({ ui, planes, locale, createEngine }: HangarProps) {

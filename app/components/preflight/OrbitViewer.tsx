@@ -8,17 +8,11 @@
  * before hydration the cadet still sees the plane they are about to fold.
  */
 import { useEffect, useRef, useState } from "react";
-import { createFoldEngine } from "@/engine";
-import type { EngineOptions, FoldEngineHandle } from "@/engine/core/types";
+import { loadFoldEngine, type FoldEngineFactory } from "@/engine";
+import type { FoldEngineHandle } from "@/engine/core/types";
 import type { PlaneStructure } from "@/content/types";
 import { EngineSvg } from "@/components/ui/EngineSvg";
 import { useTheme } from "@/lib/theme";
-
-export type ViewerEngineFactory = (
-  container: HTMLElement,
-  structure: PlaneStructure,
-  opts?: EngineOptions,
-) => FoldEngineHandle;
 
 export type OrbitViewerProps = {
   structure: PlaneStructure;
@@ -28,7 +22,7 @@ export type OrbitViewerProps = {
   label: string;
   orbitHint: string;
   specimen: string;
-  createEngine?: ViewerEngineFactory;
+  createEngine?: FoldEngineFactory;
 };
 
 export function OrbitViewer({
@@ -38,7 +32,7 @@ export function OrbitViewer({
   label,
   orbitHint,
   specimen,
-  createEngine = createFoldEngine,
+  createEngine,
 }: OrbitViewerProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const [live, setLive] = useState(false);
@@ -48,28 +42,41 @@ export function OrbitViewer({
     const mount = mountRef.current;
     if (!mount) return;
 
-    // A display stage: the aircraft stands up, lifts clear of the ground over
-    // a graded backdrop and a soft shadow, and opens on the catalogue's hero
-    // angle - the same angle the SVG underneath is drawn from.
-    //
-    // The angle is carried by `display`, not by a `cameraPreset`. Presets are
-    // authored into fold steps for the sake of that fold, so left to itself
-    // the stage would inherit the last step's hint, which on the Dart is
-    // nose-on. No step may decide how a finished aircraft is photographed.
-    const handle = createEngine(mount, structure, {
-      display: true,
-      rest: true,
-      theme,
-      onReady: () => setLive(true),
-    });
-    handle.gotoStep(stepCount - 1, { animate: false });
-    const onResize = (): void => handle.resize();
-    window.addEventListener("resize", onResize);
+    let handle: FoldEngineHandle | null = null;
+    let stopped = false;
+    const onResize = (): void => handle?.resize();
+
+    const start = (create: FoldEngineFactory): void => {
+      // Navigating away while the renderer is in flight must not leave a stage
+      // behind, and must not flip `live` on a component that is gone.
+      if (stopped) return;
+      // A display stage: the aircraft stands up, lifts clear of the ground over
+      // a graded backdrop and a soft shadow, and opens on the catalogue's hero
+      // angle - the same angle the SVG underneath is drawn from.
+      //
+      // The angle is carried by `display`, not by a `cameraPreset`. Presets are
+      // authored into fold steps for the sake of that fold, so left to itself
+      // the stage would inherit the last step's hint, which on the Dart is
+      // nose-on. No step may decide how a finished aircraft is photographed.
+      handle = create(mount, structure, {
+        display: true,
+        rest: true,
+        theme,
+        onReady: () => setLive(true),
+      });
+      handle.gotoStep(stepCount - 1, { animate: false });
+      window.addEventListener("resize", onResize);
+    };
+
+    if (createEngine) start(createEngine);
+    else void loadFoldEngine().then(start);
 
     return () => {
+      stopped = true;
       window.removeEventListener("resize", onResize);
       setLive(false);
-      handle.dispose();
+      handle?.dispose();
+      handle = null;
     };
   }, [createEngine, structure, stepCount, theme]);
 

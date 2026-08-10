@@ -74,9 +74,25 @@ export function TransportBar({
         {format(ui.stepLabel, { current: pad2(current), total: pad2(totalSteps) })}
       </p>
 
+      {/*
+        The strip is a readout that is also twelve controls, and those two jobs
+        want different geometry. The bar stays 6px because that is what reads as
+        a progress rule; the button around it is 24px square, which is what WCAG
+        2.5.8 asks of anything a thumb has to hit.
+
+        Twelve 24px targets need 288px, and inside the transport bar on a 375px
+        phone there are about 295px - but only if the strip has the line to
+        itself, which is what `basis-full` buys. It shares the row again from
+        `sm` up, where it is wider than the minimum anyway and the 3px gaps come
+        back. Below that the gaps go, because 33px of gap is the difference
+        between a target a child can hit and one they cannot.
+
+        Height costs nothing at any width: the transport's icon buttons are
+        40px, so a 24px strip still fits inside the row it sits in.
+      */}
       <ol
         aria-label={ui.stripLabel}
-        className="flex min-w-[180px] flex-1 items-center gap-[3px]"
+        className="flex basis-full items-center gap-0 sm:min-w-[180px] sm:flex-1 sm:basis-auto sm:gap-[3px]"
       >
         {Array.from({ length: totalSteps }, (_, i) => {
           const done = i < stepIndex;
@@ -87,24 +103,24 @@ export function TransportBar({
               ? "bg-[color:var(--color-red)]"
               : "bg-[color:var(--color-ink-12)]";
           return (
-            <li key={i} className="h-[6px] flex-1">
-              {/*
-                The bar is 6px because it is a readout first; the pseudo-element
-                lifts the touch target to 24px tall without moving a pixel of
-                it. Width is still a segment wide - twelve 24px-wide targets do
-                not fit across a phone - which is why WCAG 2.5.8 is met here
-                through its Equivalent exception rather than by geometry: every
-                step this strip reaches is also reachable from the transport's
-                back and next buttons, which are full-size.
-              */}
+            <li key={i} className="h-[24px] min-w-[24px] flex-1">
               <button
                 type="button"
                 aria-label={format(ui.goToStep, { step: pad2(i + 1) })}
                 aria-current={active ? "step" : undefined}
                 data-state={done ? "done" : active ? "active" : "pending"}
                 onClick={() => onSeekStep(i)}
-                className={`relative block h-full w-full ${tone} after:absolute after:-top-[9px] after:-bottom-[9px] after:inset-x-0 after:content-[''] ${FOCUS_RING}`}
-              />
+                className={`flex h-full w-full items-center ${FOCUS_RING}`}
+              >
+                {/* Without gaps, a hairline in the surface colour is what keeps
+                    two pending segments from reading as one longer one. It sits
+                    on the bar rather than the button, so the touch target keeps
+                    its full 24px. */}
+                <span
+                  aria-hidden="true"
+                  className={`h-[6px] w-full border-[color:var(--color-raised)] ${i > 0 ? "border-s sm:border-s-0" : ""} ${tone}`}
+                />
+              </button>
             </li>
           );
         })}

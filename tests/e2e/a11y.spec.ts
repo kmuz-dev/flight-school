@@ -60,6 +60,26 @@ test("night flight keeps its contrast", async ({ page }) => {
   expect(summarise(await scan(page))).toEqual([]);
 });
 
+test("every step on the progress strip is big enough to hit", async ({ page }) => {
+  // WCAG 2.5.8 asks 24x24 CSS px of any control a thumb has to find, and the
+  // strip is the one place on the site where twelve controls compete for a
+  // phone's width. axe does not check this - 2.5.8 is WCAG 2.2 and the scan
+  // above is tagged 2.1 - and it is exactly the kind of thing a later layout
+  // tweak shrinks without anyone noticing, so it is measured rather than
+  // trusted.
+  await page.goto("/en/plane/dart/fold/");
+  const steps = page.getByRole("button", { name: /go to step/i });
+  const count = await steps.count();
+  expect(count).toBeGreaterThan(1);
+
+  for (let i = 0; i < count; i += 1) {
+    const box = await steps.nth(i).boundingBox();
+    expect(box, `step ${i + 1} has no box`).not.toBeNull();
+    expect(box!.width, `step ${i + 1} is ${box!.width}px wide`).toBeGreaterThanOrEqual(24);
+    expect(box!.height, `step ${i + 1} is ${box!.height}px tall`).toBeGreaterThanOrEqual(24);
+  }
+});
+
 test("arabic has no accessibility violations", async ({ page }) => {
   // RTL is where a landmark or a label goes missing without anyone noticing,
   // because nobody on the team reads the page.

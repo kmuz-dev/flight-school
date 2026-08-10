@@ -10,9 +10,8 @@
  * reports intent, so the LRU rule lives in one place rather than per card.
  */
 import { useEffect, useRef } from "react";
-import { createFoldEngine } from "@/engine";
-import type { EngineOptions, FoldEngineHandle } from "@/engine/core/types";
-import type { PlaneStructure } from "@/content/types";
+import { loadFoldEngine, type FoldEngineFactory } from "@/engine";
+import type { FoldEngineHandle } from "@/engine/core/types";
 import { Chip } from "@/components/ui/Chip";
 import { EngineSvg } from "@/components/ui/EngineSvg";
 import { useTheme } from "@/lib/theme";
@@ -21,12 +20,6 @@ import { FOCUS_RING } from "@/components/ui/focus";
 import { TIER_CHIP } from "@/components/ui/tier";
 import { format, pad2 } from "@/components/ui/format";
 import type { HangarPlaneView, HangarUiStrings } from "./types";
-
-export type CardEngineFactory = (
-  container: HTMLElement,
-  structure: PlaneStructure,
-  opts?: EngineOptions,
-) => FoldEngineHandle;
 
 /** Hover only wakes a card where hovering is a real, deliberate gesture. */
 function hasFinePointer(): boolean {
@@ -43,7 +36,7 @@ export type PlaneCardProps = {
   onHoverStart: (id: string) => void;
   onHoverEnd: (id: string) => void;
   onToggleSelect: (id: string) => void;
-  createEngine?: CardEngineFactory;
+  createEngine?: FoldEngineFactory;
 };
 
 export function PlaneCard({
@@ -55,7 +48,7 @@ export function PlaneCard({
   onHoverStart,
   onHoverEnd,
   onToggleSelect,
-  createEngine = createFoldEngine,
+  createEngine,
 }: PlaneCardProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
@@ -65,26 +58,42 @@ export function PlaneCard({
     const mount = mountRef.current;
     if (!mount) return;
 
-    // A hangar card is a display surface: the aircraft stands up, lifts clear
-    // of the ground over a graded backdrop and a soft shadow, and breathes.
-    // No `autoRotate` - a constant spin holds the hero angle for about a second
-    // and then parks all six cards at the same non-hero angle in lockstep,
-    // which is the opposite of letting you read a shape. The engine drops the
-    // float under prefers-reduced-motion and keeps the staging.
-    const handle = createEngine(mount, view.structure, {
-      display: true,
-      rest: true,
-      quality: "preview",
-      theme,
-    });
-    // The catalog shows the aircraft, not the folding of it.
-    handle.gotoStep(view.stepCount - 1, { animate: false });
-    const onResize = (): void => handle.resize();
-    window.addEventListener("resize", onResize);
+    let handle: FoldEngineHandle | null = null;
+    let stopped = false;
+    const onResize = (): void => handle?.resize();
+
+    const start = (create: FoldEngineFactory): void => {
+      // The card can be slept, or the whole grid unmounted, while the renderer
+      // is still in flight. Building the stage then would leave a canvas with
+      // nobody to dispose it.
+      if (stopped) return;
+      // A hangar card is a display surface: the aircraft stands up, lifts clear
+      // of the ground over a graded backdrop and a soft shadow, and breathes.
+      // No `autoRotate` - a constant spin holds the hero angle for about a
+      // second and then parks all six cards at the same non-hero angle in
+      // lockstep, which is the opposite of letting you read a shape. The engine
+      // drops the float under prefers-reduced-motion and keeps the staging.
+      handle = create(mount, view.structure, {
+        display: true,
+        rest: true,
+        quality: "preview",
+        theme,
+      });
+      // The catalog shows the aircraft, not the folding of it.
+      handle.gotoStep(view.stepCount - 1, { animate: false });
+      window.addEventListener("resize", onResize);
+    };
+
+    // An injected factory is already here, so a test still mounts its stage
+    // synchronously; a browser fetches the renderer first.
+    if (createEngine) start(createEngine);
+    else void loadFoldEngine().then(start);
 
     return () => {
+      stopped = true;
       window.removeEventListener("resize", onResize);
-      handle.dispose();
+      handle?.dispose();
+      handle = null;
     };
   }, [live, createEngine, view.structure, view.stepCount, theme]);
 

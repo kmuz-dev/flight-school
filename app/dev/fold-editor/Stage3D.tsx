@@ -11,7 +11,7 @@
 import { useEffect, useRef } from "react";
 import type { FoldEngineHandle } from "@/engine/core/types";
 import type { PlaneStructure } from "@/content/types";
-import { createFoldEngine } from "@/engine";
+import { loadFoldEngine } from "@/engine";
 
 export type Stage3DProps = {
   readonly structure: PlaneStructure;
@@ -26,28 +26,41 @@ export function Stage3D({ structure, stepIndex, onHandle, onProgress }: Stage3DP
   const handleRef = useRef<FoldEngineHandle | null>(null);
   const onHandleRef = useRef(onHandle);
   const onProgressRef = useRef(onProgress);
+  // The renderer arrives after the step effect below has already run once, so
+  // the step to open on has to be readable at that later moment.
+  const stepIndexRef = useRef(stepIndex);
 
   useEffect(() => {
     onHandleRef.current = onHandle;
     onProgressRef.current = onProgress;
-  }, [onHandle, onProgress]);
+    stepIndexRef.current = stepIndex;
+  }, [onHandle, onProgress, stepIndex]);
 
   useEffect(() => {
     const mount = mountRef.current;
     if (!mount) return;
 
-    const handle = createFoldEngine(mount, structure, { theme: "paper" });
-    handleRef.current = handle;
-    const off = handle.on("progress", (payload) => {
-      onProgressRef.current(typeof payload === "number" ? payload : 1);
+    let off: (() => void) | null = null;
+    let stopped = false;
+
+    void loadFoldEngine().then((create) => {
+      if (stopped) return;
+      const handle = create(mount, structure, { theme: "paper" });
+      handleRef.current = handle;
+      off = handle.on("progress", (payload) => {
+        onProgressRef.current(typeof payload === "number" ? payload : 1);
+      });
+      onHandleRef.current(handle);
+      handle.gotoStep(stepIndexRef.current, { animate: false });
     });
-    onHandleRef.current(handle);
 
     return () => {
-      off();
+      stopped = true;
+      off?.();
+      const handle = handleRef.current;
       handleRef.current = null;
       onHandleRef.current(null);
-      handle.dispose();
+      handle?.dispose();
     };
   }, [structure]);
 

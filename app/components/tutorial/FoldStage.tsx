@@ -11,7 +11,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { AnnotationAnchor, FoldEngineHandle, PaperFormat } from "@/engine/core/types";
 import type { PlaneStructure } from "@/content/types";
-import { createFoldEngine } from "@/engine";
+import { loadFoldEngine, type FoldEngineFactory } from "@/engine";
 import { useTheme, type Theme } from "@/lib/theme";
 import { Chip } from "@/components/ui/Chip";
 import { FOCUS_RING } from "@/components/ui/focus";
@@ -20,7 +20,6 @@ import {
   format,
   pad2,
   type CameraPreset,
-  type EngineFactory,
   type TutorialUiStrings,
 } from "./types";
 
@@ -48,7 +47,7 @@ export type FoldStageProps = {
   activePreset: CameraPreset;
   onSelectPreset: (preset: CameraPreset) => void;
   onEngineChange: (handle: FoldEngineHandle | null) => void;
-  createEngine?: EngineFactory;
+  createEngine?: FoldEngineFactory;
   /** Overrides the cadet's stored scene; tests pin it, the app does not. */
   theme?: Theme;
 };
@@ -64,7 +63,7 @@ export function FoldStage({
   activePreset,
   onSelectPreset,
   onEngineChange,
-  createEngine = createFoldEngine,
+  createEngine,
   theme,
 }: FoldStageProps) {
   const scene = useTheme();
@@ -81,23 +80,37 @@ export function FoldStage({
     const mount = mountRef.current;
     if (!mount) return;
 
-    // `rest` but never `display`: the tutorial is a table, and the model
-    // stands up only once it has a bend - which is exactly when it stops
-    // being a sheet and starts being a plane.
-    const handle = createEngine(mount, structure, { rest: true, theme: activeTheme });
-    const offAnnotation = handle.on("annotation", (payload) => {
-      setEngineAnchor(toAnchor(payload));
-    });
-    const onResize = () => handle.resize();
-    window.addEventListener("resize", onResize);
-    onEngineChangeRef.current(handle);
+    let handle: FoldEngineHandle | null = null;
+    let offAnnotation: (() => void) | null = null;
+    let stopped = false;
+    const onResize = () => handle?.resize();
+
+    const start = (create: FoldEngineFactory): void => {
+      // The cadet can leave the tutorial while the renderer is in flight, and
+      // the transport must not be handed a stage that is already orphaned.
+      if (stopped) return;
+      // `rest` but never `display`: the tutorial is a table, and the model
+      // stands up only once it has a bend - which is exactly when it stops
+      // being a sheet and starts being a plane.
+      handle = create(mount, structure, { rest: true, theme: activeTheme });
+      offAnnotation = handle.on("annotation", (payload) => {
+        setEngineAnchor(toAnchor(payload));
+      });
+      window.addEventListener("resize", onResize);
+      onEngineChangeRef.current(handle);
+    };
+
+    if (createEngine) start(createEngine);
+    else void loadFoldEngine().then(start);
 
     return () => {
+      stopped = true;
       window.removeEventListener("resize", onResize);
-      offAnnotation();
+      offAnnotation?.();
       onEngineChangeRef.current(null);
       setEngineAnchor(null);
-      handle.dispose();
+      handle?.dispose();
+      handle = null;
     };
   }, [createEngine, structure, activeTheme]);
 
