@@ -24,22 +24,83 @@ const SQUARE_CCW: readonly Vec2[] = [
 const SQUARE_CW: readonly Vec2[] = [...SQUARE_CCW].reverse();
 
 describe("facetGeometry", () => {
-  it("fan-triangulates a convex polygon in the z=0 plane of paper space", () => {
+  /** Every triangle's geometric normal, from its winding. */
+  function faceNormals(geometry: ReturnType<typeof facetGeometry>): Vector3[] {
+    const position = geometry.getAttribute("position");
+    const index = geometry.getIndex()!;
+    const out: Vector3[] = [];
+    const a = new Vector3();
+    const b = new Vector3();
+    const c = new Vector3();
+    for (let t = 0; t < index.count; t += 3) {
+      a.fromBufferAttribute(position, index.getX(t));
+      b.fromBufferAttribute(position, index.getX(t + 1));
+      c.fromBufferAttribute(position, index.getX(t + 2));
+      out.push(b.clone().sub(a).cross(c.clone().sub(a)).normalize());
+    }
+    return out;
+  }
+
+  it("builds a slab centred on the z=0 plane of paper space", () => {
     const geometry = facetGeometry(SQUARE_CCW);
-    expect(geometry.getAttribute("position").count).toBe(4);
-    expect(geometry.getIndex()?.count).toBe(6); // (n - 2) triangles
-    const positions = geometry.getAttribute("position");
-    for (let i = 0; i < positions.count; i += 1) expect(positions.getZ(i)).toBe(0);
+    const position = geometry.getAttribute("position");
+    let min = Infinity;
+    let max = -Infinity;
+    for (let i = 0; i < position.count; i += 1) {
+      min = Math.min(min, position.getZ(i));
+      max = Math.max(max, position.getZ(i));
+    }
+    // The core's pose matrices place the sheet's MID-plane, so the slab has to
+    // straddle z=0 symmetrically or every fold lands half a sheet off.
+    expect(max).toBeCloseTo(-min, 9);
+    // Thinner than the 0.25mm gap the core leaves between stacked layers, so
+    // two layers keep air between them rather than z-fighting.
+    expect(max - min).toBeGreaterThan(0);
+    expect(max - min).toBeLessThan(LAYER_Z_MM);
   });
 
-  it("normalises winding so the +Z normal is always the front face", () => {
-    const ccw = facetGeometry(SQUARE_CCW).getIndex()?.array;
-    const cw = facetGeometry(SQUARE_CW).getIndex()?.array;
-    expect(ccw).toBeDefined();
-    expect(cw).toBeDefined();
-    // Same triangles, opposite traversal order: the CW polygon gets flipped.
-    expect(Array.from(cw as ArrayLike<number>)).not.toEqual(Array.from(ccw as ArrayLike<number>));
-    const normals = facetGeometry(SQUARE_CW).getAttribute("normal");
+  it("turns the edge over instead of leaving a knife edge", () => {
+    const geometry = facetGeometry(SQUARE_CCW);
+    const normals = geometry.getAttribute("normal");
+    const chamfer: number[] = [];
+    for (let i = 0; i < normals.count; i += 1) {
+      const nz = normals.getZ(i);
+      // A chamfer normal points partly out and partly up, so it is neither of
+      // the two flat faces. That is the whole point: an edge that takes a
+      // different value from the faces it borders reads as a turned edge.
+      if (Math.abs(nz) < 0.999) chamfer.push(nz);
+    }
+    expect(chamfer.length).toBeGreaterThan(0);
+    for (const nz of chamfer) expect(Math.abs(nz)).toBeGreaterThan(0.01);
+  });
+
+  it("faces every triangle outwards, whichever way the polygon was wound", () => {
+    for (const polygon of [SQUARE_CCW, SQUARE_CW]) {
+      const geometry = facetGeometry(polygon);
+      const shading = geometry.getAttribute("normal");
+      const index = geometry.getIndex()!;
+      faceNormals(geometry).forEach((geometric, t) => {
+        const declared = new Vector3().fromBufferAttribute(shading, index.getX(t * 3));
+        // A closed solid whose winding disagrees with its shading normals is
+        // invisible under back-face culling and lit inside-out under a shadow
+        // pass, and DoubleSide hides both until something turns it off.
+        expect(geometric.dot(declared)).toBeGreaterThan(0.9);
+      });
+    }
+  });
+
+  it("falls back to a flat fan for a sliver too small to inset", () => {
+    // Crease subdivision produces these constantly; insetting one turns it
+    // inside out, which draws as a black shard rather than as nothing.
+    const sliver: readonly Vec2[] = [
+      [0, 0],
+      [40, 0.002],
+      [40, 0.004],
+    ];
+    const geometry = facetGeometry(sliver);
+    expect(geometry.getAttribute("position").count).toBe(3);
+    expect(geometry.getIndex()?.count).toBe(3);
+    const normals = geometry.getAttribute("normal");
     for (let i = 0; i < normals.count; i += 1) expect(normals.getZ(i)).toBe(1);
   });
 });
@@ -337,7 +398,14 @@ describe("SceneModel", () => {
 
     const bounds = model.computeBounds();
     expect(bounds.radius).toBeGreaterThan(50);
-    expect(bounds.max.z).toBeCloseTo(LAYER_Z_MM, 5);
+    // The core places the top layer's MID-plane at LAYER_Z_MM; the render gives
+    // the sheet real thickness, so the surface stands half a sheet above that.
+    // Under a tenth of a millimetre, but the assertion has to say which of the
+    // two it is measuring or it will drift the next time the sheet does.
+    const halfSheet = bounds.max.z - LAYER_Z_MM;
+    expect(halfSheet).toBeGreaterThan(0);
+    expect(halfSheet).toBeLessThan(LAYER_Z_MM / 2);
+    expect(bounds.min.z).toBeCloseTo(-halfSheet, 5);
 
     model.dispose();
   });

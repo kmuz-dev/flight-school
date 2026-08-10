@@ -154,11 +154,31 @@ export function createPaperMaterial(theme: StageTheme): MeshStandardMaterial {
   const back = new Color(theme.paperBack);
   material.onBeforeCompile = (shader) => {
     shader.uniforms.backColor = { value: back };
+    /**
+     * Which side of the SHEET this fragment is on, in paper space.
+     *
+     * This was `gl_FrontFacing`, which read the winding and so came out right
+     * for free while a facet was one infinitely thin quad. A facet is now a
+     * closed slab, so every visible surface is a front face and that test would
+     * go permanently true: the reverse of the paper would stop being drawn at
+     * all, taking most of the separation between one panel and the next with
+     * it. The sheet's own normal still knows which way it is looking, and it is
+     * carried through the pose because it is the object normal.
+     */
+    shader.vertexShader = shader.vertexShader
+      .replace("void main() {", "varying vec3 vPaperNormal;\nvoid main() {")
+      .replace(
+        "#include <beginnormal_vertex>",
+        "#include <beginnormal_vertex>\n\tvPaperNormal = objectNormal;",
+      );
     shader.fragmentShader = shader.fragmentShader
-      .replace("void main() {", "uniform vec3 backColor;\nvoid main() {")
+      .replace("void main() {", "uniform vec3 backColor;\nvarying vec3 vPaperNormal;\nvoid main() {")
       .replace(
         "#include <color_fragment>",
-        "#include <color_fragment>\n\tif ( !gl_FrontFacing ) { diffuseColor.rgb = backColor; }",
+        // The chamfer bands sit near z=0 in paper space and belong to neither
+        // side, so they keep the front colour rather than flickering between
+        // the two as a facet turns.
+        "#include <color_fragment>\n\tif ( vPaperNormal.z < -0.3 ) { diffuseColor.rgb = backColor; }",
       );
   };
   material.customProgramCacheKey = () => "flightschool-paper-2side";
@@ -178,32 +198,148 @@ function signedArea(polygon: readonly Vec2[]): number {
 }
 
 /**
- * Fan-triangulate a convex polygon in the z=0 plane of PAPER space.
- * Winding is normalised to counter-clockwise so the +Z normal is the front face.
+ * How thick a sheet is drawn, in mm, and how much of that thickness is turned
+ * over as a chamfer at the edge.
+ *
+ * Slightly under `LAYER_THICKNESS` (0.25mm, the gap the core leaves between
+ * stacked layers) so two layers keep air between them and cannot z-fight. The
+ * chamfer is what a crease actually is: paper cannot fold to a zero radius, it
+ * folds around its own thickness, and that turned edge catching a different
+ * value from the faces either side of it is most of what separates a
+ * photograph of paper from a render of it.
+ */
+const SHEET_MM = 0.17;
+const CHAMFER_MM = 0.05;
+
+/** Inward unit normal of the edge from `a` to `b`, for a CCW polygon. */
+function edgeInward(a: Vec2, b: Vec2): Vec2 | null {
+  const dx = b[0] - a[0];
+  const dy = b[1] - a[1];
+  const len = Math.hypot(dx, dy);
+  if (len < 1e-9) return null;
+  return [-dy / len, dx / len];
+}
+
+/**
+ * The polygon pulled in by `inset`, each vertex moved along the bisector of its
+ * two edges.
+ *
+ * Returns null when the facet is too small to survive it. Crease subdivision
+ * produces slivers constantly, and insetting one of those turns it inside out,
+ * which draws as a black shard rather than as nothing.
+ */
+function insetPolygon(ccwPolygon: readonly Vec2[], inset: number): Vec2[] | null {
+  const n = ccwPolygon.length;
+  const out: Vec2[] = [];
+  for (let i = 0; i < n; i += 1) {
+    const prev = ccwPolygon[(i - 1 + n) % n]!;
+    const cur = ccwPolygon[i]!;
+    const next = ccwPolygon[(i + 1) % n]!;
+    const m1 = edgeInward(prev, cur);
+    const m2 = edgeInward(cur, next);
+    if (!m1 || !m2) return null;
+    const bx = m1[0] + m2[0];
+    const by = m1[1] + m2[1];
+    const len = Math.hypot(bx, by);
+    // A spike whose two edges double back on each other has no usable bisector.
+    if (len < 1e-6) return null;
+    const ux = bx / len;
+    const uy = by / len;
+    // Moving `inset` PERPENDICULAR to both edges means travelling further than
+    // that along the bisector, by exactly 1/cos of the half-angle between them.
+    const cos = ux * m1[0] + uy * m1[1];
+    if (cos < 0.15) return null;
+    const t = inset / cos;
+    out.push([cur[0] + ux * t, cur[1] + uy * t]);
+  }
+  // The inset must not have turned the polygon inside out or collapsed it.
+  const before = Math.abs(signedArea(ccwPolygon));
+  const after = signedArea(out);
+  if (after <= 0 || after < before * 0.25) return null;
+  return out;
+}
+
+/**
+ * A facet as a SLAB of paper in PAPER space rather than an infinitely thin
+ * sheet: a top face, a bottom face, and a chamfered edge joining them, centred
+ * on z=0 so the core's pose matrices still place the sheet's mid-plane exactly
+ * where they always did.
+ *
+ * Zero thickness is a large part of why the fleet read as CG. A knife edge
+ * cannot catch a highlight, so every fold met its neighbour in a hard line with
+ * no transition and a stack of eight layers at the keel looked like one
+ * surface. Giving the sheet its real thickness gets the crease radius for free,
+ * because a crease radius IS the paper's thickness - nothing has to model the
+ * fold itself.
+ *
+ * Winding is normalised to counter-clockwise so the +Z normal is the front
+ * face. Falls back to the old flat fan for a facet too small to inset, which is
+ * a facet far too small to see an edge on anyway.
  */
 export function facetGeometry(polygon: readonly Vec2[]): BufferGeometry {
-  const n = polygon.length;
-  const positions = new Float32Array(n * 3);
-  const normals = new Float32Array(n * 3);
-  for (let i = 0; i < n; i += 1) {
-    const p = polygon[i];
-    if (!p) continue;
-    positions[i * 3] = p[0];
-    positions[i * 3 + 1] = p[1];
-    positions[i * 3 + 2] = 0;
-    normals[i * 3 + 2] = 1;
-  }
+  const ccw = signedArea(polygon) >= 0 ? [...polygon] : [...polygon].reverse();
+  const n = ccw.length;
+  const half = SHEET_MM / 2;
+  const rings = n >= 3 ? insetPolygon(ccw, CHAMFER_MM) : null;
+  // The chamfer's own slope, from the two constants above rather than assumed
+  // to be 45 degrees: it rises `half` over a run of `CHAMFER_MM`.
+  const slope = Math.hypot(half, CHAMFER_MM);
+  const chamferOut = half / slope;
+  const chamferUp = CHAMFER_MM / slope;
 
-  const ccw = signedArea(polygon) >= 0;
+  const positions: number[] = [];
+  const normals: number[] = [];
   const indices: number[] = [];
-  for (let i = 1; i < n - 1; i += 1) {
-    if (ccw) indices.push(0, i, i + 1);
-    else indices.push(0, i + 1, i);
+
+  const push = (p: Vec2, z: number, nx: number, ny: number, nz: number): number => {
+    const index = positions.length / 3;
+    positions.push(p[0], p[1], z);
+    normals.push(nx, ny, nz);
+    return index;
+  };
+
+  if (!rings) {
+    const base = ccw.map((p) => push(p, 0, 0, 0, 1));
+    for (let i = 1; i < n - 1; i += 1) indices.push(base[0]!, base[i]!, base[i + 1]!);
+  } else {
+    const top = rings.map((p) => push(p, half, 0, 0, 1));
+    for (let i = 1; i < n - 1; i += 1) indices.push(top[0]!, top[i]!, top[i + 1]!);
+
+    const bottom = rings.map((p) => push(p, -half, 0, 0, -1));
+    for (let i = 1; i < n - 1; i += 1) indices.push(bottom[0]!, bottom[i + 1]!, bottom[i]!);
+
+    // Two chamfer bands: top ring down to the silhouette, silhouette down to
+    // the bottom ring. Their normals point out and up, or out and down, which
+    // is what makes a turned edge take a different value from the face it
+    // borders instead of vanishing into it.
+    for (let i = 0; i < n; i += 1) {
+      const j = (i + 1) % n;
+      const inward = edgeInward(ccw[i]!, ccw[j]!);
+      if (!inward) continue;
+      const ox = -inward[0] * chamferOut;
+      const oy = -inward[1] * chamferOut;
+      for (const [upper, lower, nz] of [
+        [half, 0, chamferUp],
+        [0, -half, -chamferUp],
+      ] as const) {
+        const a = upper === 0 ? ccw[i]! : rings[i]!;
+        const b = upper === 0 ? ccw[j]! : rings[j]!;
+        const c = lower === 0 ? ccw[j]! : rings[j]!;
+        const d = lower === 0 ? ccw[i]! : rings[i]!;
+        const v0 = push(a, upper, ox, oy, nz);
+        const v1 = push(b, upper, ox, oy, nz);
+        const v2 = push(c, lower, ox, oy, nz);
+        const v3 = push(d, lower, ox, oy, nz);
+        // Reversed relative to the top fan: walking the ring the same way round
+        // while descending traces the band clockwise seen from outside.
+        indices.push(v0, v2, v1, v0, v3, v2);
+      }
+    }
   }
 
   const geometry = new BufferGeometry();
-  geometry.setAttribute("position", new BufferAttribute(positions, 3));
-  geometry.setAttribute("normal", new BufferAttribute(normals, 3));
+  geometry.setAttribute("position", new BufferAttribute(new Float32Array(positions), 3));
+  geometry.setAttribute("normal", new BufferAttribute(new Float32Array(normals), 3));
   geometry.setIndex(indices);
   // Facets are placed by pose matrices, never by their own transform, so a
   // bounding sphere computed in paper space is all Three needs for culling.
@@ -278,6 +414,16 @@ export class SceneModel {
 
   private readonly paperMaterial: MeshStandardMaterial;
   private readonly edgeMaterial: LineBasicMaterial;
+  /**
+   * Whether to draw the navy facet outline.
+   *
+   * A tutorial wants it: that stage is a diagram, and a cadet is reading which
+   * panel just moved. A display stage does not - the sheet now has real
+   * thickness, so its edges are lit geometry, and an ink hairline traced over
+   * one is both the CG tell and a line fighting the chamfer beneath it for the
+   * same pixels.
+   */
+  private readonly outlines: boolean;
   private readonly meshes = new Map<number, Mesh>();
   private signature = "";
   /** Standing the model up; changes once per step. */
@@ -289,7 +435,8 @@ export class SceneModel {
   /** Scratch for the per-vertex bounds walk; avoids an allocation per vertex. */
   private readonly point = new Vector3();
 
-  constructor(theme: StageTheme) {
+  constructor(theme: StageTheme, outlines = true) {
+    this.outlines = outlines;
     this.root.name = "fold-model";
     this.root.matrixAutoUpdate = false;
     this.paperMaterial = createPaperMaterial(theme);
@@ -421,11 +568,13 @@ export class SceneModel {
     // resolves front-to-back the way the paper is actually folded.
     mesh.renderOrder = facet.layer;
 
-    const outline = new LineSegments(outlineGeometry(facet.polygon), this.edgeMaterial);
-    outline.matrixAutoUpdate = false;
-    outline.renderOrder = facet.layer + 1;
-    outline.frustumCulled = false;
-    mesh.add(outline);
+    if (this.outlines) {
+      const outline = new LineSegments(outlineGeometry(facet.polygon), this.edgeMaterial);
+      outline.matrixAutoUpdate = false;
+      outline.renderOrder = facet.layer + 1;
+      outline.frustumCulled = false;
+      mesh.add(outline);
+    }
 
     this.meshes.set(facet.id, mesh);
     this.root.add(mesh);

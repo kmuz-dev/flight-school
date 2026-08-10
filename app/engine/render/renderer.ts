@@ -415,7 +415,7 @@ export class FoldEngine implements FoldEngineHandle {
       distance: this.defaultDistance,
     };
 
-    this.model = new SceneModel(this.theme);
+    this.model = new SceneModel(this.theme, !this.display);
     this.annotations = new Annotations(this.theme);
     this.stage.add(this.model.root, this.annotations.root);
 
