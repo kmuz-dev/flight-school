@@ -128,6 +128,11 @@ const ui: UiDictionary = {
   "completion.foldNextPlane": "다음 비행기 접기",
   "completion.allComplete": "계류장의 마지막 기체였어요. 이제 격납고의 모든 비행기가 내 것이에요.",
 
+  "error.title": "이 비행기가 흐트러졌어요.",
+  "error.body":
+    "이 화면에서 뭔가 잘못됐어요. 진행 상황은 저장돼 있으니 멈춘 자리에서 그대로 이어서 하면 돼요.",
+  "error.retry": "다시 시도",
+
   "a11y.themeToggle": "낮 비행과 밤 비행 전환",
   "a11y.localePicker": "언어 선택",
 };

@@ -128,6 +128,11 @@ const ui: UiDictionary = {
   "completion.allComplete":
     "Das war das letzte Flugzeug auf dem Vorfeld. Der ganze Hangar gehört jetzt dir.",
 
+  "error.title": "Dieses Flugzeug ist auseinandergefallen.",
+  "error.body":
+    "Auf diesem Bildschirm ist etwas schiefgegangen. Dein Fortschritt ist gespeichert, du kannst genau dort weitermachen, wo du aufgehört hast.",
+  "error.retry": "Noch einmal versuchen",
+
   "a11y.themeToggle": "Zwischen Tagflug und Nachtflug wechseln",
   "a11y.localePicker": "Eine Sprache wählen",
 };

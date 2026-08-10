@@ -128,6 +128,11 @@ const ui: UiDictionary = {
   "completion.allComplete":
     "Esse era o último avião da pista. Todos os aviões do hangar são teus.",
 
+  "error.title": "Este avião desfez-se.",
+  "error.body":
+    "Alguma coisa correu mal neste ecrã. O teu progresso está guardado, por isso podes continuar exatamente onde ficaste.",
+  "error.retry": "Tentar de novo",
+
   "a11y.themeToggle": "Alternar entre voo diurno e voo noturno",
   "a11y.localePicker": "Escolher um idioma",
 };

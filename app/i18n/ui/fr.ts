@@ -128,6 +128,11 @@ const ui: UiDictionary = {
   "completion.allComplete":
     "C'était le dernier appareil du hangar. Tous les avions sont à toi maintenant.",
 
+  "error.title": "Cet avion s'est défait.",
+  "error.body":
+    "Quelque chose s'est mal passé sur cet écran. Ta progression est enregistrée, tu peux reprendre exactement où tu en étais.",
+  "error.retry": "Réessayer",
+
   "a11y.themeToggle": "Basculer entre vol de jour et vol de nuit",
   "a11y.localePicker": "Choisir une langue",
 };

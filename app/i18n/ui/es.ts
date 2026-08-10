@@ -128,6 +128,11 @@ const ui: UiDictionary = {
   "completion.allComplete":
     "Ese era el último avión de la pista. Todos los aviones del hangar son tuyos.",
 
+  "error.title": "Este avión se ha deshecho.",
+  "error.body":
+    "Algo ha fallado en esta pantalla. Tu progreso está guardado, así que puedes seguir justo donde lo dejaste.",
+  "error.retry": "Intentar de nuevo",
+
   "a11y.themeToggle": "Cambiar entre vuelo de día y vuelo nocturno",
   "a11y.localePicker": "Elegir un idioma",
 };

@@ -133,6 +133,11 @@ const ui: UiDictionary = {
   "completion.foldNextPlane": "اطوِ الطائرة التالية",
   "completion.allComplete": "كانت تلك آخر طائرة في الساحة. كل طائرات الحظيرة صارت لك.",
 
+  "error.title": "تفكّكت هذه الطائرة.",
+  "error.body":
+    "حدث خطأ ما في هذه الشاشة. تقدّمك محفوظ، فيمكنك المتابعة من حيث توقّفت تمامًا.",
+  "error.retry": "حاول من جديد",
+
   "a11y.themeToggle": "التبديل بين الطيران النهاري والليلي",
   "a11y.localePicker": "اختر لغة",
 };

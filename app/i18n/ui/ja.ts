@@ -131,6 +131,11 @@ const ui: UiDictionary = {
   "completion.allComplete":
     "これが最後の機体でした。ハンガーの全機がきみのものです。",
 
+  "error.title": "この機体はばらばらになりました。",
+  "error.body":
+    "この画面で何かがうまくいきませんでした。進みぐあいは保存してあるので、やめたところからそのまま続けられます。",
+  "error.retry": "もう一度ためす",
+
   "a11y.themeToggle": "昼のフライトと夜のフライトを切りかえる",
   "a11y.localePicker": "言語をえらぶ",
 };

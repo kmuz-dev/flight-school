@@ -127,6 +127,11 @@ const ui: UiDictionary = {
   "completion.allComplete":
     "That was the last aircraft on the floor. Every plane in the hangar is yours.",
 
+  "error.title": "This plane came apart.",
+  "error.body":
+    "Something went wrong on this screen. Your progress is saved, so you can pick up right where you left off.",
+  "error.retry": "Try again",
+
   "a11y.themeToggle": "Switch between day and night flight",
   "a11y.localePicker": "Choose a language",
 };

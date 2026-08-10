@@ -125,6 +125,11 @@ const ui: UiDictionary = {
   "completion.foldNextPlane": "折下一架飞机",
   "completion.allComplete": "那是停机坪上的最后一架。机库里的每一架飞机都属于你了。",
 
+  "error.title": "这架飞机散架了。",
+  "error.body":
+    "这个页面出了点问题。你的进度已经保存，可以从刚才停下的地方接着来。",
+  "error.retry": "再试一次",
+
   "a11y.themeToggle": "在日间飞行和夜间飞行之间切换",
   "a11y.localePicker": "选择语言",
 };

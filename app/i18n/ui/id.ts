@@ -128,6 +128,11 @@ const ui: UiDictionary = {
   "completion.allComplete":
     "Itu pesawat terakhir di landasan. Semua pesawat di hanggar sekarang milikmu.",
 
+  "error.title": "Pesawat ini terurai.",
+  "error.body":
+    "Ada yang salah di layar ini. Kemajuanmu tersimpan, jadi kamu bisa lanjut persis dari tempat kamu berhenti.",
+  "error.retry": "Coba lagi",
+
   "a11y.themeToggle": "Ganti antara penerbangan siang dan malam",
   "a11y.localePicker": "Pilih bahasa",
 };

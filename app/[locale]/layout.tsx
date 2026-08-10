@@ -1,5 +1,8 @@
 import { LOCALES, RTL_LOCALES, isLocale } from "@/i18n/config";
 import { notFound } from "next/navigation";
+import { getUi } from "@/i18n/dictionary";
+import { hangarHref } from "@/lib/paths";
+import { ChromeStringsProvider } from "@/components/ui/ChromeStrings";
 
 export function generateStaticParams() {
   return LOCALES.map((locale) => ({ locale }));
@@ -29,9 +32,23 @@ export default async function LocaleLayout({
     ever stops being true, the fix is routing, not a script that mutates <html>
     after parse.
   */
+  // error.tsx renders in place of `children`, so it sits inside this provider -
+  // which is the only way a client error boundary can be given translated copy
+  // without shipping all twelve dictionaries to the browser.
+  const ui = getUi(locale);
   return (
     <div lang={locale} dir={RTL_LOCALES.has(locale) ? "rtl" : "ltr"}>
-      {children}
+      <ChromeStringsProvider
+        value={{
+          errorTitle: ui["error.title"] ?? "error.title",
+          errorBody: ui["error.body"] ?? "error.body",
+          errorRetry: ui["error.retry"] ?? "error.retry",
+          backToHangar: ui["nav.backToHangar"] ?? "nav.backToHangar",
+          hangarHref: hangarHref(locale),
+        }}
+      >
+        {children}
+      </ChromeStringsProvider>
     </div>
   );
 }
