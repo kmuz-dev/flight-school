@@ -235,6 +235,8 @@ export class SceneModel {
   private readonly meshes = new Map<number, Mesh>();
   private signature = "";
   private readonly box = new Box3();
+  /** Scratch for the per-vertex bounds walk; avoids an allocation per vertex. */
+  private readonly point = new Vector3();
   private readonly sphere = new Sphere();
 
   constructor(theme: StageTheme) {
@@ -284,12 +286,23 @@ export class SceneModel {
   computeBounds(): ModelBounds {
     this.root.updateMatrixWorld(true);
     this.box.makeEmpty();
+    // Per vertex, not per bounding box. `Box3.applyMatrix4` transforms the eight
+    // corners of the local box and re-fits an axis-aligned box around them, and
+    // a facet's local box is a rectangle around a polygon lying flat in paper
+    // space: rotate that rectangle into a fold and its corners sweep well past
+    // the paper they were drawn around. Measured on the finished Dart, the box
+    // method reported the model as 200 x 310 x 172mm where the paper actually
+    // occupies 57 x 310 x 72 - correct only along the one axis the folds happen
+    // not to rotate about. Camera framing, the shadow camera extent and the
+    // annotation anchor all read this, so all three were being aimed at a model
+    // three times wider than the one on screen.
     for (const mesh of this.meshes.values()) {
-      const geometry = mesh.geometry;
-      if (!geometry.boundingBox) geometry.computeBoundingBox();
-      const bb = geometry.boundingBox;
-      if (!bb) continue;
-      this.box.union(bb.clone().applyMatrix4(mesh.matrixWorld));
+      const position = mesh.geometry.getAttribute("position");
+      if (!position) continue;
+      for (let i = 0; i < position.count; i += 1) {
+        this.point.fromBufferAttribute(position, i).applyMatrix4(mesh.matrixWorld);
+        this.box.expandByPoint(this.point);
+      }
     }
     if (this.box.isEmpty()) {
       return { center: new Vector3(), radius: 100, maxZ: 0 };

@@ -121,6 +121,57 @@ describe("SceneModel", () => {
     model.dispose();
   });
 
+  /**
+   * The bounds must describe the paper, not a box around a box around it.
+   *
+   * `Box3.applyMatrix4` re-fits an axis-aligned box around the eight transformed
+   * corners of the local one, and a facet's local box is a rectangle around a
+   * polygon lying flat in paper space. Rotate that rectangle into a fold and its
+   * corners sweep past the paper they were drawn around; on the finished Dart
+   * that reported the model as 200 x 310 x 172mm against an actual 57 x 310 x
+   * 72, and every consumer - camera framing, the shadow camera, the annotation
+   * anchor - was aimed at a plane three times wider than the one on screen. A
+   * single rotated facet reproduces it, so this pins the vertex walk rather than
+   * the plane that happened to expose it.
+   */
+  it("measures the paper itself, not the box swept by a rotated bounding box", () => {
+    // A right triangle, because a rectangle cannot show the defect: its local
+    // bounding box *is* the polygon, so rotating either gives the same answer.
+    // A triangle fills half its box, and the empty half is what the box method
+    // rotates into the result.
+    const model = new SceneModel(theme);
+    model.sync({
+      facets: [
+        {
+          id: 0,
+          polygon: [
+            [0, 0],
+            [100, 0],
+            [0, 100],
+          ],
+          flatMap: [1, 0, 0, 0, 1, 0],
+          layer: 0,
+          bend: [],
+        },
+      ],
+      creaseMarks: [],
+      maxLayer: 0,
+    });
+
+    // 45 degrees about z, column-major as Three stores it.
+    const c = Math.SQRT1_2;
+    model.applyPoses(new Map([[0, [c, c, 0, 0, -c, c, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]]]));
+
+    // Vertices land on x[-70.7, 70.7], y[0, 70.7]: a 141.4 x 70.7 box, whose
+    // half-diagonal is 79.06. The box method rotates the triangle's empty
+    // corner too, reaching y = 141.4 and reporting 100.
+    const bounds = model.computeBounds();
+    expect(bounds.radius).toBeCloseTo(79.06, 1);
+    expect(bounds.radius).toBeLessThan(90);
+
+    model.dispose();
+  });
+
   it("dispose() releases every geometry and material it created", () => {
     const core = createCoreStub();
     const structure = makeStructure(2);
