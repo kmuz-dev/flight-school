@@ -8,6 +8,14 @@
  * A reflection (det -1) in the flat map is realised physically as a 180 degree
  * rotation about the fold axis, which is why animating a fold and snapping to
  * the folded state agree exactly at t = 1.
+ *
+ * REST IS NOT A TERM IN THAT LAW. `rest.ts` computes the rigid motion that
+ * stands a settled model up on a table, and it belongs strictly outside this
+ * composition, left-multiplied by the caller. Fold axes are TABLE-space lines
+ * and the rotations above are left-multiplied onto `poseForFacet`, so a rest
+ * transform composed inward would leave a facet in rest space while its fold
+ * axis stayed in table space, and every fold would turn about the wrong line.
+ * See ADR 0004.
  */
 import type { Facet, FoldState, PartialRotation, StepDelta } from "./types";
 import { LAYER_THICKNESS } from "./paper";

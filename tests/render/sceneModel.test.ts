@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
-import { BufferGeometry, LineSegments, Material, Mesh, Vector3 } from "three";
+import { BufferGeometry, LineSegments, Material, Matrix4, Mesh, SRGBColorSpace, Vector3 } from "three";
 import {
+  ContactShadow,
   SceneModel,
+  createBackdropTexture,
+  displayBounds,
   facetGeometry,
   facetSignature,
   stageTheme,
@@ -71,6 +74,132 @@ describe("unionBounds", () => {
     // through to the caller's bounds.
     expect(a.min.toArray()).toEqual([-10, 0, 0]);
     expect(b.max.toArray()).toEqual([2, 30, 4]);
+  });
+});
+
+describe("displayBounds", () => {
+  it("frames the lifted model together with the ground its shadow lands on", () => {
+    const raw = {
+      min: new Vector3(-100, -150, 0),
+      max: new Vector3(100, 150, 40),
+      center: new Vector3(0, 0, 20),
+      radius: 200,
+    };
+    const framed = displayBounds(raw, 60);
+
+    // A lifted plane framed on itself alone puts its own shadow off-screen.
+    expect(framed.min.z).toBe(0);
+    expect(framed.max.z).toBe(100);
+    expect(framed.min.x).toBe(-100);
+    expect(framed.max.y).toBe(150);
+    expect(raw.max.z).toBe(40); // operand untouched
+  });
+
+  it("keeps the ground in frame even when the model already sits below z=0", () => {
+    // Only the tutorial's last step lifts, and it lifts a rested model - but a
+    // stage told to lift something that still straddles the table must not
+    // crop the ground away, because the shadow is drawn at z=0 regardless.
+    const framed = displayBounds(
+      { min: new Vector3(-5, -5, -30), max: new Vector3(5, 5, 10), center: new Vector3(), radius: 1 },
+      20,
+    );
+    expect(framed.min.z).toBe(0);
+    expect(framed.max.z).toBe(30);
+  });
+});
+
+describe("createBackdropTexture", () => {
+  it("grades from the ground stop at the bottom to the sky stop at the top", () => {
+    const theme = stageTheme("paper");
+    const texture = createBackdropTexture(theme);
+    const data = texture.image.data as Uint8Array;
+
+    expect(texture.image.width).toBe(1);
+    expect(texture.image.height).toBe(128);
+    // sRGB, because Three does NOT tone-map a background texture: these two
+    // land on exactly the hexes the design system names.
+    expect(texture.colorSpace).toBe(SRGBColorSpace);
+
+    const row = (i: number): number => (data[i * 4]! << 16) | (data[i * 4 + 1]! << 8) | data[i * 4 + 2]!;
+    // v=0 is the BOTTOM of the screen quad, so the ground stop belongs at i=0.
+    expect(row(0)).toBe(theme.displayGround);
+    expect(row(127)).toBe(theme.displaySky);
+
+    texture.dispose();
+  });
+
+  it("rises monotonically, so the grade never bands", () => {
+    const texture = createBackdropTexture(stageTheme("night"));
+    const data = texture.image.data as Uint8Array;
+    for (let i = 1; i < 128; i += 1) {
+      expect(data[i * 4]!).toBeGreaterThanOrEqual(data[(i - 1) * 4]!);
+    }
+    texture.dispose();
+  });
+});
+
+describe("ContactShadow", () => {
+  const bounds = {
+    min: new Vector3(-80, -150, 0),
+    max: new Vector3(80, 150, 40),
+    center: new Vector3(0, 0, 20),
+    radius: 200,
+  };
+
+  it("takes the model's footprint plus a spread, offset toward where the light is not", () => {
+    const shadow = new ContactShadow(stageTheme("paper"));
+    shadow.fit(bounds, 12, -7, 30);
+
+    expect(shadow.mesh.scale.x).toBeCloseTo(190, 9); // 160 wide + 30 spread
+    expect(shadow.mesh.scale.y).toBeCloseTo(330, 9); // 300 deep + 30 spread
+    expect(shadow.mesh.position.x).toBeCloseTo(12, 9);
+    expect(shadow.mesh.position.y).toBeCloseTo(-7, 9);
+    // Clear of z=0 by a hair so it never fights the rested model for the ground.
+    expect(shadow.mesh.position.z).toBeGreaterThan(0);
+    expect(shadow.mesh.position.z).toBeLessThan(1);
+
+    shadow.dispose();
+  });
+
+  /**
+   * The one thing that tells a viewer the plane ROSE rather than that it grew.
+   * If the pool held still, the lift would read as a zoom.
+   */
+  it("goes wider and fainter as the plane rises, and exact at neutral", () => {
+    const theme = stageTheme("paper");
+    const shadow = new ContactShadow(theme);
+    shadow.fit(bounds, 0, 0, 0);
+
+    shadow.follow(0);
+    expect(shadow.opacity).toBe(theme.shadowOpacity);
+    const neutralWidth = shadow.mesh.scale.x;
+
+    shadow.follow(1);
+    const top = shadow.opacity;
+    expect(top).toBeLessThan(theme.shadowOpacity);
+    expect(shadow.mesh.scale.x).toBeGreaterThan(neutralWidth);
+
+    shadow.follow(-1);
+    expect(shadow.opacity).toBeGreaterThan(theme.shadowOpacity);
+    expect(shadow.mesh.scale.x).toBeLessThan(neutralWidth);
+
+    // Scale reads from the fitted footprint every time, never from the last
+    // frame's scale - otherwise the pool would ratchet outward as it breathes.
+    shadow.follow(0);
+    expect(shadow.mesh.scale.x).toBe(neutralWidth);
+    expect(shadow.opacity).toBe(theme.shadowOpacity);
+
+    shadow.dispose();
+  });
+
+  it("clamps, so a stage that overdrives it cannot invert the pool", () => {
+    const shadow = new ContactShadow(stageTheme("night"));
+    shadow.follow(50);
+    const far = shadow.opacity;
+    shadow.follow(1);
+    expect(shadow.opacity).toBe(far);
+    expect(far).toBeGreaterThan(0);
+    shadow.dispose();
   });
 });
 
@@ -193,6 +322,71 @@ describe("SceneModel", () => {
     expect(bounds.radius).toBeCloseTo(79.06, 1);
     expect(bounds.radius).toBeLessThan(90);
 
+    model.dispose();
+  });
+
+  /**
+   * The composition order the whole standing-up change rests on.
+   *
+   * `root.matrix` is `placement * rest`, in that order and nowhere else. The
+   * rest transform rolls the model about 85 degrees onto its belly, so
+   * composing the two the other way round would carry the lift along with that
+   * roll and slide the plane sideways instead of raising it - which looks like
+   * a framing bug rather than a matrix bug, and is why it gets its own test.
+   */
+  it("lifts the model along world +Z however far the rest transform rolled it", () => {
+    const model = new SceneModel(theme);
+    // A quarter turn about Y: world +Z came from -X. If rest were applied last,
+    // a +10 lift would come out along one of those instead.
+    const rest = new Matrix4().makeRotationY(Math.PI / 2);
+    model.setRest([...rest.elements]);
+
+    const pivot = new Vector3(3, 4, 5);
+    model.setPlacement(pivot, 0, 10, 0);
+
+    const marker = new Vector3(1, 2, 3);
+    const rested = marker.clone().applyMatrix4(rest);
+    const placed = marker.clone().applyMatrix4(model.root.matrix);
+    expect(placed.x).toBeCloseTo(rested.x, 9);
+    expect(placed.y).toBeCloseTo(rested.y, 9);
+    expect(placed.z).toBeCloseTo(rested.z + 10, 9);
+
+    model.dispose();
+  });
+
+  it("banks about the aircraft's own axis, not about the world origin", () => {
+    const model = new SceneModel(theme);
+    model.setRest(null);
+
+    // The Dart's centre sits 25mm off x=0, which is plenty to turn a 5-degree
+    // roll into a visible slew if the rotation is taken about the origin.
+    const pivot = new Vector3(25, 7, 40);
+    model.setPlacement(pivot, 0, 0, Math.PI / 8);
+
+    const held = pivot.clone().applyMatrix4(model.root.matrix);
+    expect(held.x).toBeCloseTo(pivot.x, 9);
+    expect(held.y).toBeCloseTo(pivot.y, 9);
+    expect(held.z).toBeCloseTo(pivot.z, 9);
+
+    // And it is a roll, not a yaw: a point offset along the fuselage (+y) does
+    // not move, a point out on a wing (+x) does.
+    const onNose = pivot.clone().add(new Vector3(0, 100, 0));
+    expect(onNose.clone().applyMatrix4(model.root.matrix).distanceTo(onNose)).toBeCloseTo(0, 9);
+    const onWing = pivot.clone().add(new Vector3(100, 0, 0));
+    expect(onWing.clone().applyMatrix4(model.root.matrix).distanceTo(onWing)).toBeGreaterThan(1);
+
+    model.dispose();
+  });
+
+  it("setRest(null) is the identity, so a tutorial stage pays nothing for it", () => {
+    const model = new SceneModel(theme);
+    model.setRest(null);
+    model.setPlacement(new Vector3(9, 9, 9), 0, 0, 0);
+    expect(model.root.matrix.elements).toEqual(new Matrix4().elements);
+    // A short array is refused rather than half-read: a core that returned a
+    // 3x3 by mistake would otherwise scramble the stage silently.
+    model.setRest([1, 0, 0, 0, 1, 0, 0, 0, 1]);
+    expect(model.root.matrix.elements).toEqual(new Matrix4().elements);
     model.dispose();
   });
 

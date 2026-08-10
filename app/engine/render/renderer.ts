@@ -668,7 +668,13 @@ export class FoldEngine implements FoldEngineHandle {
         // Scrubbing back off the end puts the plane down again, and snaps
         // rather than eases: the cadet owns the playhead while dragging, and a
         // 0.9s tween chasing a drag feels broken.
-        if (t < 1 && this.liftProgress !== 0 && !this.display) this.setLift(0, false);
+        //
+        // "Lifted OR lifting", not "lifted": the rise is a tween, so for the
+        // first frame after it starts `liftProgress` is still exactly 0, and a
+        // scrub inside that window would leave the tween running and take the
+        // plane off the table while the cadet was dragging backwards.
+        const rising = this.liftProgress !== 0 || this.liftTween !== null;
+        if (t < 1 && rising && !this.display) this.setLift(0, false);
         this.emit("progress", t);
       },
       onComplete: () => {

@@ -48,10 +48,14 @@ export function OrbitViewer({
     const mount = mountRef.current;
     if (!mount) return;
 
-    // 3/4 is the catalogue's hero angle (SCREENS.md) and the angle the SVG
-    // underneath is drawn from. Without pinning it the stage inherits the last
-    // fold step's camera hint, which is authored for that fold rather than for
-    // looking at the result - on the Dart that is nose-on.
+    // A display stage: the aircraft stands up, lifts clear of the ground over
+    // a graded backdrop and a soft shadow, and opens on the catalogue's hero
+    // angle - the same angle the SVG underneath is drawn from.
+    //
+    // The angle is carried by `display`, not by a `cameraPreset`. Presets are
+    // authored into fold steps for the sake of that fold, so left to itself
+    // the stage would inherit the last step's hint, which on the Dart is
+    // nose-on. No step may decide how a finished aircraft is photographed.
     const handle = createEngine(mount, structure, {
       display: true,
       rest: true,

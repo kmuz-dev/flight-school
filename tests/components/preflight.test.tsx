@@ -77,6 +77,28 @@ describe("Preflight", () => {
     expect(log.steps).toEqual([view.stepCount - 1]);
   });
 
+  /**
+   * The hero is a photograph of an aircraft, not a paused fold. None of this
+   * is visible in the DOM, so nothing else would catch its removal until the
+   * hero was showing a plane on its side, half under the ground.
+   */
+  it("dresses the hero as a display stage rather than a tutorial one", () => {
+    const { log } = renderPreflight();
+    const opts = log.created[0]?.opts;
+    // Floorless, backdropped, shadowed, lifted and breathing.
+    expect(opts?.display).toBe(true);
+    // Standing up, rather than lying in the frame its creases were authored in.
+    expect(opts?.rest).toBe(true);
+    // The hero angle rides on `display`. A preset here would be a fold step's
+    // opinion about how a finished aircraft is photographed.
+    expect(opts?.cameraPreset).toBeUndefined();
+    // No constant spin: it holds the hero angle for about a second and then
+    // parks at some other angle. The float in the engine is the motion now.
+    expect(opts?.autoRotate).toBeUndefined();
+    // Full tier, unlike a hangar card: this is the largest render on the site.
+    expect(opts?.quality).toBeUndefined();
+  });
+
   it("derives the spec table from the fold sequence", () => {
     renderPreflight();
     expect(screen.getByText(`${view.stepCount} folds`)).toBeInTheDocument();

@@ -473,8 +473,16 @@ export function displayBounds(bounds: ModelBounds, liftMm: number): ModelBounds 
  */
 export function createBackdropTexture(theme: StageTheme): DataTexture {
   const height = 128;
+  // `new Color(hex)` decodes an sRGB hex into the LINEAR working space, so the
+  // mix below is a mix of light rather than of screen values - which is what
+  // keeps a two-stop grade from going muddy through its middle. The bytes must
+  // then be encoded back, because the texture is declared sRGB: writing the
+  // linear numbers straight out darkened both stops by about ten values and
+  // silently missed the hexes the design system names.
   const sky = new Color(theme.displaySky);
   const ground = new Color(theme.displayGround);
+  const mixed = new Color();
+  const encoded = { r: 0, g: 0, b: 0 };
   const data = new Uint8Array(height * 4);
   for (let i = 0; i < height; i += 1) {
     // v=0 is the BOTTOM of the quad, so the ground stop belongs at i=0.
@@ -482,9 +490,10 @@ export function createBackdropTexture(theme: StageTheme): DataTexture {
     // Smoothstep rather than linear: the grade concentrates low, which reads as
     // light falling off toward a ground rather than as a two-colour wash.
     const k = v * v * (3 - 2 * v);
-    data[i * 4] = Math.round((ground.r + (sky.r - ground.r) * k) * 255);
-    data[i * 4 + 1] = Math.round((ground.g + (sky.g - ground.g) * k) * 255);
-    data[i * 4 + 2] = Math.round((ground.b + (sky.b - ground.b) * k) * 255);
+    mixed.copy(ground).lerp(sky, k).getRGB(encoded, SRGBColorSpace);
+    data[i * 4] = Math.round(encoded.r * 255);
+    data[i * 4 + 1] = Math.round(encoded.g * 255);
+    data[i * 4 + 2] = Math.round(encoded.b * 255);
     data[i * 4 + 3] = 255;
   }
   const texture = new DataTexture(data, 1, height, RGBAFormat);

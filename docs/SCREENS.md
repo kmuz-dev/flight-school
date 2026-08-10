@@ -29,7 +29,8 @@ The canonical catalog is PRD.md section 5; mockup names and counts are visual fi
 - Each card (Stitch treatment): plane name in Archivo Narrow caps, tier chip top-right (BEGINNER navy-filled, PILOT outlined, ACE red-filled), plane render area, STEPS count in mono, SPEED and DISTANCE gauge bars. Completed planes get the diagonal "WINGS EARNED" stamp across the render, as mocked.
 - Worth adopting from Claude Design's hangar (1a) at build time: the ALL / BEGINNER / PILOT / ACE filter chips and the wings counter in the nav; its denser card data (descriptions, dot-matrix ratings) stays out - Stitch's calmer card won.
 - Footer: mono academy fiction line ("© CADET FLIGHT MANIFEST - LICENSE #0815-FA" style).
-- **Card liveness:** default state shows a pre-rendered image of the finished plane. On hover (desktop) or selection (all devices), the card wakes a live 3D scene: the plane floats with a slow bob and gentle rotation. At most two live scenes at once; the least-recently-used scene sleeps back to its static render. Touch devices are selection-only.
+- **Card liveness:** default state shows a pre-rendered image of the finished plane. On hover (desktop) or selection (all devices), the card wakes a live 3D scene: the plane floats with a slow bob. At most two live scenes at once; the least-recently-used scene sleeps back to its static render. Touch devices are selection-only.
+- **Built deviation (2026-08-10, in DESIGN.md's Decisions Log):** a woken card is a *display stage* - no graph-paper floor, a graded backdrop and a soft contact shadow instead, the aircraft standing up and lifted clear of the ground. And "gentle rotation" is gone: a constant spin parks all six cards at the same non-hero angle in lockstep. The float is the motion.
 - Non-live cards keep the 2-4px paper hover-lift from DESIGN.md.
 
 ## Screen 2: Preflight (plane detail)
@@ -39,6 +40,7 @@ Stitch visual presentation carrying Claude Design's information set. Verified in
 - **Frame and visual (from Stitch `preflight_the_glider`):** split screen with a dominant left orbit viewer (DRAG TO ORBIT hint, "FIG 1.1 - PROTOTYPE" specimen tag), right rail with license chip, plane name, and the big red START FOLDING button with offset-shadow 3D card treatment; the mono-italic tip strip sits directly beneath it.
 - **Information set (from Claude Design 1c):** the fuller data - "PREFLIGHT: GET YOUR PAPER" spec table (Paper / Weight / Folds / Time), all four ratings (Speed, Distance, Airtime, Ease - Stitch showed only two), the THROW TIP callout card, and the social-proof mono line ("FOLDED 4,318 TIMES THIS MONTH" style). The "Watch flight" secondary action is deferred unless V1 builds a flight preview.
 - Primary action: Start folding (or Resume at Step N when localStorage has progress).
+- **Built deviation (2026-08-10, in DESIGN.md's Decisions Log):** the orbit viewer is a display stage, same as a woken hangar card - floorless, over a graded backdrop, the aircraft standing up and floating over a soft contact shadow. It opens on the catalogue's hero angle, which rides on the display flag rather than on a camera preset, because presets are authored into fold steps and no step gets to decide how a finished aircraft is photographed.
 
 ## Screen 3: Tutorial (the core screen)
 
