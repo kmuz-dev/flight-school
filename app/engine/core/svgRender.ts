@@ -31,12 +31,37 @@ const DEFAULTS = {
 } as const;
 
 /**
- * Project with a fixed isometric-ish view so the SVG reads like the 3D stage:
- * x to the right, y up, z toward the viewer with a slight tilt.
+ * Orthographic projection from the 3/4 view, matching the stage's default
+ * camera preset so the SVG and the 3D stage show the same aircraft.
+ *
+ * This used to be a near-overhead view with a slight z shear, which is the
+ * worst angle a paper plane has: nose-on, every aircraft in the catalog
+ * collapsed to the same thin vertical strip, and the hangar asked cadets to
+ * pick between six identical slivers. Turning the model off-axis and looking
+ * down at it is what makes a dart read as a dart.
+ *
+ * Table space is x right, y forward (nose to tail), z up. Yaw first, then
+ * pitch: at 90 degrees of pitch this degenerates to the old overhead view, at
+ * 0 degrees to a pure front elevation.
  */
+const YAW = (38 * Math.PI) / 180;
+const PITCH = (32 * Math.PI) / 180;
+
+/** Distance into the scene, before the pitch tilts it onto the screen. */
+function alongView(p: readonly [number, number, number]): number {
+  return p[0] * Math.sin(YAW) + p[1] * Math.cos(YAW);
+}
+
 function project(p: readonly [number, number, number]): [number, number] {
-  const tilt = 0.35;
-  return [p[0] + p[2] * tilt * 0.4, -(p[1] - p[2] * tilt)];
+  return [
+    p[0] * Math.cos(YAW) - p[1] * Math.sin(YAW),
+    alongView(p) * Math.sin(PITCH) - p[2] * Math.cos(PITCH),
+  ];
+}
+
+/** Larger is nearer the camera. Degenerates to z when looking straight down. */
+function closeness(p: readonly [number, number, number]): number {
+  return p[2] * Math.sin(PITCH) - alongView(p) * Math.cos(PITCH);
 }
 
 export function renderStateToSvg(state: FoldState, options: SvgOptions = {}): string {
@@ -48,9 +73,13 @@ export function renderStateToSvg(state: FoldState, options: SvgOptions = {}): st
     const pts = facet.polygon.map((p) =>
       project(pose ? transformPoint(pose, p) : [p[0], p[1], 0]),
     );
-    // Average depth decides paint order alongside the layer index.
+    // Mean closeness to the camera breaks ties the layer index cannot: bigger
+    // is nearer, so it sorts last and paints on top. This has to be measured
+    // along the view direction, not up the z axis - z alone only happens to be
+    // the view direction when the camera is directly overhead, which is the one
+    // angle this no longer uses.
     const depth = pose
-      ? facet.polygon.reduce((sum, p) => sum + transformPoint(pose, p)[2], 0) /
+      ? facet.polygon.reduce((sum, p) => sum + closeness(transformPoint(pose, p)), 0) /
         Math.max(1, facet.polygon.length)
       : 0;
     const det =
