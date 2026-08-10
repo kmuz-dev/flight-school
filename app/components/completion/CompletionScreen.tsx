@@ -59,7 +59,7 @@ export function CompletionScreen({
           <div
             className="relative flex min-h-[320px] items-center justify-center overflow-hidden rounded-card border border-ink-12"
             style={{
-              background: "linear-gradient(170deg, var(--color-raised), var(--color-paper))",
+              background: "linear-gradient(170deg, var(--color-stage-sky), var(--color-stage-ground))",
             }}
           >
             <svg

@@ -66,9 +66,10 @@ export type StageTheme = {
   /**
    * Display stage only: the two stops of the backdrop that replaces the
    * graph-paper floor, top and bottom. They are the page's own
-   * `--color-raised` -> `--color-paper`, which is exactly the CSS gradient the
-   * panels around the canvas already use, so a card does not flash when its
-   * live scene wakes over the static one.
+   * `--color-stage-sky` -> `--color-stage-ground`, which is exactly the CSS
+   * gradient the panels around the canvas already use, so a card does not flash
+   * when its live scene wakes over the static one. Change both or neither; the
+   * reasoning behind the values lives on the tokens in `app/globals.css`.
    */
   readonly displaySky: number;
   readonly displayGround: number;
@@ -98,8 +99,8 @@ export const STAGE_THEMES: Readonly<Record<ThemeName, StageTheme>> = {
     rimIntensity: 0,
     crease: 0xd64541,
     shadowOpacity: 0.16,
-    displaySky: 0xffffff,
-    displayGround: 0xf7f3e9,
+    displaySky: 0xf0e7d3,
+    displayGround: 0xd8c9a8,
     contactShadow: 0x1a2b4a,
   },
   night: {

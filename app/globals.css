@@ -48,6 +48,26 @@
   --color-sky-ink: #456f93; /* 5.32 on white, 4.80 on paper */
   --color-ink-muted: rgb(26 43 74 / 0.7); /* 5.41 on white, 5.15 on paper */
 
+  /*
+   * The ground a finished aircraft is presented against, top stop then bottom.
+   *
+   * A surface colour, never a text one, so it is exempt from the AA rule above.
+   * It used to be raised -> paper, i.e. #FFFFFF -> #F7F3E9, and that was the
+   * whole reason the fleet looked washed out: white paper renders around
+   * #F2F0EA, so the aircraft and the ground it floats over were within about
+   * three percent of the same value and no amount of relighting could recover
+   * the separation the backdrop had already taken away. Kraft is the same cream
+   * carried further toward manila, which is where the airmail fiction was
+   * pointing anyway.
+   *
+   * `STAGE_THEMES[*].displaySky` / `.displayGround` in
+   * `app/engine/render/sceneModel.ts` carry the same two values, because the
+   * live GL stage paints its own backdrop and a card must not flash when it
+   * wakes. Change both or neither.
+   */
+  --color-stage-sky: #f0e7d3;
+  --color-stage-ground: #d8c9a8;
+
   /* Typography (families wired to next/font variables in the root layout) */
   --font-display: var(--font-archivo-narrow);
   --font-body: var(--font-instrument-sans);
@@ -109,6 +129,11 @@
   --color-ink-60: rgb(247 243 233 / 0.6);
   --color-ink-38: rgb(247 243 233 / 0.38);
   --color-ink-12: rgb(247 243 233 / 0.12);
+
+  /* The dark scene never had the contrast problem: its ground was already
+     nowhere near the paper's value. Deep navy over deeper navy, unchanged. */
+  --color-stage-sky: #16223a;
+  --color-stage-ground: #0e1626;
 
   /*
    * In the dark scene the lifted accents are already legible as text - red

@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { BufferGeometry, LineSegments, Material, Matrix4, Mesh, SRGBColorSpace, Vector3 } from "three";
 import {
@@ -135,6 +137,72 @@ describe("createBackdropTexture", () => {
       expect(data[i * 4]!).toBeGreaterThanOrEqual(data[(i - 1) * 4]!);
     }
     texture.dispose();
+  });
+});
+
+/**
+ * The backdrop is declared twice - once in GL for the live stage, once in CSS
+ * for the still card underneath it - and it has to be the same picture, because
+ * a hangar card wakes its scene under the pointer and a mismatch reads as a
+ * flash. It also has to stay clear of the paper's own value, which is the
+ * defect this pair of tests exists to prevent coming back: the ground used to
+ * be #FFFFFF -> #F7F3E9, white paper renders around #F2F0EA, and the fleet
+ * looked washed out because the aircraft and the ground were the same colour.
+ */
+describe("the display ground", () => {
+  const CSS = readFileSync(path.resolve(import.meta.dirname, "../../app/globals.css"), "utf8");
+
+  /** A token's hex, as a number, from the block starting at `blockStart`. */
+  function token(blockStart: number, name: string): number {
+    const at = CSS.indexOf(`${name}:`, blockStart);
+    if (at < 0) throw new Error(`no ${name} after index ${blockStart}`);
+    const value = CSS.slice(at + name.length + 1, CSS.indexOf(";", at)).trim();
+    const hex = /^#([0-9a-f]{6})$/i.exec(value);
+    if (!hex) throw new Error(`${name} is not a plain hex: ${value}`);
+    return parseInt(hex[1]!, 16);
+  }
+
+  it.each([
+    ["paper", "@theme"],
+    ["night", ".night"],
+  ] as const)("matches the CSS the still card paints, in %s", (name, block) => {
+    const start = CSS.indexOf(block);
+    expect(start).toBeGreaterThanOrEqual(0);
+    const theme = stageTheme(name);
+    expect(token(start, "--color-stage-sky")).toBe(theme.displaySky);
+    expect(token(start, "--color-stage-ground")).toBe(theme.displayGround);
+  });
+
+  // Relative luminance, the same measure DESIGN.md's contrast rule uses.
+  const luminance = (hex: number): number =>
+    [16, 8, 0]
+      .map((shift) => ((hex >> shift) & 255) / 255)
+      .map((c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4))
+      .reduce((sum, c, i) => sum + c * [0.2126, 0.7152, 0.0722][i]!, 0);
+
+  /** What a lit white sheet actually renders as, sampled off the display stage. */
+  const PAPER_ON_SCREEN = luminance(0xf2f0ea);
+  const contrast = (a: number, b: number): number =>
+    (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+
+  it.each(["paper", "night"] as const)("stays darker than the paper at both stops, in %s", (name) => {
+    const theme = stageTheme(name);
+    // The sign is the load-bearing half, and it is what the old ground got
+    // wrong: its sky stop was pure white, BRIGHTER than the lit paper, while
+    // its ground stop was fractionally darker. An aircraft whose ground crosses
+    // its own value from one side of the frame to the other has no silhouette
+    // anywhere in between, however the lamps are set.
+    expect(luminance(theme.displaySky)).toBeLessThan(PAPER_ON_SCREEN);
+    expect(luminance(theme.displayGround)).toBeLessThan(luminance(theme.displaySky));
+  });
+
+  it.each(["paper", "night"] as const)("separates where the aircraft sits, in %s", (name) => {
+    const ground = luminance(stageTheme(name).displayGround);
+    // Not a text ratio. The plane floats low in the frame and its shadow lands
+    // on the ground stop, so that is the stop that has to carry the reading.
+    // Kraft scores 1.44 and Night Flight 15.9; the ground this replaced managed
+    // 1.03, which is another way of saying the plane was invisible.
+    expect(contrast(ground, PAPER_ON_SCREEN)).toBeGreaterThan(1.35);
   });
 });
 

@@ -130,7 +130,7 @@ export function PlaneCard({
             className="absolute inset-0"
             style={{
               backgroundImage:
-                "linear-gradient(170deg, var(--color-raised), var(--color-paper))",
+                "linear-gradient(170deg, var(--color-stage-sky), var(--color-stage-ground))",
             }}
           />
           <EngineSvg svg={view.svg} className="absolute inset-0 flex items-center justify-center" />

@@ -84,7 +84,7 @@ export function OrbitViewer({
     <section
       aria-label={label}
       className="relative isolate min-h-[380px] flex-1 overflow-hidden rounded-card border border-ink-12 lg:min-h-[520px]"
-      style={{ background: "linear-gradient(170deg, var(--color-raised), var(--color-paper))" }}
+      style={{ background: "linear-gradient(170deg, var(--color-stage-sky), var(--color-stage-ground))" }}
     >
       <div
         aria-hidden="true"
