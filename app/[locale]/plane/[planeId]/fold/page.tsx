@@ -1,8 +1,7 @@
 import { notFound } from "next/navigation";
 import { LOCALES, isLocale } from "@/i18n/config";
 import { PLANE_IDS, getPlane } from "@/content";
-import ui from "@/i18n/ui/en";
-import planesDict from "@/i18n/planes/en";
+import { getPlanes, getUi } from "@/i18n/dictionary";
 import { tutorialUiFromDictionary } from "@/components/tutorial/uiStrings";
 import { buildTutorialSteps } from "@/components/tutorial/viewModel";
 import { formatForPlane } from "@/engine/core/paper";
@@ -26,11 +25,10 @@ export default async function TutorialPage({
   const structure = getPlane(planeId);
   if (!isLocale(locale) || !structure) notFound();
 
-  // Only English exists so far; Phase 3 adds the other eleven dictionaries and
-  // the merge-over-English fallback.
+  const planesDict = getPlanes(locale);
   const strings = planesDict.planes[structure.id as PlaneId];
   if (!strings) notFound();
-  const tutorialUi = tutorialUiFromDictionary(ui);
+  const tutorialUi = tutorialUiFromDictionary(getUi(locale));
 
   /**
    * One variant per sheet a cadet might have. Paper prep is folds and a cut

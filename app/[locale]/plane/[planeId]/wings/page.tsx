@@ -1,8 +1,7 @@
 import { notFound } from "next/navigation";
 import { LOCALES, isLocale } from "@/i18n/config";
 import { PLANES, PLANE_IDS, getPlane } from "@/content";
-import ui from "@/i18n/ui/en";
-import planesDict from "@/i18n/planes/en";
+import { getPlanes, getUi } from "@/i18n/dictionary";
 import { hangarHref, preflightHref, tutorialHref } from "@/lib/paths";
 import { finishedPlaneSvg } from "@/components/hangar/viewModel";
 import { CompletionScreen } from "@/components/completion/CompletionScreen";
@@ -23,14 +22,13 @@ export default async function WingsPage({
   const structure = getPlane(planeId);
   if (!isLocale(locale) || !structure) notFound();
 
-  // Only English exists so far; Phase 3 adds the other eleven dictionaries and
-  // the merge-over-English fallback.
+  const planesDict = getPlanes(locale);
   const strings = planesDict.planes[structure.id as PlaneId];
   if (!strings) notFound();
 
   return (
     <CompletionScreen
-      ui={completionUiFromDictionary(ui)}
+      ui={completionUiFromDictionary(getUi(locale))}
       view={{
         id: structure.id,
         name: strings.name,

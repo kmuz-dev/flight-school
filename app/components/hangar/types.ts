@@ -33,6 +33,7 @@ export type HangarUiStrings = {
   readonly navDayFlight: string;
   readonly navNightFlight: string;
   readonly themeToggleLabel: string;
+  readonly localePickerLabel: string;
   /** "{count} wings". */
   readonly navWings: string;
   readonly title: string;
@@ -62,6 +63,7 @@ export const HANGAR_UI_KEYS = [
   "nav.dayFlight",
   "nav.nightFlight",
   "a11y.themeToggle",
+  "a11y.localePicker",
   "hangar.title",
   "hangar.subtitle",
   "hangar.eyebrow",
@@ -93,6 +95,7 @@ export function hangarUiFromDictionary(ui: UiDictionary): HangarUiStrings {
     navDayFlight: t("nav.dayFlight"),
     navNightFlight: t("nav.nightFlight"),
     themeToggleLabel: t("a11y.themeToggle"),
+    localePickerLabel: t("a11y.localePicker"),
     navWings: t("nav.wings"),
     title: t("hangar.title"),
     subtitle: t("hangar.subtitle"),

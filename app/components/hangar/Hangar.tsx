@@ -16,11 +16,13 @@ import { useCallback, useMemo, useState } from "react";
 import { useProgressSnapshot, wingsEarned } from "@/lib/progress";
 import { hangarHref } from "@/lib/paths";
 import type { PlaneId, Tier } from "@/content/types";
+import type { Locale } from "@/i18n/config";
 import { Chip } from "@/components/ui/Chip";
 import { FOCUS_RING } from "@/components/ui/focus";
 import { TIERS } from "@/components/ui/tier";
 import { format } from "@/components/ui/format";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { LocalePicker } from "@/components/ui/LocalePicker";
 import { PlaneCard, type CardEngineFactory } from "./PlaneCard";
 import type { HangarPlaneView, HangarUiStrings } from "./types";
 
@@ -32,7 +34,7 @@ type Filter = "all" | Tier;
 export type HangarProps = {
   ui: HangarUiStrings;
   planes: readonly HangarPlaneView[];
-  locale: string;
+  locale: Locale;
   createEngine?: CardEngineFactory;
 };
 
@@ -128,6 +130,7 @@ export function Hangar({ ui, planes, locale, createEngine }: HangarProps) {
               nightLabel={ui.navNightFlight}
               a11yLabel={ui.themeToggleLabel}
             />
+            <LocalePicker locale={locale} a11yLabel={ui.localePickerLabel} />
           </div>
         </div>
       </nav>

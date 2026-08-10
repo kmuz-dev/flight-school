@@ -1,8 +1,7 @@
 import { notFound } from "next/navigation";
 import { LOCALES, isLocale } from "@/i18n/config";
 import { PLANE_IDS, getPlane } from "@/content";
-import ui from "@/i18n/ui/en";
-import planesDict from "@/i18n/planes/en";
+import { getPlanes, getUi } from "@/i18n/dictionary";
 import { hangarHref, tutorialHref } from "@/lib/paths";
 import { finishedPlaneSvg } from "@/components/hangar/viewModel";
 import { PreflightScreen } from "@/components/preflight/PreflightScreen";
@@ -23,11 +22,9 @@ export default async function PreflightPage({
   const structure = getPlane(planeId);
   if (!isLocale(locale) || !structure) notFound();
 
-  // Only English exists so far; Phase 3 adds the other eleven dictionaries and
-  // the merge-over-English fallback.
   const view = buildPreflightView(
     structure,
-    planesDict,
+    getPlanes(locale),
     PLANE_IDS,
     finishedPlaneSvg(structure, { width: 760, height: 520 }),
   );
@@ -35,7 +32,7 @@ export default async function PreflightPage({
 
   return (
     <PreflightScreen
-      ui={preflightUiFromDictionary(ui)}
+      ui={preflightUiFromDictionary(getUi(locale))}
       view={view}
       hangarHref={hangarHref(locale)}
       tutorialHref={tutorialHref(locale, planeId)}
