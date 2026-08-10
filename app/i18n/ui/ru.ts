@@ -1,0 +1,140 @@
+/**
+ * Russian site chrome. Translated from ui/en.ts key for key; `{placeholder}`
+ * slots must survive translation or format() leaves a gap in the sentence.
+ *
+ * Counted nouns are phrased so one wording fits 1, 2 and 5 ("Крылья: 3"),
+ * because format() substitutes a number and knows nothing about Russian's
+ * three plural forms.
+ */
+import type { UiDictionary } from "../types";
+
+const ui: UiDictionary = {
+  "brand.name": "Лётная школа",
+
+  "nav.hangar": "Ангар",
+  "nav.logbook": "Мой журнал",
+  "nav.wings": "Крылья: {count}",
+  "nav.backToHangar": "Вернуться в ангар",
+  "nav.dayFlight": "Дневной полёт",
+  "nav.nightFlight": "Ночной полёт",
+
+  "hangar.title": "Ангар",
+  "hangar.subtitle":
+    "Выбери самолёт. Каждый сгиб показан в 3D, от гладкого листа до первого полёта.",
+  "hangar.eyebrow": "Лётная школа для бумаги - самолётов на площадке: {count}",
+  "hangar.steps": "Шаги",
+  "hangar.wingsEarned": "Крылья получены",
+  "hangar.filterAll": "Все",
+  "hangar.filterLabel": "Фильтр парка по лицензии",
+  "hangar.fleetOverview": "Обзор парка",
+  "hangar.preview": "Посмотреть {name} в 3D",
+  "hangar.empty": "Самолётов с такой лицензией пока нет.",
+  "hangar.footerLine": "Список курсантов - лицензия № 0815-FA",
+
+  "tier.easy": "Новичок",
+  "tier.medium": "Пилот",
+  "tier.advanced": "Ас",
+
+  "tutorial.license.easy": "Лицензия новичка",
+  "tutorial.license.medium": "Лицензия пилота",
+  "tutorial.license.advanced": "Лицензия аса",
+
+  "rating.speed": "Скорость",
+  "rating.distance": "Дальность",
+  "rating.airtime": "Время в воздухе",
+  "rating.ease": "Простота",
+  "rating.gauge": "{label}: {value} из 5",
+
+  "preflight.eyebrow": "Предполётная подготовка",
+  "preflight.getYourPaper": "Подготовка: возьми бумагу",
+  "preflight.paper": "Бумага",
+  "preflight.weight": "Плотность",
+  "preflight.folds": "Сгибы",
+  "preflight.time": "Время",
+  "preflight.creases": "Складки",
+  "preflight.creasesAllValley": "Только сгибы «долиной»",
+  "preflight.creasesMix": "«долиной» - {valley}, «горой» - {mountain}",
+  "preflight.paperValue.letter-a4": "A4 или Letter, один лист",
+  "preflight.paperValue.square": "Квадрат, вырезанный из A4 или Letter",
+  "preflight.weightValue": "80 г/м², обычная бумага для принтера",
+  "preflight.foldsValue": "сгибов: {count}",
+  "preflight.flightProfile": "Профиль полёта",
+  "preflight.specimen": "Рис. 1.1 - прототип",
+  "preflight.manifestLine": "Самолёт {index} из {total} в ангаре",
+  "preflight.viewerLabel": "Готовый самолёт, можно вращать",
+  "preflight.throwTip": "Совет по запуску",
+  "preflight.paperQuestion": "Какая у тебя бумага?",
+  "preflight.paperChoice.a4": "A4",
+  "preflight.paperChoice.letter": "US Letter",
+  "preflight.paperChoice.square": "Квадрат",
+  "preflight.paperChoice.index-4x6": "Карточка 4x6",
+  "preflight.paperNeedsPrep": "Сначала дополнительных шагов: {count}, чтобы обрезать её по форме",
+  "preflight.paperNoPrep": "С этой можно складывать сразу, резать не нужно",
+  "preflight.startFolding": "Начать складывать",
+  "preflight.resume": "Продолжить с шага {step}",
+  "preflight.orbitHint": "Потяни, чтобы повернуть",
+
+  "tutorial.backToHangar": "Ангар",
+  "tutorial.exit": "Выйти",
+  "tutorial.progressLabel": "{current} / {total}",
+  "tutorial.stageLabel": "Стол для складывания",
+  "tutorial.viewHint": "Потяни, чтобы повернуть",
+  "tutorial.cameraGroupLabel": "Ракурс камеры",
+  "tutorial.camera.front": "Спереди",
+  "tutorial.camera.threeQuarter": "3/4",
+  "tutorial.camera.top": "Сверху",
+  "tutorial.playingFold": "Идёт сгиб {step}",
+  "tutorial.pausedFold": "Пауза - сгиб {step}",
+  "tutorial.transportLabel": "Управление воспроизведением",
+  "tutorial.play": "Показать сгиб",
+  "tutorial.pause": "Остановить сгиб",
+  "tutorial.prevStep": "К предыдущему сгибу",
+  "tutorial.nextStep": "К следующему сгибу",
+  "tutorial.replay": "Повторить этот сгиб",
+  "tutorial.stepLabel": "Шаг {current} / {total}",
+  "tutorial.timeReadout": "{elapsed} / {total} - скорость {speed}x",
+  "tutorial.scrubLabel": "Перемотка внутри сгиба",
+  "tutorial.stripLabel": "Перейти к шагу",
+  "tutorial.goToStep": "Перейти к шагу {step}",
+  "tutorial.stepRegionLabel": "Текущий шаг",
+  "tutorial.why": "Зачем",
+  "tutorial.foldTerms": "Термины складывания",
+  "tutorial.selfCheck": "У меня бумага выглядит так",
+  "tutorial.back": "Назад",
+  "tutorial.nextFold": "Следующий сгиб",
+  "tutorial.finish": "Готово",
+  "tutorial.foldsToWings": "До крыльев осталось сгибов: {count}",
+  "tutorial.tipLabel": "Совет:",
+
+  "tutorial.paper.a4": "A4 - 210 x 297 мм",
+  "tutorial.paper.letter": "Letter - 8,5 x 11 дюймов",
+  "tutorial.paper.square": "Квадрат - 210 x 210 мм",
+  "tutorial.paper.index-4x6": "Карточка - 4 x 6 дюймов",
+
+  "completion.eyebrow": "Задание выполнено",
+  "completion.title": "Ты заслужил свои крылья.",
+  "completion.body":
+    "Отличная работа, курсант. Найди открытое место, направь самолёт немного вверх и брось ровно.",
+  "completion.certificateLabel": "Лётный сертификат",
+  "completion.certified": "Сертифицировано",
+  "completion.rewardIssued": "Награда вручена",
+  "completion.wingsBadge": "Крылья: {tier}",
+  "completion.logFlight": "Запиши свой полёт",
+  "completion.returnToHangar": "Вернуться в ангар",
+  "completion.foldAgain": "Сложить ещё раз",
+  "completion.statsLabel": "Лётная запись",
+  "completion.statFolds": "Сгибы",
+  "completion.statCertified": "Сертификат",
+  "completion.statWings": "Крылья",
+  "completion.nextInHangar": "Следующий в ангаре",
+  "completion.nextMeta": "сгибов: {folds}, {license}",
+  "completion.foldNextPlane": "Сложить следующий самолёт",
+  "completion.allComplete":
+    "Это был последний самолёт на площадке. Теперь весь ангар твой.",
+
+  "a11y.themeToggle": "Переключить дневной и ночной полёт",
+  "a11y.localePicker": "Выбрать язык",
+};
+
+export default ui;
+export { ui };

@@ -24,10 +24,33 @@ import type { GlossaryEntry, PlaneStrings, PlanesDictionary, UiDictionary } from
 import type { PlaneId } from "@/content/types";
 
 import enUi from "./ui/en";
+import esUi from "./ui/es";
+import frUi from "./ui/fr";
+import deUi from "./ui/de";
+import ptUi from "./ui/pt";
+import ruUi from "./ui/ru";
+import hiUi from "./ui/hi";
+import idUi from "./ui/id";
+import jaUi from "./ui/ja";
+import koUi from "./ui/ko";
+import zhUi from "./ui/zh";
+import arUi from "./ui/ar";
+
 import enPlanes from "./planes/en";
 
 const UI: Partial<Record<Locale, UiDictionary>> = {
   en: enUi,
+  es: esUi,
+  fr: frUi,
+  de: deUi,
+  pt: ptUi,
+  ru: ruUi,
+  hi: hiUi,
+  id: idUi,
+  ja: jaUi,
+  ko: koUi,
+  zh: zhUi,
+  ar: arUi,
 };
 
 const PLANES: Partial<Record<Locale, PlanesDictionary>> = {
