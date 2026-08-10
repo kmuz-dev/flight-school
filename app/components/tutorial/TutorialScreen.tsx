@@ -155,21 +155,31 @@ export function TutorialScreen({
   return (
     <main className="flex min-h-screen flex-col">
       <header className="flex items-center justify-between gap-md border-b border-[color:var(--color-ink-12)] px-lg py-md">
-        <div className="flex items-center gap-md">
-          <a href={hangarHref} className={`font-mono text-micro tracking-[0.08em] ${FOCUS_RING}`}>
+        {/*
+          Every child here shrinks (min-w-0 + truncate on the name) and the
+          linear bar drops below sm. A phone that cannot fit this row does not
+          wrap it - mobile Chrome zooms the whole page out to make it fit, and
+          every tap after that lands a dozen pixels off its target. Orientation
+          is not lost on a phone: the mono counter stays, the transport strip
+          shows a segment per fold, and the rail repeats STEP nn / nn.
+        */}
+        <div className="flex min-w-0 items-center gap-md">
+          <a href={hangarHref} className={`shrink-0 font-mono text-micro tracking-[0.08em] ${FOCUS_RING}`}>
             {ui.backToHangar}
           </a>
-          <h1 className="font-display text-h3 font-bold uppercase tracking-tight">{planeName}</h1>
-          <span className="border border-[color:var(--color-ink)] px-sm py-[2px] font-mono text-micro tracking-[0.08em]">
+          <h1 className="truncate font-display text-h3 font-bold uppercase tracking-tight">
+            {planeName}
+          </h1>
+          <span className="shrink-0 border border-[color:var(--color-ink)] px-sm py-[2px] font-mono text-micro tracking-[0.08em]">
             {ui.license[tier]}
           </span>
         </div>
-        <div className="flex items-center gap-md">
+        <div className="flex shrink-0 items-center gap-md">
           <p className="font-mono text-micro text-[color:var(--color-ink-60)]">
             {format(ui.progressLabel, { current: pad2(stepIndex + 1), total: pad2(total) })}
           </p>
           <div
-            className="h-[4px] w-[120px] bg-[color:var(--color-ink-12)]"
+            className="hidden h-[4px] w-[120px] bg-[color:var(--color-ink-12)] sm:block"
             role="progressbar"
             aria-valuenow={stepIndex + 1}
             aria-valuemin={1}

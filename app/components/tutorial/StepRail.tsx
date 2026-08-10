@@ -101,6 +101,9 @@ export function StepRail({
         the paper and should not have to scroll to advance. Sticking the action
         row to the bottom of the viewport keeps it in reach at every step; the
         opaque background is what stops the prose showing through behind it.
+        This is a reach fix only. It was briefly credited with fixing the
+        mobile Finish failures too; that was the top bar overflowing the
+        viewport, and the credit was wrong.
       */}
       <div className="sticky bottom-0 z-10 -mx-lg flex gap-sm bg-[color:var(--color-paper)] px-lg pt-sm pb-md lg:static lg:mx-0 lg:px-0 lg:pt-0 lg:pb-0">
         <button

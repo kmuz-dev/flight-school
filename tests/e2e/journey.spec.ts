@@ -127,22 +127,14 @@ test("choosing a smaller sheet adds the steps that cut it square", async ({ page
 /**
  * Every plane in the catalog reaches its certificate, not just the Dart.
  *
- * KNOWN DEFECT, tracked here rather than hidden: on the Pixel 7 viewport the
- * Bulldog's Finish click is intercepted by the why-box, reproducibly and only
- * for that plane, only via preflight -> fold. What has been checked: the button
- * renders visible, enabled and stable, and elementFromPoint at its centre
- * returns the button itself when the route is loaded directly, so it is a
- * layout interaction on that path rather than a missing or dead control.
- * Sticking the action row to the bottom of the viewport fixed the other four
- * planes, which shared the same symptom. Mobile coverage is not lost: the Dart
- * walks every fold on mobile, and the hangar-to-wings journey runs there too.
+ * The mobile half of this used to fail on Finish with "the section intercepts
+ * pointer events", which read like a stacking bug and was not one: the top bar
+ * overflowed the phone viewport, mobile Chrome zoomed the page out to fit, and
+ * every synthesised tap landed offset from its target. tests/e2e/layout.spec.ts
+ * now guards the width invariant directly.
  */
 for (const plane of ["bulldog", "harrier", "sea-glider", "hammer", "square-cruiser"]) {
-  test(`${plane} folds from the hangar through to its wings`, async ({ page }, testInfo) => {
-    test.fixme(
-      plane === "bulldog" && testInfo.project.name === "mobile",
-      "why-box intercepts the Finish click on a phone viewport",
-    );
+  test(`${plane} folds from the hangar through to its wings`, async ({ page }) => {
     await page.goto(`/en/plane/${plane}/`);
     await page.getByRole("link", { name: /start folding|resume/i }).click();
     await page.waitForURL(new RegExp(`/plane/${plane}/fold/?$`), { waitUntil: "commit" });
