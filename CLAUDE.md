@@ -25,8 +25,42 @@ In QA mode, flag any code that doesn't match DESIGN.md.
 
 ## Commands
 
-No build tooling exists yet.
-When the app is scaffolded, record build, lint, test, and single-test commands here.
+```
+npm run dev              # Next dev server on :3000
+npm run build            # static export into out/
+npm run typecheck        # tsc --noEmit
+npm run lint             # eslint
+npm run test             # vitest, both projects (unit = node, components = jsdom)
+npm run test:e2e         # Playwright against the export; run `npm run build` first
+npm run validate:content # content rules only
+npm run i18n:audit       # key parity across locales (fails until Phase 3 lands them)
+```
+
+Single test: `npx vitest run tests/engine/fold.test.ts -t "name of the case"`.
+Single E2E: `npx playwright test --project=chromium tests/e2e/journey.spec.ts -g "bulldog"`.
+
+E2E specs are `*.spec.ts` under `tests/`; vitest owns `*.test.ts`. Playwright's
+default match would otherwise pull the vitest files in and fail on Vitest's
+internal state.
+
+## Authoring a fold sequence
+
+`/dev/fold-editor` is the instrument: it shows the 3D stage, the SVG the
+geometry tests compare against, and a true-scale table-space plan with the
+crease drawn on it, plus a facet/layer inspector and the validation panel.
+
+Two rules that are easy to get wrong and expensive to find later:
+
+- **Never round a crease endpoint to a tidy number.** Derive it from the
+  condition the fold satisfies. A crease authored 0.008 mm off its true
+  bisector leaves a sub-millimetre wedge on every layer it crosses, each one
+  claiming a layer of its own. See `SLOPE_EDGE_Y` in `app/content/planes/dart.ts`.
+- **A wing pair needs the `layers` selector.** After a plane is folded in half
+  both wings sit on the same side of the wing crease, so one step tilts them
+  together instead of opening a V. Use two steps: same crease, same side,
+  opposite `direction`, `layers: "top"` then `"bottom"`. The fold angle is per
+  wing measured from closed, so the two finish about twice it apart - 82 gives
+  a shallow dihedral, 25 gives a plane with its wings shut.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
