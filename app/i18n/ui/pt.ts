@@ -92,7 +92,6 @@ const ui: UiDictionary = {
   "tutorial.stripLabel": "Saltar para um passo",
   "tutorial.goToStep": "Ir para o passo {step}",
   "tutorial.stepRegionLabel": "Passo atual",
-  "tutorial.why": "Porquê",
   "tutorial.foldTerms": "Termos de dobragem",
   "tutorial.selfCheck": "O meu papel está assim",
   "tutorial.back": "Voltar",

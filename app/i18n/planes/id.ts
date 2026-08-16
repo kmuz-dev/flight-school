@@ -55,7 +55,7 @@ const planes: PlanesDictionary = {
         "dart.step-12":
           "Balik dan lakukan hal yang sama pada sayap satunya. Kedua sayap sekarang mestinya menjulur mendatar, membentuk huruf V yang landai. Itulah Si Panah.",
       },
-      why: {
+      explanations: {
         "dart.step-01":
           "Garis tengah adalah tulang punggung pesawat. Setiap lipatan berikutnya diukur dari situ.",
         "dart.step-02":
@@ -134,7 +134,7 @@ const planes: PlanesDictionary = {
         "bulldog.step-13":
           "Balik dan lakukan hal yang sama pada sayap satunya. Kedua sayap mestinya menjulur mendatar, terangkat sedikit saja. Itulah Bulldog.",
       },
-      why: {
+      explanations: {
         "bulldog.step-01":
           "Garis tengah adalah tulang punggung pesawat. Setiap lipatan berikutnya diukur dari situ.",
         "bulldog.step-02":
@@ -216,7 +216,7 @@ const planes: PlanesDictionary = {
         "harrier.step-13":
           "Balik dan angkat sayap satunya dengan cara yang sama. Dilihat dari depan mestinya ada dua sayap lebar dan rata dengan dua ujung yang terangkat.",
       },
-      why: {
+      explanations: {
         "harrier.step-01":
           "Garis tengah adalah tulang punggung pesawat. Setiap lipatan berikutnya diukur dari situ.",
         "harrier.step-02":
@@ -294,7 +294,7 @@ const planes: PlanesDictionary = {
         "sea-glider.step-12":
           "Balik dan angkat sayap satunya dengan cara yang sama. Dua sayap panjang dan rata, terangkat sedikit saja, dan selesai.",
       },
-      why: {
+      explanations: {
         "sea-glider.step-01":
           "Garis tengah adalah tulang punggung pesawat. Setiap lipatan berikutnya diukur dari situ.",
         "sea-glider.step-02":
@@ -379,7 +379,7 @@ const planes: PlanesDictionary = {
         "hammer.step-14":
           "Balik dan angkat sayap satunya dengan cara yang sama. Buat sayap ini lebih datar daripada pada peluncur. Itulah Si Palu.",
       },
-      why: {
+      explanations: {
         "hammer.step-01":
           "Garis tengah adalah tulang punggung pesawat. Setiap lipatan berikutnya diukur dari situ.",
         "hammer.step-02":
@@ -490,7 +490,7 @@ const planes: PlanesDictionary = {
         "square-cruiser.step-13":
           "Balik dan angkat sayap satunya dengan cara yang sama. Sayap pendek, lebar, mendatar, dan Penjelajah pun selesai.",
       },
-      why: {
+      explanations: {
         "square-cruiser.prep.letter-01":
           "Melipat satu tepi ke tepi di sebelahnya adalah cara menemukan persegi tanpa penggaris. Lipatannya yang mengukur untukmu.",
         "square-cruiser.prep.letter-03":

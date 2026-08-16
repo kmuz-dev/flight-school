@@ -87,7 +87,7 @@ The tutorial is a learning workspace with one dominant procedural stage and no d
 - The header contains one Hangar escape, the plane name, and one authoritative progress display.
 - The stage keeps orbit, zoom, Front, Three-quarter, and Top camera controls.
 - The transport contains only Play or Pause, scrub, Replay, and elapsed or total time.
-- The instruction rail contains the title, kid-clear instruction, optional Why disclosure, first-use fold-term disclosures, and optional useful tip.
+- The instruction rail contains the title, kid-clear action, optional explanatory paragraph, first-use fold-term disclosures, and optional useful tip.
 - Remove duplicate Exit, licence placard, transport Back or Next controls, segmented full-step strip, consequence-free self-check, and repeated progress labels.
 - Keep Back and Next or Finish as the only primary step-navigation controls.
 - Add a labeled native step selector for compact direct access.

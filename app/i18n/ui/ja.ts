@@ -95,7 +95,6 @@ const ui: UiDictionary = {
   "tutorial.stripLabel": "ステップにジャンプ",
   "tutorial.goToStep": "ステップ {step} へ",
   "tutorial.stepRegionLabel": "いまのステップ",
-  "tutorial.why": "なぜ",
   "tutorial.foldTerms": "折り紙のことば",
   "tutorial.selfCheck": "わたしの紙もこうなった",
   "tutorial.back": "もどる",

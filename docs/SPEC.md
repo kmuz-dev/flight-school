@@ -73,7 +73,6 @@ type FoldStep = {
     | { type: "rotate"; degrees: number }     // reorient on the table
     | { type: "cut"; line: [Vec2, Vec2] };    // Paper Prep only
   camera?: CameraHint;              // optional per-step framing
-  hasWhy: boolean;                  // whether a why-line exists in dictionaries
 };
 
 type PlaneStructure = {
@@ -99,7 +98,7 @@ type AircraftPresentation = {
 };
 ```
 
-All instruction text, why-lines, flight descriptions, and throw tips live in `i18n/planes/<locale>.ts` keyed by step and plane ids.
+All instruction text, optional explanations, flight descriptions, and throw tips live in `i18n/planes/<locale>.ts` keyed by step and plane ids.
 The `AircraftPresentation` manifest is keyed by `PlaneId` and must contain all six planes.
 It does not alter `PlaneStructure`, fold state, or geometry-derived rest orientation.
 
@@ -149,7 +148,7 @@ All reads guarded for SSR/export (no `window` at module scope).
 ## 7. Testing
 
 - **Fold math unit tests** (highest value): reflection of points across crease lines, facet splitting, layer ordering, and determinism of state at step n. Pure TS, no WebGL needed.
-- **Content validation test**: every plane's sequence type-checks, every step id has instruction text in English, every `hasWhy` step has a why-line, every prep table covers all three source papers or declares pass-through.
+- **Content validation test**: every plane's sequence type-checks, every step id has instruction text in English, every explanation names a real step, and every prep table covers all three source papers or declares pass-through.
 - **i18n audit** in CI (anatomy repo has this exact script shape).
 - **Build test**: static export succeeds and key routes exist for every locale (anatomy's rendered-html test pattern).
 - **Playwright against the exported build**, which supersedes this section's original "no browser-automation suite required for V1". The owner asked for end-to-end checks to gate every phase, so the suite is in from Phase 0: every plane folded start to finish, resume and badges, the paper-prep cut flow, RTL and CJK locales, a no-WebGL run, keyboard completion, axe-core over four screens, layout stability, and a console-error sweep. The same specs run against the deployed URL by setting `E2E_BASE_URL`.

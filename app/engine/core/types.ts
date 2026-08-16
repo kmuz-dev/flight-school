@@ -124,8 +124,6 @@ export type FoldStep = {
   readonly id: string;
   readonly action: FoldAction;
   readonly camera?: CameraHint;
-  /** Whether a why-line exists in dictionaries (content validation checks it). */
-  readonly hasWhy: boolean;
   /** Fold-term glossary keys taught at this step (first-use inline glosses). */
   readonly teaches?: readonly string[];
   /** Seconds the fold animation should take (default derived from fold size). */

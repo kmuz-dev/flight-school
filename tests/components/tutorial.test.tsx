@@ -179,14 +179,16 @@ describe("guided playback", () => {
     expect(screen.getByRole("status")).toHaveTextContent(tutorialUi.staticFallback);
   });
 
-  it("has one Hangar escape, native disclosures, and a polite step announcement", async () => {
+  it("shows the explanation inline, keeps Fold terms native, and announces steps", async () => {
     renderScreen();
     await waitFor(() =>
       expect(screen.getByRole("combobox", { name: tutorialUi.stepSelectLabel })).toBeVisible(),
     );
     expect(screen.getAllByRole("link", { name: tutorialUi.backToHangar })).toHaveLength(1);
-    expect(screen.getByText(tutorialUi.why).closest("details")).not.toBeNull();
+    expect(screen.getByText(strings.explanations["dart.step-01"]!)).toBeVisible();
     expect(screen.getByText(tutorialUi.foldTerms).closest("details")).not.toBeNull();
+    expect(document.querySelectorAll("details")).toHaveLength(1);
+    expect(screen.queryByText("Why", { exact: true })).not.toBeInTheDocument();
     expect(screen.getByText(/Step 1 of 12:/)).toHaveAttribute("aria-live", "polite");
   });
 

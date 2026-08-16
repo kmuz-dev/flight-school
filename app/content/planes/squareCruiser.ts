@@ -65,7 +65,6 @@ const steps: readonly FoldStep[] = [
       direction: "valley",
     },
     camera: { preset: "threeQuarter" },
-    hasWhy: true,
     teaches: ["valley-fold", "crease", "center-line"],
     duration: 1.2,
   },
@@ -74,7 +73,6 @@ const steps: readonly FoldStep[] = [
     id: "square-cruiser.step-02",
     action: { type: "unfold", toStep: "square-cruiser.step-01" },
     camera: { preset: "top" },
-    hasWhy: true,
     duration: 0.9,
   },
   // Flat square with a centre crease. On a square the corner fold is a half-turn
@@ -90,7 +88,6 @@ const steps: readonly FoldStep[] = [
       direction: "valley",
     },
     camera: { preset: "top" },
-    hasWhy: true,
     duration: 1.1,
   },
   // Mirror of step 3 on the left corner. The result is a triangle sitting on the
@@ -105,7 +102,6 @@ const steps: readonly FoldStep[] = [
       direction: "valley",
     },
     camera: { preset: "top" },
-    hasWhy: false,
     duration: 1.1,
   },
   // Fold the point back down about y = 52.5, so the tip lands at (0, 0) on top
@@ -122,7 +118,6 @@ const steps: readonly FoldStep[] = [
       direction: "valley",
     },
     camera: { preset: "top" },
-    hasWhy: true,
     teaches: ["blunt-nose"],
     duration: 1.2,
   },
@@ -140,7 +135,6 @@ const steps: readonly FoldStep[] = [
       direction: "valley",
     },
     camera: { preset: "threeQuarter" },
-    hasWhy: true,
     duration: 1.2,
   },
   // Mirror of step 6.
@@ -154,7 +148,6 @@ const steps: readonly FoldStep[] = [
       direction: "valley",
     },
     camera: { preset: "threeQuarter" },
-    hasWhy: false,
     duration: 1.2,
   },
   // Apex (0, 52.5), shoulders (+-105, -52.5). Mountain-fold it down the centre so
@@ -169,7 +162,6 @@ const steps: readonly FoldStep[] = [
       direction: "mountain",
     },
     camera: { preset: "front" },
-    hasWhy: true,
     teaches: ["mountain-fold"],
     duration: 1.3,
   },
@@ -186,7 +178,6 @@ const steps: readonly FoldStep[] = [
       direction: "valley",
     },
     camera: { preset: "threeQuarter" },
-    hasWhy: true,
     duration: 1.3,
   },
   // Turn it over to check the other side matches.
@@ -194,7 +185,6 @@ const steps: readonly FoldStep[] = [
     id: "square-cruiser.step-10",
     action: { type: "flip" },
     camera: { preset: "threeQuarter" },
-    hasWhy: false,
     duration: 1,
   },
   // Turn it end for end to sight along the body.
@@ -202,7 +192,6 @@ const steps: readonly FoldStep[] = [
     id: "square-cruiser.step-11",
     action: { type: "rotate", degrees: 180 },
     camera: { preset: "front" },
-    hasWhy: false,
     duration: 0.8,
   },
   // Open the near wing. Both wings sit on the same side of this crease, stacked,
@@ -219,7 +208,6 @@ const steps: readonly FoldStep[] = [
       layers: "top",
     },
     camera: { preset: "front" },
-    hasWhy: true,
     duration: 1.4,
   },
   // The far wing, same crease, opposite way.
@@ -234,7 +222,6 @@ const steps: readonly FoldStep[] = [
       layers: "bottom",
     },
     camera: { preset: "front" },
-    hasWhy: true,
     duration: 1.4,
   },
 ];
@@ -265,7 +252,6 @@ function squareFromSheet(id: string, width: number, height: number): readonly Fo
         direction: "valley",
       },
       camera: { preset: "top" },
-      hasWhy: true,
       teaches: ["square-from-rectangle"],
       duration: 1.2,
     },
@@ -273,7 +259,6 @@ function squareFromSheet(id: string, width: number, height: number): readonly Fo
       id: `${id}-02`,
       action: { type: "unfold", toStep: `${id}-01` },
       camera: { preset: "top" },
-      hasWhy: false,
       duration: 0.8,
     },
     {
@@ -282,7 +267,6 @@ function squareFromSheet(id: string, width: number, height: number): readonly Fo
       // discard the strip below.
       action: { line: { a: [-hw, cutY], b: [hw, cutY] }, type: "cut", keep: "left" },
       camera: { preset: "top" },
-      hasWhy: true,
       duration: 1.1,
     },
   ];

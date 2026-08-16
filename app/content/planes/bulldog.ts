@@ -77,7 +77,6 @@ const steps: readonly FoldStep[] = [
       direction: "valley",
     },
     camera: { preset: "threeQuarter" },
-    hasWhy: true,
     teaches: ["valley-fold", "crease", "center-line"],
     duration: 1.2,
   },
@@ -86,7 +85,6 @@ const steps: readonly FoldStep[] = [
     id: "bulldog.step-02",
     action: { type: "unfold", toStep: "bulldog.step-01" },
     camera: { preset: "top" },
-    hasWhy: true,
     duration: 0.9,
   },
   // Flat sheet with a centre crease. The top-right corner (105, 148.5) folds to
@@ -102,7 +100,6 @@ const steps: readonly FoldStep[] = [
       direction: "valley",
     },
     camera: { preset: "top" },
-    hasWhy: true,
     duration: 1.1,
   },
   // Mirror of step 3 on the left corner.
@@ -116,7 +113,6 @@ const steps: readonly FoldStep[] = [
       direction: "valley",
     },
     camera: { preset: "top" },
-    hasWhy: false,
     duration: 1.1,
   },
   // Silhouette is a house shape: apex at (0, 148.5), sloping edges down to
@@ -134,7 +130,6 @@ const steps: readonly FoldStep[] = [
       direction: "valley",
     },
     camera: { preset: "threeQuarter" },
-    hasWhy: true,
     duration: 1.2,
   },
   // Mirror of step 5.
@@ -148,7 +143,6 @@ const steps: readonly FoldStep[] = [
       direction: "valley",
     },
     camera: { preset: "threeQuarter" },
-    hasWhy: false,
     duration: 1.2,
   },
   // A long narrow spike, apex (0, 148.5), edges falling at -67.5 deg to
@@ -166,7 +160,6 @@ const steps: readonly FoldStep[] = [
       direction: "valley",
     },
     camera: { preset: "top" },
-    hasWhy: true,
     teaches: ["blunt-nose"],
     duration: 1.2,
   },
@@ -183,7 +176,6 @@ const steps: readonly FoldStep[] = [
       direction: "mountain",
     },
     camera: { preset: "front" },
-    hasWhy: true,
     teaches: ["mountain-fold"],
     duration: 1.3,
   },
@@ -200,7 +192,6 @@ const steps: readonly FoldStep[] = [
       direction: "valley",
     },
     camera: { preset: "threeQuarter" },
-    hasWhy: true,
     duration: 1.3,
   },
   // Turn it over to check the other side matches.
@@ -208,7 +199,6 @@ const steps: readonly FoldStep[] = [
     id: "bulldog.step-10",
     action: { type: "flip" },
     camera: { preset: "threeQuarter" },
-    hasWhy: false,
     duration: 1,
   },
   // Turn it nose-up to sight along the body.
@@ -216,7 +206,6 @@ const steps: readonly FoldStep[] = [
     id: "bulldog.step-11",
     action: { type: "rotate", degrees: 180 },
     camera: { preset: "front" },
-    hasWhy: false,
     duration: 0.8,
   },
   // Open the near wing. Both wings sit on the same side of this crease, stacked,
@@ -234,7 +223,6 @@ const steps: readonly FoldStep[] = [
       layers: "top",
     },
     camera: { preset: "front" },
-    hasWhy: true,
     duration: 1.4,
   },
   // The far wing, same crease, opposite way: the plane now has a V of wings.
@@ -249,7 +237,6 @@ const steps: readonly FoldStep[] = [
       layers: "bottom",
     },
     camera: { preset: "front" },
-    hasWhy: true,
     duration: 1.4,
   },
 ];

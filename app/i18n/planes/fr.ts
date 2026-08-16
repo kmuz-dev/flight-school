@@ -55,7 +55,7 @@ const planes: PlanesDictionary = {
         "dart.step-12":
           "Retourne-le et fais pareil avec l'autre aile. Les deux ailes doivent maintenant sortir bien à plat, en formant un V très ouvert. Voilà une Flèche.",
       },
-      why: {
+      explanations: {
         "dart.step-01":
           "La ligne du milieu est la colonne vertébrale de l'avion. Tous les plis suivants se mesurent par rapport à elle.",
         "dart.step-02":
@@ -133,7 +133,7 @@ const planes: PlanesDictionary = {
         "bulldog.step-13":
           "Retourne-le et fais pareil avec l'autre aile. Les deux ailes doivent sortir bien à plat, juste un tout petit peu relevées. Voilà un Bulldog.",
       },
-      why: {
+      explanations: {
         "bulldog.step-01":
           "La ligne du milieu est la colonne vertébrale de l'avion. Tous les plis suivants se mesurent par rapport à elle.",
         "bulldog.step-02":
@@ -214,7 +214,7 @@ const planes: PlanesDictionary = {
         "harrier.step-13":
           "Retourne-le et relève l'autre aile pareil. Vu de face, tu dois avoir deux grandes ailes plates avec deux bouts relevés.",
       },
-      why: {
+      explanations: {
         "harrier.step-01":
           "La ligne du milieu est la colonne vertébrale de l'avion. Tous les plis suivants se mesurent par rapport à elle.",
         "harrier.step-02":
@@ -291,7 +291,7 @@ const planes: PlanesDictionary = {
         "sea-glider.step-12":
           "Retourne-le et relève l'autre aile pareil. Deux longues ailes plates, juste un tout petit peu relevées, et c'est fini.",
       },
-      why: {
+      explanations: {
         "sea-glider.step-01":
           "La ligne du milieu est la colonne vertébrale de l'avion. Tous les plis suivants se mesurent par rapport à elle.",
         "sea-glider.step-02":
@@ -376,7 +376,7 @@ const planes: PlanesDictionary = {
         "hammer.step-14":
           "Retourne-le et relève l'autre aile pareil. Garde ces ailes plus plates que sur les planeurs. Voilà un Marteau.",
       },
-      why: {
+      explanations: {
         "hammer.step-01":
           "La ligne du milieu est la colonne vertébrale de l'avion. Tous les plis suivants se mesurent par rapport à elle.",
         "hammer.step-02":
@@ -487,7 +487,7 @@ const planes: PlanesDictionary = {
         "square-cruiser.step-13":
           "Retourne-le et relève l'autre aile pareil. Des ailes courtes, larges et bien à plat, et le Croiseur est fini.",
       },
-      why: {
+      explanations: {
         "square-cruiser.prep.letter-01":
           "Rabattre un bord sur le bord d'à côté, c'est comme ça qu'on trouve un carré sans règle. Le pli fait la mesure à ta place.",
         "square-cruiser.prep.letter-03":

@@ -92,7 +92,6 @@ const ui: UiDictionary = {
   "tutorial.stripLabel": "Lompat ke satu langkah",
   "tutorial.goToStep": "Ke langkah {step}",
   "tutorial.stepRegionLabel": "Langkah saat ini",
-  "tutorial.why": "Kenapa",
   "tutorial.foldTerms": "Istilah lipatan",
   "tutorial.selfCheck": "Kertasku kelihatan seperti ini",
   "tutorial.back": "Kembali",

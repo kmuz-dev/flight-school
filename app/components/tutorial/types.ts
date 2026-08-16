@@ -31,8 +31,8 @@ export type TutorialStepView = {
   readonly title: string;
   /** Kid-clear instruction paragraph (renders at 18px minimum). */
   readonly instruction: string;
-  /** Optional one-line WHY callout. */
-  readonly why?: string;
+  /** Optional rationale rendered as the instruction's second paragraph. */
+  readonly explanation?: string;
   /** Tip bar copy: per-step when the step declares one, per-plane otherwise. */
   readonly tip?: string;
   /** Red mono label drawn over the stage, e.g. "VALLEY FOLD". */
@@ -70,7 +70,6 @@ export type TutorialUiStrings = {
   readonly stepSelectLabel: string;
   readonly staticFallback: string;
   readonly stepRegionLabel: string;
-  readonly why: string;
   readonly foldTerms: string;
   readonly back: string;
   readonly nextFold: string;

@@ -53,7 +53,6 @@ const steps: readonly FoldStep[] = [
       direction: "valley",
     },
     camera: { preset: "threeQuarter" },
-    hasWhy: true,
     teaches: ["valley-fold", "crease", "center-line"],
     duration: 1.2,
   },
@@ -62,7 +61,6 @@ const steps: readonly FoldStep[] = [
     id: "sea-glider.step-02",
     action: { type: "unfold", toStep: "sea-glider.step-01" },
     camera: { preset: "top" },
-    hasWhy: true,
     duration: 0.9,
   },
   // Flat sheet with a centre crease. Hem 1: a horizontal crease 30 mm below the
@@ -79,7 +77,6 @@ const steps: readonly FoldStep[] = [
       direction: "valley",
     },
     camera: { preset: "top" },
-    hasWhy: true,
     teaches: ["hem"],
     duration: 1.1,
   },
@@ -95,7 +92,6 @@ const steps: readonly FoldStep[] = [
       direction: "valley",
     },
     camera: { preset: "threeQuarter" },
-    hasWhy: true,
     duration: 1.1,
   },
   // A rectangle 210 wide and 237 tall with a heavy front edge at y = 88.5. The
@@ -112,7 +108,6 @@ const steps: readonly FoldStep[] = [
       direction: "valley",
     },
     camera: { preset: "top" },
-    hasWhy: true,
     duration: 1.2,
   },
   // Mirror of step 5 on the left corner.
@@ -126,7 +121,6 @@ const steps: readonly FoldStep[] = [
       direction: "valley",
     },
     camera: { preset: "top" },
-    hasWhy: false,
     duration: 1.2,
   },
   // House shape: apex (0, 88.5), shoulders (+-105, -16.5). Mountain-fold it down
@@ -142,7 +136,6 @@ const steps: readonly FoldStep[] = [
       direction: "mountain",
     },
     camera: { preset: "front" },
-    hasWhy: true,
     teaches: ["mountain-fold"],
     duration: 1.3,
   },
@@ -160,7 +153,6 @@ const steps: readonly FoldStep[] = [
       direction: "valley",
     },
     camera: { preset: "threeQuarter" },
-    hasWhy: true,
     duration: 1.3,
   },
   // Turn it over to check the other side matches.
@@ -168,7 +160,6 @@ const steps: readonly FoldStep[] = [
     id: "sea-glider.step-09",
     action: { type: "flip" },
     camera: { preset: "threeQuarter" },
-    hasWhy: false,
     duration: 1,
   },
   // Turn it end for end to sight along the body.
@@ -176,7 +167,6 @@ const steps: readonly FoldStep[] = [
     id: "sea-glider.step-10",
     action: { type: "rotate", degrees: 180 },
     camera: { preset: "front" },
-    hasWhy: false,
     duration: 0.8,
   },
   // Open the near wing. Both wings sit on the same side of this crease, stacked,
@@ -193,7 +183,6 @@ const steps: readonly FoldStep[] = [
       layers: "top",
     },
     camera: { preset: "front" },
-    hasWhy: true,
     duration: 1.4,
   },
   // The far wing, same crease, opposite way.
@@ -208,7 +197,6 @@ const steps: readonly FoldStep[] = [
       layers: "bottom",
     },
     camera: { preset: "front" },
-    hasWhy: true,
     duration: 1.4,
   },
 ];

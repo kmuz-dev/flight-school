@@ -77,7 +77,7 @@ The production font set is deliberately small and is self-hosted in the static b
 - **Tutorial:** Give at least 60% of the desktop working width to the procedural stage.
   The header owns the single authoritative step progress display.
   The playback strip beneath the stage contains only Play or Pause, scrub, Replay, and time.
-  The instruction rail contains the instruction, optional Why content, fold-term help, and Back or Next navigation.
+  The instruction rail contains the action, an optional explanatory paragraph, fold-term help, and Back or Next navigation.
   On mobile, the stage and playback strip stack above the instruction rail.
 - **Grid:** Use a 12-column desktop grid, a 4-column mobile grid, and a 1200px maximum content width.
   The procedural stage may bleed wider where space permits.

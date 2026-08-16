@@ -92,7 +92,6 @@ const ui: UiDictionary = {
   "tutorial.stripLabel": "किसी चरण पर जाएँ",
   "tutorial.goToStep": "चरण {step} पर जाएँ",
   "tutorial.stepRegionLabel": "मौजूदा चरण",
-  "tutorial.why": "क्यों",
   "tutorial.foldTerms": "मोड़ने के शब्द",
   "tutorial.selfCheck": "मेरा कागज़ ऐसा दिखता है",
   "tutorial.back": "पीछे",

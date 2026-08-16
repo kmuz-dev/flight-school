@@ -51,7 +51,7 @@ export function buildTutorialSteps(
         ? glossary[`${step.action.direction}-fold`]?.term
         : undefined;
 
-    const why = step.hasWhy ? strings.why[step.id] : undefined;
+    const explanation = strings.explanations[step.id];
     const tip = strings.tips[step.id];
 
     const view: TutorialStepView = {
@@ -59,7 +59,7 @@ export function buildTutorialSteps(
       index,
       title: strings.titles?.[step.id] ?? "",
       instruction: strings.steps[step.id] ?? "",
-      ...(why === undefined ? {} : { why }),
+      ...(explanation === undefined ? {} : { explanation }),
       ...(tip === undefined ? {} : { tip }),
       ...(annotationLabel === undefined ? {} : { annotationLabel }),
       glossary: glossaryItems,

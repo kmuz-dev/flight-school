@@ -98,7 +98,6 @@ const ui: UiDictionary = {
   "tutorial.stripLabel": "الانتقال إلى خطوة",
   "tutorial.goToStep": "انتقل إلى الخطوة {step}",
   "tutorial.stepRegionLabel": "الخطوة الحالية",
-  "tutorial.why": "لماذا",
   "tutorial.foldTerms": "مصطلحات الطي",
   "tutorial.selfCheck": "ورقتي تبدو هكذا",
   "tutorial.back": "رجوع",

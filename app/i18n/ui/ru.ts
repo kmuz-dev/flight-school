@@ -96,7 +96,6 @@ const ui: UiDictionary = {
   "tutorial.stripLabel": "Перейти к шагу",
   "tutorial.goToStep": "Перейти к шагу {step}",
   "tutorial.stepRegionLabel": "Текущий шаг",
-  "tutorial.why": "Зачем",
   "tutorial.foldTerms": "Термины складывания",
   "tutorial.selfCheck": "У меня бумага выглядит так",
   "tutorial.back": "Назад",

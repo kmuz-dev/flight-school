@@ -93,7 +93,6 @@ const ui: UiDictionary = {
   "tutorial.stripLabel": "단계로 건너뛰기",
   "tutorial.goToStep": "{step}단계로 가기",
   "tutorial.stepRegionLabel": "현재 단계",
-  "tutorial.why": "왜",
   "tutorial.foldTerms": "종이접기 용어",
   "tutorial.selfCheck": "내 종이도 이렇게 됐어요",
   "tutorial.back": "뒤로",

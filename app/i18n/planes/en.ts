@@ -56,7 +56,7 @@ const planes: PlanesDictionary = {
         "dart.step-12":
           "Turn it over and do the same to the other wing. Both wings should now stick out level, making a shallow V. That is a Dart.",
       },
-      why: {
+      explanations: {
         "dart.step-01":
           "The middle line is the plane's backbone. Every later fold measures itself against it.",
         "dart.step-02":
@@ -133,7 +133,7 @@ const planes: PlanesDictionary = {
         "bulldog.step-13":
           "Turn it over and do the same to the other wing. Both wings should stick out level, tipped up just a little. That is a Bulldog.",
       },
-      why: {
+      explanations: {
         "bulldog.step-01":
           "The middle line is the plane's backbone. Every later fold measures itself against it.",
         "bulldog.step-02":
@@ -212,7 +212,7 @@ const planes: PlanesDictionary = {
         "harrier.step-13":
           "Turn it over and lift the other wing the same way. Seen from the front you should have two wide flat wings with two upturned tips.",
       },
-      why: {
+      explanations: {
         "harrier.step-01":
           "The middle line is the plane's backbone. Every later fold measures itself against it.",
         "harrier.step-02":
@@ -288,7 +288,7 @@ const planes: PlanesDictionary = {
         "sea-glider.step-12":
           "Turn it over and lift the other wing the same way. Two long flat wings, tipped up just a little, and you are done.",
       },
-      why: {
+      explanations: {
         "sea-glider.step-01":
           "The middle line is the plane's backbone. Every later fold measures itself against it.",
         "sea-glider.step-02":
@@ -370,7 +370,7 @@ const planes: PlanesDictionary = {
         "hammer.step-14":
           "Turn it over and lift the other wing the same way. Keep these wings flatter than on the gliders. That is a Hammer.",
       },
-      why: {
+      explanations: {
         "hammer.step-01":
           "The middle line is the plane's backbone. Every later fold measures itself against it.",
         "hammer.step-02":
@@ -478,7 +478,7 @@ const planes: PlanesDictionary = {
         "square-cruiser.step-13":
           "Turn it over and lift the other wing the same way. Short, wide, level wings, and the Cruiser is finished.",
       },
-      why: {
+      explanations: {
         "square-cruiser.prep.letter-01":
           "Folding one edge onto the next is how you find a square without a ruler. The fold does the measuring for you.",
         "square-cruiser.prep.letter-03":

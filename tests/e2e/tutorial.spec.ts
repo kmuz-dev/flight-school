@@ -13,11 +13,11 @@ test.describe("the Dart tutorial", () => {
     await expect(page.getByText(/step 01 \/ 12/i).first()).toBeVisible();
   });
 
-  test("shows the first step's instruction and its why", async ({ page }) => {
+  test("shows the first step's instruction and explanation together", async ({ page }) => {
     await expect(page.getByRole("heading", { level: 2 })).toContainText("Fold it in half");
     await expect(page.getByText(/fold the right edge over/i)).toBeVisible();
-    await page.getByText("Why", { exact: true }).click();
     await expect(page.getByText(/backbone/i)).toBeVisible();
+    await expect(page.getByText("Why", { exact: true })).toHaveCount(0);
   });
 
   test("teaches fold terms on first use", async ({ page }) => {

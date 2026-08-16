@@ -15,7 +15,7 @@ This sets the complexity ceiling (no design ships if a 10-year-old cannot comple
 |------|---------|
 | Plane (Design) | A named paper airplane model in the catalog (e.g. the Dart). Has a finished-plane visual, a fold sequence, and flight characteristics. |
 | Fold Sequence | The ordered list of Steps that takes a sheet of paper to the finished Plane. |
-| Step | One atomic folding action a user performs. Has an instruction, a visual, and (later iterations) a "why" explanation. |
+| Step | One atomic folding action a user performs. Has an instruction, a visual, and an optional explanatory paragraph. |
 | Paper Prep | The pre-folding stage: what paper size/type is needed and how to cut common paper (e.g. Letter, A4, 4x6) down to it. |
 | Hangar | The catalog and the home page: one aircraft at a time, floating in a photographed hangar interior, chosen from a strip of six markers. |
 | Bay | The photographic surface the Hangar aircraft occupies. A room, not a theme - the only dark surface in the product. |
@@ -40,7 +40,7 @@ This sets the complexity ceiling (no design ships if a 10-year-old cannot comple
   Beauty-image failure outside inspection also falls back to the canonical SVG.
 - **Paper Prep:** The fold engine renders Paper Prep as Step 0 of each sequence.
   Each plane declares its required paper and the user chooses Letter, A4, or 4x6 paper.
-- **Why layer:** Each step may have one short Why explanation and each plane has an Estimated flight profile on Preflight.
+- **Explanation layer:** Each step may have one short rationale beneath its folding action and each plane has an Estimated flight profile on Preflight.
   Deep aerodynamics remains a later iteration.
 - **User state:** Browser localStorage holds resume position and earned wings per plane.
   No accounts or backend state exist.

@@ -41,7 +41,8 @@ export function StepRail({
     >
       {/*
         The only scrolling region in the tutorial. Everything that varies with
-        the step - a longer instruction, a Why, a first-use fold term, a tip -
+        the step - a longer instruction, an explanation, a first-use fold term,
+        a tip -
         varies in here, where varying moves nothing else.
       */}
       <div className="flex min-h-0 flex-1 flex-col gap-lg overflow-y-auto px-lg pt-lg pb-md lg:px-xl lg:pt-xl">
@@ -65,16 +66,10 @@ export function StepRail({
           {step.title}
         </h2>
         <p className="text-instruction leading-relaxed text-ink-87">{step.instruction}</p>
+        {step.explanation ? (
+          <p className="text-small leading-relaxed text-ink-87">{step.explanation}</p>
+        ) : null}
       </div>
-
-      {step.why ? (
-        <details className="group scroll-mb-32 border-s-4 border-sky bg-raised p-md">
-          <summary className={`flex min-h-11 cursor-pointer items-center font-mono text-micro text-sky-ink ${FOCUS_RING}`}>
-            {ui.why}
-          </summary>
-          <p className="mt-sm text-small leading-relaxed text-ink-87">{step.why}</p>
-        </details>
-      ) : null}
 
       {step.glossary.length > 0 ? (
         <details className="group scroll-mb-32 border border-ink-12 bg-raised p-md">

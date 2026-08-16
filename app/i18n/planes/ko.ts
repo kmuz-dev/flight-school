@@ -54,7 +54,7 @@ const planes: PlanesDictionary = {
         "dart.step-12":
           "뒤집어서 다른 날개도 똑같이 하세요. 이제 두 날개가 수평으로 뻗어 완만한 V자를 이루면 됩니다. 그게 다트예요.",
       },
-      why: {
+      explanations: {
         "dart.step-01": "가운데 선은 비행기의 등뼈예요. 이후의 모든 접기가 이 선을 기준으로 측정됩니다.",
         "dart.step-02":
           "필요한 건 접힘이 아니라 자국뿐이었어요. 접었다 다시 펴는 건 스스로에게 기준선을 남기는 방법입니다.",
@@ -129,7 +129,7 @@ const planes: PlanesDictionary = {
         "bulldog.step-13":
           "뒤집어서 다른 날개도 똑같이 하세요. 두 날개가 수평으로 뻗고 아주 살짝만 올라가면 됩니다. 그게 불도그예요.",
       },
-      why: {
+      explanations: {
         "bulldog.step-01": "가운데 선은 비행기의 등뼈예요. 이후의 모든 접기가 이 선을 기준으로 측정됩니다.",
         "bulldog.step-02":
           "필요한 건 접힘이 아니라 자국뿐이었어요. 접었다 다시 펴는 건 스스로에게 기준선을 남기는 방법입니다.",
@@ -206,7 +206,7 @@ const planes: PlanesDictionary = {
         "harrier.step-13":
           "뒤집어서 반대쪽 날개도 똑같이 올리세요. 앞에서 보면 넓고 평평한 날개 두 개와 위로 올라간 끝 두 개가 보여야 합니다.",
       },
-      why: {
+      explanations: {
         "harrier.step-01": "가운데 선은 비행기의 등뼈예요. 이후의 모든 접기가 이 선을 기준으로 측정됩니다.",
         "harrier.step-02":
           "필요한 건 접힘이 아니라 자국뿐이었어요. 접었다 다시 펴는 건 스스로에게 기준선을 남기는 방법입니다.",
@@ -280,7 +280,7 @@ const planes: PlanesDictionary = {
         "sea-glider.step-12":
           "뒤집어서 반대쪽 날개도 똑같이 올리세요. 길고 평평한 날개 둘이 아주 살짝만 올라가면 끝입니다.",
       },
-      why: {
+      explanations: {
         "sea-glider.step-01": "가운데 선은 비행기의 등뼈예요. 이후의 모든 접기가 이 선을 기준으로 측정됩니다.",
         "sea-glider.step-02":
           "필요한 건 접힘이 아니라 자국뿐이었어요. 접었다 다시 펴는 건 스스로에게 기준선을 남기는 방법입니다.",
@@ -361,7 +361,7 @@ const planes: PlanesDictionary = {
         "hammer.step-14":
           "뒤집어서 반대쪽 날개도 똑같이 올리세요. 이 날개는 글라이더보다 더 평평하게 두세요. 그게 해머입니다.",
       },
-      why: {
+      explanations: {
         "hammer.step-01": "가운데 선은 비행기의 등뼈예요. 이후의 모든 접기가 이 선을 기준으로 측정됩니다.",
         "hammer.step-02":
           "필요한 건 접힘이 아니라 자국뿐이었어요. 접었다 다시 펴는 건 스스로에게 기준선을 남기는 방법입니다.",
@@ -467,7 +467,7 @@ const planes: PlanesDictionary = {
         "square-cruiser.step-13":
           "뒤집어서 반대쪽 날개도 똑같이 올리세요. 짧고 넓고 수평인 날개, 그러면 크루저 완성입니다.",
       },
-      why: {
+      explanations: {
         "square-cruiser.prep.letter-01":
           "가장자리를 옆 가장자리에 포개어 접는 것이 자 없이 정사각형을 찾는 방법입니다. 접힘이 대신 재 줘요.",
         "square-cruiser.prep.letter-03":

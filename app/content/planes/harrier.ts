@@ -73,7 +73,6 @@ const steps: readonly FoldStep[] = [
       direction: "valley",
     },
     camera: { preset: "threeQuarter" },
-    hasWhy: true,
     teaches: ["valley-fold", "crease", "center-line"],
     duration: 1.2,
   },
@@ -82,7 +81,6 @@ const steps: readonly FoldStep[] = [
     id: "harrier.step-02",
     action: { type: "unfold", toStep: "harrier.step-01" },
     camera: { preset: "top" },
-    hasWhy: true,
     duration: 0.9,
   },
   // Flat sheet with a centre crease. The top-right corner (105, 148.5) folds to
@@ -98,7 +96,6 @@ const steps: readonly FoldStep[] = [
       direction: "valley",
     },
     camera: { preset: "top" },
-    hasWhy: true,
     duration: 1.1,
   },
   // Mirror of step 3 on the left corner.
@@ -112,7 +109,6 @@ const steps: readonly FoldStep[] = [
       direction: "valley",
     },
     camera: { preset: "top" },
-    hasWhy: false,
     duration: 1.1,
   },
   // House shape: apex (0, 148.5), shoulders (+-105, 43.5). Unlike the Dart, the
@@ -131,7 +127,6 @@ const steps: readonly FoldStep[] = [
       direction: "valley",
     },
     camera: { preset: "top" },
-    hasWhy: true,
     teaches: ["blunt-nose"],
     duration: 1.2,
   },
@@ -148,7 +143,6 @@ const steps: readonly FoldStep[] = [
       direction: "mountain",
     },
     camera: { preset: "front" },
-    hasWhy: true,
     teaches: ["mountain-fold"],
     duration: 1.3,
   },
@@ -166,7 +160,6 @@ const steps: readonly FoldStep[] = [
       direction: "valley",
     },
     camera: { preset: "threeQuarter" },
-    hasWhy: true,
     duration: 1.3,
   },
   // Turn it over to check the other side matches.
@@ -174,7 +167,6 @@ const steps: readonly FoldStep[] = [
     id: "harrier.step-08",
     action: { type: "flip" },
     camera: { preset: "threeQuarter" },
-    hasWhy: false,
     duration: 1,
   },
   // Turn it end for end so the tail is the near end while the flaps are made.
@@ -182,7 +174,6 @@ const steps: readonly FoldStep[] = [
     id: "harrier.step-09",
     action: { type: "rotate", degrees: 180 },
     camera: { preset: "front" },
-    hasWhy: false,
     duration: 0.8,
   },
   // Tip fins, bent BEFORE the wings open so that opening the wings carries them
@@ -201,7 +192,6 @@ const steps: readonly FoldStep[] = [
       layers: "top",
     },
     camera: { preset: "threeQuarter" },
-    hasWhy: true,
     teaches: ["partial-fold", "tip-fin"],
     duration: 1.2,
   },
@@ -216,7 +206,6 @@ const steps: readonly FoldStep[] = [
       layers: "bottom",
     },
     camera: { preset: "threeQuarter" },
-    hasWhy: false,
     duration: 1.2,
   },
   // Open the near wing. Both wings sit on the same side of this crease, stacked,
@@ -234,7 +223,6 @@ const steps: readonly FoldStep[] = [
       layers: "top",
     },
     camera: { preset: "front" },
-    hasWhy: true,
     duration: 1.4,
   },
   // The far wing, same crease, opposite way.
@@ -249,7 +237,6 @@ const steps: readonly FoldStep[] = [
       layers: "bottom",
     },
     camera: { preset: "front" },
-    hasWhy: true,
     duration: 1.4,
   },
 ];

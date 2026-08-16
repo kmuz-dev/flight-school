@@ -31,11 +31,14 @@ describe.each(Object.entries(PLANES))("%s: structure and prose agree", (id, plan
     }
   });
 
-  it("has a why-line exactly where hasWhy is set", () => {
-    for (const step of plane.steps) {
-      const why = strings.why[step.id];
-      if (step.hasWhy) expect(why, `${step.id} declares hasWhy but has no why-line`).toBeTruthy();
-      else expect(why, `${step.id} has a why-line but hasWhy is false`).toBeUndefined();
+  it("keeps every optional explanation attached to a real fold step", () => {
+    const ids = new Set([
+      ...plane.steps,
+      ...Object.values(plane.paper.prep).flat(),
+    ].map((step) => step.id));
+    for (const [stepId, explanation] of Object.entries(strings.explanations)) {
+      expect(ids.has(stepId), `explanation refers to unknown step ${stepId}`).toBe(true);
+      expect(explanation, `empty explanation for ${stepId}`).toBeTruthy();
     }
   });
 
@@ -77,16 +80,13 @@ describe.each(Object.entries(PLANES))("%s: structure and prose agree", (id, plan
     }
   });
 
-  it("gives every prep step prose, and a why exactly where hasWhy is set", () => {
+  it("gives every prep step its required prose", () => {
     // Prep steps are Steps like any other (PRD 6.2.4): same UI, same placard.
     for (const [format, prepSteps] of Object.entries(plane.paper.prep)) {
       for (const step of prepSteps) {
         expect(step.id.startsWith(`${id}.`), `${step.id} is not namespaced to ${id}`).toBe(true);
         expect(strings.steps[step.id], `missing ${format} prep instruction for ${step.id}`).toBeTruthy();
         expect(strings.titles[step.id], `missing ${format} prep title for ${step.id}`).toBeTruthy();
-        const why = strings.why[step.id];
-        if (step.hasWhy) expect(why, `${step.id} declares hasWhy but has no why-line`).toBeTruthy();
-        else expect(why, `${step.id} has a why-line but hasWhy is false`).toBeUndefined();
       }
     }
   });
@@ -120,7 +120,7 @@ describe("writing rules", () => {
             p.throwTip,
             ...Object.values(p.titles),
             ...Object.values(p.steps),
-            ...Object.values(p.why),
+            ...Object.values(p.explanations),
             ...Object.values(p.tips),
           ]
         : [],

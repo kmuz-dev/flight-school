@@ -28,7 +28,7 @@ A static tutorial website with:
 1. A **catalog** of 6 planes in a difficulty ladder.
 2. A **step-by-step tutorial** per plane, where every step is rendered by a shared procedural fold engine with interactive WebGL and a static SVG fallback.
 3. **Paper Prep** as the start of every tutorial: the user says what paper they have, the site shows how to convert it.
-4. A **light why-layer**: one-line explanations of what key folds accomplish, plus a flight profile per plane.
+4. A **light explanation layer**: one-line rationales beneath key folds, plus a flight profile per plane.
 5. **Resume and completion** memory in the browser (localStorage).
 6. **Multi-locale** launch using content-as-code dictionaries.
 
@@ -89,7 +89,7 @@ Every plane carries an estimated flight profile shown on its Preflight screen:
 
 ### 6.3 Fold steps
 
-1. Each Step shows: the procedural fold, the instruction text, one authoritative step counter (e.g. Step 4 of 12), and the optional one-line why.
+1. Each Step shows: the procedural fold, the folding action, an optional explanatory paragraph, and one authoritative step counter (e.g. Step 4 of 12).
 2. The user can: replay the fold animation, scrub it with a timeline control, orbit and zoom the paper freely, and step forward or back.
 3. First-use folding terms carry an inline explanation.
 4. Fold 1 and directly selected or revisited steps open paused so the learner can orient; advancing deliberately to a later fold auto-plays it once.

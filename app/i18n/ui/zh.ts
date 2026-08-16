@@ -91,7 +91,6 @@ const ui: UiDictionary = {
   "tutorial.stripLabel": "跳到某一步",
   "tutorial.goToStep": "跳到第 {step} 步",
   "tutorial.stepRegionLabel": "当前步骤",
-  "tutorial.why": "为什么",
   "tutorial.foldTerms": "折纸术语",
   "tutorial.selfCheck": "我的纸就是这样",
   "tutorial.back": "返回",
