@@ -6,25 +6,22 @@ import type { UiDictionary } from "../types";
 
 const ui: UiDictionary = {
   "brand.name": "飞行学校",
-
-  "nav.hangar": "机库",
   "nav.wings": "飞行徽章：{count}",
   "nav.backToHangar": "返回机库",
   "nav.backToHangarShort": "机库",
   "nav.dayFlight": "日间飞行",
   "nav.nightFlight": "夜间飞行",
-
-  "hangar.title": "机库",
   "hangar.subtitle": "挑一架飞机，准备好纸张，学习从纸片到首次飞行的每一次折叠。",
   "hangar.eyebrow": "属于纸飞机的飞行学校 - 停机坪上有 {count} 架",
-  "hangar.steps": "步骤",
+  "hangar.folds": "{count} 次折叠",
+  "hangar.bayHint": "拖动查看 · 方向键切换机型",
+  "hangar.chooseAircraft": "选择一架飞机",
+  "hangar.previousAircraft": "上一架",
+  "hangar.nextAircraft": "下一架",
+  "hangar.dotEarned": "{name}，已获得机翼",
+  "hangar.announce": "{name}，{tier}，{count} 次折叠",
   "hangar.wingsEarned": "已获徽章",
-  "hangar.viewPlane": "查看飞机",
-  "hangar.filterAll": "全部",
-  "hangar.filterLabel": "按难度筛选飞机",
-  "hangar.fleetOverview": "机队总览",
   "hangar.preview": "用 3D 查看 {name}",
-  "hangar.empty": "没有符合此筛选条件的飞机。",
 
   "tier.easy": "新手",
   "tier.medium": "飞行员",

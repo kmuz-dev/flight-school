@@ -65,6 +65,15 @@ const MAXIMUM_CHROMA_PIXELS_PER_MEGAPIXEL = 2;
  * ratio. The accepted set runs 1.26 to 1.48.
  */
 const MINIMUM_AVERAGE_OBJECT_CONTRAST = 1.2;
+/**
+ * The photographed Hangar plate, and how far the aircraft must separate from it.
+ *
+ * A far easier case than the cream stage - white paper on a dark room - so the
+ * floor is correspondingly high. It is here to catch an aircraft that arrives
+ * dark or muddy, which would vanish into the bay entirely.
+ */
+const HANGAR_PLATE = path.join(process.cwd(), "app/assets/hangar/hangar-interior.jpg");
+const MINIMUM_BAY_CONTRAST = 5;
 
 type Decoded = {
   readonly data: Buffer;
@@ -327,6 +336,44 @@ describe("aircraft presentation manifest", () => {
     );
     expect(contrast, `${id} on the display gradient`).toBeGreaterThanOrEqual(
       MINIMUM_AVERAGE_OBJECT_CONTRAST,
+    );
+  });
+
+  /*
+   * And on the Hangar's own ground, which is a photograph rather than a colour.
+   *
+   * Measured against the real plate rather than against two sampled hexes, so
+   * there is nothing here to drift out of step with `.hangar-photo`. It is
+   * measured UNGRADED, which is the conservative direction: the shipped plate is
+   * darkened (`brightness(0.72)`), so a white aircraft separates from it by more
+   * than this, never less - and the floor cannot be quietly satisfied by the CSS
+   * grade doing the work the artwork should be doing.
+   */
+  it.each(PLANE_IDS)("keeps the %s aircraft legible in the photographed bay", async (id) => {
+    const bay = await sharp(HANGAR_PLATE)
+      .resize(ARTWORK_SIZE.width, ARTWORK_SIZE.height, { fit: "cover" })
+      .removeAlpha()
+      .raw()
+      .toBuffer();
+    const artwork = await decodedRgba(artworkFile(id));
+
+    let total = 0;
+    let samples = 0;
+    for (let pixel = 0; pixel < artwork.width * artwork.height; pixel += 1) {
+      const alpha = artwork.data[pixel * 4 + 3]! / 255;
+      if (alpha < 0.5) continue;
+      const behind = luminance(bay[pixel * 3]!, bay[pixel * 3 + 1]!, bay[pixel * 3 + 2]!);
+      const front = luminance(
+        ...([0, 1, 2].map(
+          (channel) => artwork.data[pixel * 4 + channel]! * alpha + bay[pixel * 3 + channel]! * (1 - alpha),
+        ) as unknown as [number, number, number]),
+      );
+      total += (Math.max(front, behind) + 0.05) / (Math.min(front, behind) + 0.05);
+      samples += 1;
+    }
+
+    expect(total / samples, `${id} against the hangar plate`).toBeGreaterThanOrEqual(
+      MINIMUM_BAY_CONTRAST,
     );
   });
 });

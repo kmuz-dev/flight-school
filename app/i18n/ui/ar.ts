@@ -13,25 +13,22 @@ import type { UiDictionary } from "../types";
 
 const ui: UiDictionary = {
   "brand.name": "مدرسة الطيران",
-
-  "nav.hangar": "الحظيرة",
   "nav.wings": "الأجنحة: {count}",
   "nav.backToHangar": "العودة إلى الحظيرة",
   "nav.backToHangarShort": "الحظيرة",
   "nav.dayFlight": "طيران نهاري",
   "nav.nightFlight": "طيران ليلي",
-
-  "hangar.title": "الحظيرة",
   "hangar.subtitle": "اختر طائرة، وجهّز الورق، وتعلّم كل طيّة حتى أول تحليق.",
   "hangar.eyebrow": "مدرسة طيران للورق - {count} طائرات في الساحة",
-  "hangar.steps": "الخطوات",
+  "hangar.folds": "{count} طيّة",
+  "hangar.bayHint": "اسحب للمعاينة · مفاتيح الأسهم تغيّر الطائرة",
+  "hangar.chooseAircraft": "اختر طائرة",
+  "hangar.previousAircraft": "الطائرة السابقة",
+  "hangar.nextAircraft": "الطائرة التالية",
+  "hangar.dotEarned": "{name}، الأجنحة مكتسبة",
+  "hangar.announce": "{name}، {tier}، {count} طيّة",
   "hangar.wingsEarned": "الأجنحة المكتسبة",
-  "hangar.viewPlane": "عرض الطائرة",
-  "hangar.filterAll": "الكل",
-  "hangar.filterLabel": "تصفية الطائرات حسب الصعوبة",
-  "hangar.fleetOverview": "نظرة عامة على الأسطول",
   "hangar.preview": "شاهد {name} بأبعاد ثلاثية",
-  "hangar.empty": "لا توجد طائرات تطابق هذا المرشّح.",
 
   "tier.easy": "مبتدئ",
   "tier.medium": "طيّار",

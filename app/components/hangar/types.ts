@@ -3,122 +3,132 @@
  *
  * Same rule as the tutorial module: components hold no prose. `HangarUiStrings`
  * carries chrome copy lifted out of the flat `UiDictionary`; `HangarPlaneView`
- * carries one plane's already-resolved name, numbers and engine render, so the
- * card never reaches into the content registry or a dictionary itself.
+ * carries one aircraft's already-resolved name, numbers and engine render, so
+ * the bay never reaches into the content registry or a dictionary itself.
  */
-import type { PlaneStructure, Rating, Tier } from "@/content/types";
+import type { AircraftPresentation } from "@/content/presentation";
+import type { PlaneStructure, Tier } from "@/content/types";
 import type { UiDictionary } from "@/i18n/types";
-
-export type RatingKey = "speed" | "distance" | "airtime" | "ease";
-
-export const RATING_KEYS: readonly RatingKey[] = ["speed", "distance", "airtime", "ease"];
 
 export type HangarPlaneView = {
   readonly id: string;
   readonly name: string;
   readonly tier: Tier;
   readonly stepCount: number;
-  readonly ratings: Readonly<Record<RatingKey, Rating>>;
-  /** Finished-plane SVG from the fold engine, generated at build time. */
+  /** Finished-aircraft SVG from the fold engine, generated at build time. */
   readonly svg: string;
+  /** Beauty artwork and the canonical display angle, resolved on the server. */
+  readonly presentation: AircraftPresentation;
+  /** Preflight, which is where the bay's primary action goes. */
   readonly href: string;
-  /** Kept so a woken card can mount a live engine without a second lookup. */
+  /** Kept so the bay can mount a live engine without a second lookup. */
   readonly structure: PlaneStructure;
 };
 
 export type HangarUiStrings = {
+  readonly skipToContent: string;
   readonly brand: string;
-  readonly navHangar: string;
-  readonly navLogbook: string;
-  readonly navDayFlight: string;
-  readonly navNightFlight: string;
-  readonly themeToggleLabel: string;
   readonly localePickerLabel: string;
-  /** "{count} wings". */
+  /** "Wings: {count}". */
   readonly navWings: string;
-  readonly title: string;
-  readonly subtitle: string;
-  /** "... {count} aircraft on the floor". */
+  /** "A flight academy for paper - {count} aircraft on the floor". */
   readonly eyebrow: string;
-  readonly fleetOverview: string;
-  readonly steps: string;
+  readonly subtitle: string;
+  /** "{count} folds". */
+  readonly folds: string;
   readonly wingsEarned: string;
-  readonly filterAll: string;
-  readonly filterLabel: string;
+  readonly startFolding: string;
+  /** "Resume at step {step}". */
+  readonly resume: string;
   readonly tier: Readonly<Record<Tier, string>>;
-  /** "Preview {name} in 3D". */
-  readonly preview: string;
-  readonly empty: string;
-  readonly footerLine: string;
-  readonly rating: Readonly<Record<RatingKey, string>>;
-  /** "{label}: {value} out of 5". */
-  readonly ratingGauge: string;
+  readonly bayHint: string;
+  readonly chooseAircraft: string;
+  readonly previousAircraft: string;
+  readonly nextAircraft: string;
+  /** "{name}, wings earned" - the dot's own name. */
+  readonly dotEarned: string;
+  /** "{name}, {tier}, {count} folds" - what the live region announces. */
+  readonly announce: string;
+  /** "Inspect {name} in 3D". */
+  readonly inspect3d: string;
+  readonly showArtwork: string;
+  readonly loading3d: string;
+  readonly staticFallback: string;
 };
 
 export const HANGAR_UI_KEYS = [
   "brand.name",
-  "nav.hangar",
-  "nav.logbook",
   "nav.wings",
-  "nav.dayFlight",
-  "nav.nightFlight",
-  "a11y.themeToggle",
   "a11y.localePicker",
-  "hangar.title",
+  "a11y.skipToContent",
   "hangar.subtitle",
   "hangar.eyebrow",
-  "hangar.fleetOverview",
-  "hangar.steps",
+  "hangar.folds",
   "hangar.wingsEarned",
-  "hangar.filterAll",
-  "hangar.filterLabel",
+  "hangar.bayHint",
+  "hangar.chooseAircraft",
+  "hangar.previousAircraft",
+  "hangar.nextAircraft",
+  "hangar.dotEarned",
+  "hangar.announce",
   "hangar.preview",
-  "hangar.empty",
-  "hangar.footerLine",
+  "preflight.showArtwork",
+  "preflight.loading3d",
+  "preflight.staticFallback",
+  "preflight.startFolding",
+  "preflight.resume",
   "tier.easy",
   "tier.medium",
   "tier.advanced",
-  "rating.speed",
-  "rating.distance",
-  "rating.airtime",
-  "rating.ease",
-  "rating.gauge",
 ] as const;
 
 /** A missing key renders as the key itself: loud in QA, never silent English. */
 export function hangarUiFromDictionary(ui: UiDictionary): HangarUiStrings {
   const t = (key: string): string => ui[key] ?? key;
   return {
+    skipToContent: t("a11y.skipToContent"),
     brand: t("brand.name"),
-    navHangar: t("nav.hangar"),
-    navLogbook: t("nav.logbook"),
-    navDayFlight: t("nav.dayFlight"),
-    navNightFlight: t("nav.nightFlight"),
-    themeToggleLabel: t("a11y.themeToggle"),
     localePickerLabel: t("a11y.localePicker"),
     navWings: t("nav.wings"),
-    title: t("hangar.title"),
-    subtitle: t("hangar.subtitle"),
     eyebrow: t("hangar.eyebrow"),
-    fleetOverview: t("hangar.fleetOverview"),
-    steps: t("hangar.steps"),
+    subtitle: t("hangar.subtitle"),
+    folds: t("hangar.folds"),
     wingsEarned: t("hangar.wingsEarned"),
-    filterAll: t("hangar.filterAll"),
-    filterLabel: t("hangar.filterLabel"),
+    startFolding: t("preflight.startFolding"),
+    resume: t("preflight.resume"),
     tier: {
       easy: t("tier.easy"),
       medium: t("tier.medium"),
       advanced: t("tier.advanced"),
     },
-    preview: t("hangar.preview"),
-    empty: t("hangar.empty"),
-    footerLine: t("hangar.footerLine"),
-    rating: {
-      speed: t("rating.speed"),
-      distance: t("rating.distance"),
-      airtime: t("rating.airtime"),
-      ease: t("rating.ease"),
-    },
-    ratingGauge: t("rating.gauge"),
+    bayHint: t("hangar.bayHint"),
+    chooseAircraft: t("hangar.chooseAircraft"),
+    previousAircraft: t("hangar.previousAircraft"),
+    nextAircraft: t("hangar.nextAircraft"),
+    dotEarned: t("hangar.dotEarned"),
+    announce: t("hangar.announce"),
+    inspect3d: t("hangar.preview"),
+    showArtwork: t("preflight.showArtwork"),
+    loading3d: t("preflight.loading3d"),
+    staticFallback: t("preflight.staticFallback"),
   };
+}
+
+/**
+ * Which aircraft the bay opens on, once storage has actually been read.
+ *
+ * The first one the cadet has not finished, which answers three cases with one
+ * rule: a new cadet lands on the Dart because it is first on the difficulty
+ * ladder, a returning cadet lands on the aircraft they were up to rather than
+ * having to arrow past the ones they have already folded, and a cadet who has
+ * finished all six lands back on the Dart because there is no unfinished one to
+ * find. That last case is the reason for the `?? 0` rather than an error: the
+ * fleet being complete is a success, not a state with nothing to show.
+ */
+export function firstUnfinishedIndex(
+  planes: readonly HangarPlaneView[],
+  isComplete: (planeId: string) => boolean,
+): number {
+  const index = planes.findIndex((plane) => !isComplete(plane.id));
+  return index === -1 ? 0 : index;
 }

@@ -6,26 +6,23 @@ import type { UiDictionary } from "../types";
 
 const ui: UiDictionary = {
   "brand.name": "फ्लाइट स्कूल",
-
-  "nav.hangar": "हैंगर",
   "nav.wings": "पंख: {count}",
   "nav.backToHangar": "हैंगर पर वापस जाएँ",
   "nav.backToHangarShort": "हैंगर",
   "nav.dayFlight": "दिन की उड़ान",
   "nav.nightFlight": "रात की उड़ान",
-
-  "hangar.title": "हैंगर",
   "hangar.subtitle":
     "एक विमान चुनो, कागज़ तैयार करो और पहली उड़ान तक हर मोड़ सीखो।",
   "hangar.eyebrow": "कागज़ के लिए एक उड़ान अकादमी - मैदान पर {count} विमान",
-  "hangar.steps": "चरण",
+  "hangar.folds": "{count} मोड़",
+  "hangar.bayHint": "देखने के लिए खींचें · तीर कुंजियाँ विमान बदलती हैं",
+  "hangar.chooseAircraft": "एक विमान चुनें",
+  "hangar.previousAircraft": "पिछला विमान",
+  "hangar.nextAircraft": "अगला विमान",
+  "hangar.dotEarned": "{name}, विंग्स अर्जित",
+  "hangar.announce": "{name}, {tier}, {count} मोड़",
   "hangar.wingsEarned": "पंख मिले",
-  "hangar.viewPlane": "विमान देखें",
-  "hangar.filterAll": "सभी",
-  "hangar.filterLabel": "कठिनाई के हिसाब से विमान छाँटें",
-  "hangar.fleetOverview": "बेड़े का विवरण",
   "hangar.preview": "{name} को 3D में देखें",
-  "hangar.empty": "इस फ़िल्टर से कोई विमान मेल नहीं खाता।",
 
   "tier.easy": "शुरुआती",
   "tier.medium": "पायलट",

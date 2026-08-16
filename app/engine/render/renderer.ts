@@ -176,7 +176,11 @@ export type ControlsLike = {
 
 export type FoldEngineDeps = {
   readonly core: CoreApi;
-  readonly rendererFactory?: (canvas: HTMLCanvasElement, quality: StageQuality) => RendererLike;
+  readonly rendererFactory?: (
+    canvas: HTMLCanvasElement,
+    quality: StageQuality,
+    transparent: boolean,
+  ) => RendererLike;
   readonly controlsFactory?: (camera: PerspectiveCamera, dom: HTMLElement) => ControlsLike;
 };
 
@@ -247,14 +251,18 @@ const QUALITY: Record<StageQuality, { antialias: boolean; shadows: boolean; maxP
 export function createDefaultRenderer(
   canvas: HTMLCanvasElement,
   quality: StageQuality = "full",
+  transparent = false,
 ): RendererLike {
   const tier = QUALITY[quality];
   const renderer = new WebGLRenderer({
     canvas,
     antialias: tier.antialias,
-    alpha: false,
+    // An alpha buffer costs a little bandwidth per frame, so it is asked for
+    // only where something behind the canvas actually has to show through.
+    alpha: transparent,
     powerPreference: "high-performance",
   });
+  if (transparent) renderer.setClearAlpha(0);
   renderer.outputColorSpace = SRGBColorSpace;
   renderer.toneMapping = ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
@@ -299,6 +307,7 @@ export class FoldEngine implements FoldEngineHandle {
   private readonly annotations: Annotations;
   private readonly stage = new Group();
 
+  private readonly transparent: boolean;
   /** Null on a display stage, which has a backdrop and a shadow instead. */
   private readonly floorMesh: Mesh | null;
   private readonly floorMaterial: MeshStandardMaterial | null;
@@ -398,14 +407,22 @@ export class FoldEngine implements FoldEngineHandle {
     const canvas = doc.createElement("canvas");
     canvas.style.cssText = "display:block;width:100%;height:100%;touch-action:none";
     this.quality = opts.quality === "preview" ? "preview" : "full";
-    this.renderer = (deps.rendererFactory ?? createDefaultRenderer)(canvas, this.quality);
+    this.transparent = opts.transparent === true;
+    this.renderer = (deps.rendererFactory ?? createDefaultRenderer)(
+      canvas,
+      this.quality,
+      this.transparent,
+    );
     container.appendChild(this.renderer.domElement);
 
     // A display stage swaps the flat clear colour for a vertical grade. It has
-    // to be drawn in GL: the canvas is `alpha: false`, so the CSS gradients on
-    // the panels around it have never once shown through.
-    this.backdrop = this.display ? createBackdropTexture(this.theme) : null;
-    this.scene.background = this.backdrop ?? new Color(this.theme.background);
+    // to be drawn in GL, because the canvas is otherwise opaque and the CSS
+    // behind it has never once shown through - which is exactly what
+    // `transparent` opts out of, for the one ground that is a photograph.
+    this.backdrop = this.display && !this.transparent ? createBackdropTexture(this.theme) : null;
+    this.scene.background = this.transparent
+      ? null
+      : (this.backdrop ?? new Color(this.theme.background));
     this.scene.add(this.stage);
 
     this.camera = new PerspectiveCamera(FOV_DEG, 1, 1, 20000);

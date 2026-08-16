@@ -1,36 +1,33 @@
 "use client";
 
 /**
- * The Hangar: the catalog and the home page (SCREENS.md §1).
+ * The Hangar: one aircraft in a photographed room, and the fleet on a strip
+ * beneath it (SCREENS.md §1).
  *
- * Stitch's calm card grid, Claude Design's filter chips and wings counter.
- * Filtering is client-side state, not routing: the catalog is one page and a
- * licence filter is a view of it, so the URL keeps meaning "the hangar".
+ * The composition is deliberately not centred. DESIGN.md's avoid-list names
+ * "centered-everything landing pages", and one big aeroplane in the middle of
+ * the screen is exactly that shape - so the bay sits toward the top-right and
+ * the placard occupies the lower-left, which also runs WITH the aircraft: the
+ * artwork's nose points low-left, so the type sits where the plane is heading
+ * rather than opposite it.
  *
- * Card liveness is owned here rather than in the card. At most two scenes may
- * be live at once; waking a third sleeps the least recently woken one. Hover
- * wakes on fine pointers, the card's preview control selects on any device, and
- * a selected card stays awake when the pointer leaves it.
+ * This component owns WHICH aircraft; `HangarBay` owns how it moves. Selection
+ * is state here because four separate controls set it and the placard, the live
+ * region and the primary action all read it.
  */
-import { useCallback, useMemo, useState } from "react";
-import { useProgressSnapshot, wingsEarned } from "@/lib/progress";
+import { useCallback, useEffect, useState } from "react";
+import { useProgressHydrated, useProgressSnapshot, wingsEarned } from "@/lib/progress";
 import { hangarHref } from "@/lib/paths";
-import type { PlaneId, Tier } from "@/content/types";
+import type { PlaneId } from "@/content/types";
 import type { Locale } from "@/i18n/config";
-import { Chip } from "@/components/ui/Chip";
+import { RTL_LOCALES } from "@/i18n/config";
 import { FOCUS_RING } from "@/components/ui/focus";
-import { TIERS } from "@/components/ui/tier";
 import { format } from "@/components/ui/format";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { usePrefersReducedMotion } from "@/components/ui/reducedMotion";
 import { LocalePicker } from "@/components/ui/LocalePicker";
-import { PlaneCard } from "./PlaneCard";
+import { HangarBay } from "./HangarBay";
+import { firstUnfinishedIndex, type HangarPlaneView, type HangarUiStrings } from "./types";
 import type { FoldEngineFactory } from "@/engine";
-import type { HangarPlaneView, HangarUiStrings } from "./types";
-
-/** Two live WebGL scenes is the ceiling a mid-range phone holds comfortably. */
-const MAX_LIVE = 2;
-
-type Filter = "all" | Tier;
 
 export type HangarProps = {
   ui: HangarUiStrings;
@@ -40,174 +37,143 @@ export type HangarProps = {
 };
 
 export function Hangar({ ui, planes, locale, createEngine }: HangarProps) {
-  const [filter, setFilter] = useState<Filter>("all");
-  const [liveIds, setLiveIds] = useState<readonly string[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-
+  /*
+   * Which aircraft is showing, as a CHOICE plus a default rather than as one
+   * piece of state seeded by an effect.
+   *
+   * The bay has to open on the first unfinished aircraft, and that cannot be
+   * known until storage has been read - so the obvious shape is "start at 0,
+   * then setIndex once hydrated", which is a render, an effect, and a second
+   * render to correct the first. Deriving it instead makes the rule the value:
+   * before hydration there is nothing to know, after it the fleet answers, and
+   * the moment the cadet chooses anything their choice outranks both. "Pick
+   * once" then needs no flag to enforce, because there is no picking.
+   */
+  const [chosen, setChosen] = useState<number | null>(null);
   const stored = useProgressSnapshot();
+  const hydrated = useProgressHydrated();
+  const reducedMotion = usePrefersReducedMotion();
+  const rtl = RTL_LOCALES.has(locale);
+
   const wings = wingsEarned(stored);
+  const index =
+    chosen ??
+    (hydrated
+      ? firstUnfinishedIndex(planes, (id) => stored.completed[id as PlaneId] !== undefined)
+      : 0);
+  const selected = planes[index]!;
+  const progress = stored.progress[selected.id as PlaneId];
+  const earned = stored.completed[selected.id as PlaneId] !== undefined;
 
-  // A selection only counts while its scene is still awake; two hovers can
-  // evict it, and a stale selection would otherwise pin a sleeping card.
-  const activeSelection = selectedId !== null && liveIds.includes(selectedId) ? selectedId : null;
+  const select = useCallback((next: number) => setChosen(next), []);
 
-  const wake = useCallback((id: string) => {
-    setLiveIds((prev) => [id, ...prev.filter((x) => x !== id)].slice(0, MAX_LIVE));
-  }, []);
+  /*
+   * Arrow keys anywhere that is not a text control, so the bay behaves the way
+   * a selector in a game does. They follow the reading direction: in Arabic the
+   * fleet runs right to left, so Left is the NEXT aircraft.
+   */
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+      const target = event.target;
+      if (target instanceof HTMLElement && target.closest("input, select, textarea, [contenteditable]")) {
+        return;
+      }
+      event.preventDefault();
+      const forward = rtl ? event.key === "ArrowLeft" : event.key === "ArrowRight";
+      setChosen((index + (forward ? 1 : -1) + planes.length) % planes.length);
+    };
+    // Re-bound whenever the selection changes, which is what lets it step from
+    // the aircraft actually showing rather than from a captured stale one. One
+    // window listener swapped per arrow press is not a cost worth a ref.
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [index, planes.length, rtl]);
 
-  const sleep = useCallback((id: string) => {
-    setLiveIds((prev) => prev.filter((x) => x !== id));
-  }, []);
-
-  const onHoverEnd = useCallback(
-    (id: string) => {
-      if (id !== activeSelection) sleep(id);
-    },
-    [activeSelection, sleep],
-  );
-
-  // Both halves key off `activeSelection`, not the raw id: a card that was
-  // evicted while selected reads as unselected everywhere, so pressing it wakes
-  // and selects it again instead of waking it into a contradictory state.
-  const onToggleSelect = useCallback(
-    (id: string) => {
-      const isSelected = activeSelection === id;
-      setLiveIds((prev) =>
-        isSelected
-          ? prev.filter((x) => x !== id)
-          : [id, ...prev.filter((x) => x !== id)].slice(0, MAX_LIVE),
-      );
-      setSelectedId(isSelected ? null : id);
-    },
-    [activeSelection],
-  );
-
-  const visible = useMemo(
-    () => (filter === "all" ? planes : planes.filter((p) => p.tier === filter)),
-    [filter, planes],
-  );
-
-  const filters: readonly { readonly key: Filter; readonly label: string }[] = useMemo(
-    () => [
-      { key: "all", label: ui.filterAll },
-      ...TIERS.map((tier) => ({ key: tier as Filter, label: ui.tier[tier] })),
-    ],
-    [ui],
-  );
+  const primaryLabel =
+    progress && progress.step > 0
+      ? format(ui.resume, { step: progress.step + 1 })
+      : ui.startFolding;
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <div className="chevron-bar" aria-hidden="true" />
+    <div className="hangar-shell">
+      <a
+        href="#hangar-main"
+        className={`fixed top-sm start-sm z-50 -translate-y-24 rounded-input bg-ink px-md py-sm text-paper transition-transform focus:translate-y-0 ${FOCUS_RING}`}
+      >
+        {ui.skipToContent}
+      </a>
+      <div className="chevron-bar relative z-40" aria-hidden="true" />
 
-      <nav className="border-b border-ink-12">
-        {/*
-          Wraps rather than overflows. Four controls plus the wordmark do not fit
-          a 412px phone on one line, and a nav that does not fit is not a nav
-          that scrolls - mobile Chrome zooms the whole page out to make it fit,
-          and every tap after that lands off its target (tests/e2e/layout.spec.ts).
-        */}
-        <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-md px-lg py-md">
-          <a href={hangarHref(locale)} className={`flex items-center gap-sm ${FOCUS_RING}`}>
-            <span aria-hidden="true" className="size-[18px] rotate-45 bg-red" />
-            <span className="font-display text-h3 font-bold tracking-tight uppercase">
-              {ui.brand}
-            </span>
-          </a>
-          <div className="flex flex-wrap items-center gap-md sm:gap-lg">
-            <span className="border-b-2 border-ink pb-[2px] font-display text-small font-bold tracking-[0.06em] uppercase">
-              {ui.navHangar}
-            </span>
-            {/* The logbook screen is not in this build; shown inactive rather than
-                as a link that would land on a 404. */}
-            <span className="font-display text-small font-bold tracking-[0.06em] text-ink-muted uppercase">
-              {ui.navLogbook}
-            </span>
-            <Chip variant="outline" className="gap-sm">
-              <span aria-hidden="true" className="size-[10px] rounded-full border-2 border-green" />
-              <span data-testid="wings-counter">{format(ui.navWings, { count: wings })}</span>
-            </Chip>
-            <ThemeToggle
-              dayLabel={ui.navDayFlight}
-              nightLabel={ui.navNightFlight}
-              a11yLabel={ui.themeToggleLabel}
-            />
-            <LocalePicker locale={locale} a11yLabel={ui.localePickerLabel} />
-          </div>
-        </div>
+      <nav className="hangar-nav">
+        <a href={hangarHref(locale)} className={`hangar-wordmark ${FOCUS_RING}`}>
+          <span aria-hidden="true" className="size-[14px] rotate-45 bg-red" />
+          <span>{ui.brand}</span>
+        </a>
+        <span className="flex-1" />
+        <span className="hangar-chip" data-testid="wings-counter">
+          {format(ui.navWings, { count: wings })}
+        </span>
+        <LocalePicker locale={locale} a11yLabel={ui.localePickerLabel} />
       </nav>
 
-      <main className="mx-auto w-full max-w-[1200px] flex-1 px-lg py-2xl">
-        <header>
-          <p className="font-mono text-micro font-semibold tracking-[0.18em] text-red-ink uppercase">
-            {format(ui.eyebrow, { count: planes.length })}
-          </p>
-          <div className="mt-md flex flex-wrap items-end justify-between gap-md">
-            <h1 className="font-display text-display leading-none font-bold tracking-tight uppercase">
-              {ui.title}
-            </h1>
-            <p className="flex items-center gap-sm font-mono text-micro tracking-[0.1em] text-ink-muted uppercase">
-              {ui.fleetOverview}
-            </p>
-          </div>
-          <div className="mt-md h-[2px] w-full bg-ink" />
-          <p className="mt-md max-w-[62ch] text-instruction leading-relaxed text-ink-87">
-            {ui.subtitle}
-          </p>
-        </header>
+      {/*
+        One announcement per selection, and it carries what the placard says
+        rather than just the name: a screen-reader user arrowing through the
+        fleet is choosing between aircraft, and difficulty and length are what
+        they are choosing on.
+      */}
+      <p className="sr-only" aria-live="polite" aria-atomic="true" data-testid="hangar-announce">
+        {format(ui.announce, {
+          name: selected.name,
+          tier: ui.tier[selected.tier],
+          count: selected.stepCount,
+        })}
+      </p>
 
-        <div role="group" aria-label={ui.filterLabel} className="mt-lg flex flex-wrap gap-sm">
-          {filters.map(({ key, label }) => {
-            const active = key === filter;
-            return (
-              <button
-                key={key}
-                type="button"
-                aria-pressed={active}
-                onClick={() => setFilter(key)}
-                className={`rounded-input px-md py-sm font-mono text-micro font-semibold tracking-[0.08em] uppercase transition-colors duration-150 ease-move ${
-                  active ? "bg-ink text-paper" : "border border-ink-38 text-ink hover:bg-ink-12"
-                } ${FOCUS_RING}`}
-              >
-                {label}
-              </button>
-            );
-          })}
+      <main id="hangar-main" className="hangar-main">
+        <HangarBay
+          ui={ui}
+          planes={planes}
+          index={index}
+          reducedMotion={reducedMotion}
+          rtl={rtl}
+          onSelect={select}
+          {...(createEngine ? { createEngine } : {})}
+        />
+
+        <div className="hangar-placard">
+          <p className="hangar-eyebrow">{format(ui.eyebrow, { count: planes.length })}</p>
+          <h1 className="hangar-title" data-long={selected.name.length > 12 ? "true" : "false"}>
+            {selected.name}
+          </h1>
+          <div className="hangar-meta">
+            {/*
+              The accent is a RULE, not a fill. White on the Bulldog's amber
+              measures about 2.6:1 and DESIGN.md requires AA on every text pair,
+              so an accent keeps its hex as a mark and never carries text.
+            */}
+            <span className="hangar-tier" style={{ ["--accent" as string]: selected.structure.accent }}>
+              {ui.tier[selected.tier]}
+            </span>
+            <span className="hangar-steps">{format(ui.folds, { count: selected.stepCount })}</span>
+            {/*
+              Held until hydration for the same reason the completion route
+              holds: the prerender says "not earned" for everybody, and flashing
+              that at a cadet who has folded it is worse than a beat of nothing.
+            */}
+            {hydrated && earned ? (
+              <span className="hangar-wings" data-testid="hangar-wings">
+                {ui.wingsEarned}
+              </span>
+            ) : null}
+          </div>
+          <p className="hangar-blurb">{ui.subtitle}</p>
+          <a href={selected.href} data-testid="hangar-primary" className={`hangar-primary ${FOCUS_RING}`}>
+            {primaryLabel}
+          </a>
         </div>
-
-        {visible.length === 0 ? (
-          <p className="mt-2xl font-mono text-small text-ink-muted">{ui.empty}</p>
-        ) : (
-          <div className="mt-lg grid grid-cols-1 gap-lg md:grid-cols-2 lg:grid-cols-3">
-            {visible.map((view) => (
-              <PlaneCard
-                key={view.id}
-                view={view}
-                ui={ui}
-                completed={stored.completed[view.id as PlaneId] !== undefined}
-                live={liveIds.includes(view.id)}
-                selected={activeSelection === view.id}
-                onHoverStart={wake}
-                onHoverEnd={onHoverEnd}
-                onToggleSelect={onToggleSelect}
-                {...(createEngine ? { createEngine } : {})}
-              />
-            ))}
-          </div>
-        )}
       </main>
-
-      <footer className="border-t border-ink-12">
-        <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-sm px-lg py-lg">
-          <p className="font-mono text-micro tracking-[0.1em] text-ink-muted uppercase">
-            {ui.footerLine}
-          </p>
-          <span aria-hidden="true" className="flex gap-xs">
-            <span className="size-[10px] rotate-45 bg-red" />
-            <span className="size-[10px] rotate-45 bg-sky" />
-            <span className="size-[10px] rotate-45 bg-ink" />
-          </span>
-        </div>
-      </footer>
     </div>
   );
 }

@@ -289,6 +289,54 @@ describe("FoldEngine display staging", () => {
   });
 
   /**
+   * The Hangar bay's ground is a photograph, and a stage that paints its own
+   * replaced that room with a field of cream - taking the composition, the
+   * legibility of the white type over it, and the point of the screen with it.
+   *
+   * The contact shadow still has to be there: a transparent stage is an
+   * aircraft standing on something, not a cut-out floating over the page.
+   */
+  it("paints no ground at all when the caller owns what is behind the canvas", () => {
+    const { engine, quality } = mount({
+      engine: { display: true, quality: "preview", transparent: true },
+    });
+    expect(engine["scene"].background).toBeNull();
+    expect(engine["backdrop"]).toBeNull();
+    expect(engine["shadow"]).not.toBeNull();
+    expect(quality).toBe("preview");
+  });
+
+  it("still paints its own ground when nobody asked for transparency", () => {
+    const { engine } = mount({ engine: { display: true } });
+    expect(engine["scene"].background).not.toBeNull();
+    expect(engine["backdrop"]).not.toBeNull();
+  });
+
+  it("asks for an alpha buffer only when it is going to use one", () => {
+    const asked: boolean[] = [];
+    for (const transparent of [true, false]) {
+      const { container } = createFakeDom(800, 600);
+      const engine = new FoldEngine(
+        container as unknown as HTMLElement,
+        makeStructure(4),
+        { display: true, transparent },
+        {
+          core: createCoreStub(),
+          rendererFactory: (c, _quality, isTransparent) => {
+            asked.push(isTransparent);
+            return createFakeRenderer(c as unknown as FakeNode);
+          },
+          controlsFactory: () => createFakeControls(),
+        },
+      );
+      engine.dispose();
+    }
+    // An alpha buffer costs bandwidth on every frame of every tutorial that
+    // will never once see through its own canvas.
+    expect(asked).toEqual([true, false]);
+  });
+
+  /**
    * The hangar's LRU wakes and sleeps scenes constantly, so a texture leaked
    * per wake is not hypothetical - it is one per hover.
    */

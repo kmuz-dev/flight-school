@@ -8,25 +8,22 @@ import type { UiDictionary } from "../types";
 
 const ui: UiDictionary = {
   "brand.name": "비행 학교",
-
-  "nav.hangar": "격납고",
   "nav.wings": "윙: {count}",
   "nav.backToHangar": "격납고로 돌아가기",
   "nav.backToHangarShort": "격납고",
   "nav.dayFlight": "낮 비행",
   "nav.nightFlight": "밤 비행",
-
-  "hangar.title": "격납고",
   "hangar.subtitle": "비행기를 고르고 종이를 준비한 뒤 첫 비행까지 모든 접기를 배워 보세요.",
   "hangar.eyebrow": "종이를 위한 비행 학교 - 계류장에 {count}대",
-  "hangar.steps": "단계",
+  "hangar.folds": "{count}번 접기",
+  "hangar.bayHint": "드래그해서 살펴보기 · 화살표 키로 기체 변경",
+  "hangar.chooseAircraft": "기체 선택",
+  "hangar.previousAircraft": "이전 기체",
+  "hangar.nextAircraft": "다음 기체",
+  "hangar.dotEarned": "{name}, 윙 획득함",
+  "hangar.announce": "{name}, {tier}, {count}번 접기",
   "hangar.wingsEarned": "획득한 윙",
-  "hangar.viewPlane": "비행기 보기",
-  "hangar.filterAll": "전체",
-  "hangar.filterLabel": "난이도로 비행기 고르기",
-  "hangar.fleetOverview": "기체 목록",
   "hangar.preview": "{name} 3D로 보기",
-  "hangar.empty": "이 필터에 맞는 비행기가 없어요.",
 
   "tier.easy": "초보",
   "tier.medium": "조종사",

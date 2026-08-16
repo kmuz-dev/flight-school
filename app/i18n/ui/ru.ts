@@ -10,26 +10,23 @@ import type { UiDictionary } from "../types";
 
 const ui: UiDictionary = {
   "brand.name": "Лётная школа",
-
-  "nav.hangar": "Ангар",
   "nav.wings": "Крылья: {count}",
   "nav.backToHangar": "Вернуться в ангар",
   "nav.backToHangarShort": "Ангар",
   "nav.dayFlight": "Дневной полёт",
   "nav.nightFlight": "Ночной полёт",
-
-  "hangar.title": "Ангар",
   "hangar.subtitle":
     "Выбери самолёт, подготовь бумагу и освой каждый сгиб до первого полёта.",
   "hangar.eyebrow": "Лётная школа для бумаги - самолётов на площадке: {count}",
-  "hangar.steps": "Шаги",
+  "hangar.folds": "{count} сгибов",
+  "hangar.bayHint": "Потяните, чтобы рассмотреть · стрелки меняют самолёт",
+  "hangar.chooseAircraft": "Выберите самолёт",
+  "hangar.previousAircraft": "Предыдущий самолёт",
+  "hangar.nextAircraft": "Следующий самолёт",
+  "hangar.dotEarned": "{name}, крылья получены",
+  "hangar.announce": "{name}, {tier}, {count} сгибов",
   "hangar.wingsEarned": "Крылья получены",
-  "hangar.viewPlane": "Открыть самолёт",
-  "hangar.filterAll": "Все",
-  "hangar.filterLabel": "Фильтр самолётов по сложности",
-  "hangar.fleetOverview": "Обзор парка",
   "hangar.preview": "Посмотреть {name} в 3D",
-  "hangar.empty": "Ни один самолёт не подходит под этот фильтр.",
 
   "tier.easy": "Новичок",
   "tier.medium": "Пилот",

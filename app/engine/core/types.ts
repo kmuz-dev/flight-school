@@ -285,5 +285,20 @@ export type EngineOptions = {
    * Defaults to the catalogue-wide `HERO_VIEW`.
    */
   readonly displayView?: DisplayView;
+  /**
+   * Draw the aircraft and nothing else, letting whatever is behind the canvas
+   * show through.
+   *
+   * The stage normally paints its own ground - a flat clear colour for a
+   * tutorial, a vertical grade for a display surface - and it has to do that in
+   * GL rather than in CSS, because the canvas is otherwise opaque. That is
+   * right everywhere the ground is a colour, and wrong in the one place it is
+   * a photograph: the Hangar bay, where an opaque backdrop replaced the room
+   * the aircraft was supposed to be standing in with a field of cream.
+   *
+   * The contact shadow still draws, so a transparent stage is still an aircraft
+   * sitting on something rather than a cut-out floating over the page.
+   */
+  readonly transparent?: boolean;
   readonly onReady?: () => void;
 };

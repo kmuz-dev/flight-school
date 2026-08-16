@@ -88,3 +88,173 @@ test("the tutorial says which plane is on the table, at any width", async ({ pag
     }
   }
 });
+
+test("the mobile bay keeps its aircraft contained and its controls reachable", async (
+  { page },
+  testInfo,
+) => {
+  test.skip(testInfo.project.name !== "mobile", "mobile viewport regression");
+  await page.goto("/en/");
+
+  const viewport = page.viewportSize();
+  expect(viewport).not.toBeNull();
+
+  // The aircraft is positioned by script every frame and scaled off the bay
+  // width, so "it fits" is a claim that has to be measured rather than styled.
+  const aircraft = page.locator(".hangar-aircraft img").first();
+  const box = await aircraft.boundingBox();
+  expect(box, "the resting aircraft has no box").not.toBeNull();
+  expect(box!.x, "the aircraft escapes the near edge").toBeGreaterThanOrEqual(-1);
+  expect(box!.x + box!.width, "the aircraft escapes the far edge").toBeLessThanOrEqual(
+    viewport!.width + 1,
+  );
+
+  // Every control the bay stacks over the photograph has to stay on screen and
+  // stay hittable: on a phone the arrows sit on the bay's own edges and the dot
+  // strip floats over the floor, which is exactly where they can drift off.
+  for (const control of ["hangar-prev", "hangar-next", "hangar-primary", "hangar-inspect"]) {
+    const element = page.getByTestId(control);
+    await expect(element).toBeVisible();
+    const rect = await element.boundingBox();
+    expect(rect, `${control} has no box`).not.toBeNull();
+    expect(rect!.x, `${control} escapes the near edge`).toBeGreaterThanOrEqual(0);
+    expect(rect!.x + rect!.width, `${control} escapes the far edge`).toBeLessThanOrEqual(
+      viewport!.width,
+    );
+  }
+
+  const dots = page.locator(".hangar-dot");
+  await expect(dots).toHaveCount(6);
+  const last = await dots.last().boundingBox();
+  expect(last!.x + last!.width, "the last marker is pushed off screen").toBeLessThanOrEqual(
+    viewport!.width,
+  );
+
+  // And the strip still selects, rather than being decoration under a scrim.
+  await dots.nth(3).click();
+  await expect(dots.nth(3)).toHaveAttribute("aria-current", "true");
+});
+
+test("mobile preflight uses a compact one-line Hangar return", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "mobile viewport regression");
+  await page.goto("/en/plane/dart/");
+
+  const back = page.getByRole("link", { name: "Back to the hangar" });
+  expect((await back.innerText()).trim().toLowerCase()).toBe("hangar");
+  const metrics = await back.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return {
+      height: element.getBoundingClientRect().height,
+      lineHeight: Number.parseFloat(style.lineHeight),
+      whiteSpace: style.whiteSpace,
+    };
+  });
+  expect(metrics.whiteSpace).toBe("nowrap");
+  expect(metrics.height).toBeLessThanOrEqual(metrics.lineHeight * 1.25);
+});
+
+test("tutorial transport and sticky navigation stay coherent at narrow phone widths", async ({ page }) => {
+  for (const width of [320, 360, 375, 390, 412]) {
+    await page.setViewportSize({ width, height: 780 });
+    await page.goto("/en/plane/dart/fold/");
+
+    const play = page.getByRole("button", { name: "Play the fold" });
+    const replay = page.getByRole("button", { name: "Replay this fold" });
+    const playBox = await play.boundingBox();
+    const replayBox = await replay.boundingBox();
+    expect(playBox, `${width}px play control has no box`).not.toBeNull();
+    expect(replayBox, `${width}px replay control has no box`).not.toBeNull();
+    expect(Math.abs(playBox!.y - replayBox!.y), `${width}px replay is orphaned`).toBeLessThan(2);
+    expect(playBox!.width).toBeGreaterThanOrEqual(40);
+    expect(replayBox!.width).toBeGreaterThanOrEqual(40);
+
+    const planeName = page.getByRole("heading", { level: 1 });
+    await expect(planeName).toHaveText("The Dart");
+    const nameMetrics = await planeName.evaluate((element) => ({
+      clientWidth: element.clientWidth,
+      scrollWidth: element.scrollWidth,
+      textOverflow: getComputedStyle(element).textOverflow,
+    }));
+    expect(nameMetrics.scrollWidth, `${width}px plane name is clipped`).toBeLessThanOrEqual(
+      nameMetrics.clientWidth,
+    );
+    expect(nameMetrics.textOverflow).not.toBe("ellipsis");
+
+    await expect(page.getByRole("group", { name: "Camera angle" })).toBeHidden();
+
+    const selector = page.getByRole("combobox", { name: "Choose a fold" });
+    await selector.evaluate((element) => element.scrollIntoView({ block: "center" }));
+    const selectorBox = await selector.boundingBox();
+    const nextBox = await page.getByRole("button", { name: "Next fold", exact: true }).boundingBox();
+    expect(selectorBox, `${width}px selector has no box`).not.toBeNull();
+    expect(nextBox, `${width}px sticky navigation has no box`).not.toBeNull();
+    const overlaps =
+      selectorBox!.x < nextBox!.x + nextBox!.width &&
+      selectorBox!.x + selectorBox!.width > nextBox!.x &&
+      selectorBox!.y < nextBox!.y + nextBox!.height &&
+      selectorBox!.y + selectorBox!.height > nextBox!.y;
+    expect(overlaps, `${width}px sticky navigation covers the fold selector`).toBe(false);
+  }
+});
+
+/**
+ * The tutorial is a workspace, not a document.
+ *
+ * A cadet works it with paper in their hands, so the two things that must not
+ * move are the size of the window it occupies and the place Next sits in it.
+ * Neither held. `min-h-screen` let the page grow to whatever the current step
+ * contained, and Back and Next sat after that content: across the Hammer's
+ * fourteen folds the page ran between 253 and 566px past a 390x844 phone and
+ * Next appeared at six different heights, while on a 1440x900 desktop a tip bar
+ * that only four steps carry moved it by 35px.
+ *
+ * Both are asserted over a whole plane rather than on one screen, because the
+ * defect is by definition invisible on any single step.
+ */
+const SHELL_VIEWPORTS = [
+  { name: "desktop", width: 1440, height: 900 },
+  { name: "laptop", width: 1280, height: 800 },
+  { name: "phone", width: 390, height: 844 },
+] as const;
+
+for (const { name, width, height } of SHELL_VIEWPORTS) {
+  test(`the tutorial holds one shape on every fold, on ${name}`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    // The Hammer: the longest sequence in the fleet and the one whose tips are
+    // spread across it, so it varies more than any other plane.
+    await page.goto("/en/plane/hammer/fold/");
+    const next = page.getByRole("button", { name: "Next fold", exact: true });
+    await expect(next).toBeVisible();
+
+    const tops = new Set<number>();
+    const overflows: string[] = [];
+
+    for (let step = 1; step <= 14; step += 1) {
+      const box = await next.or(page.getByRole("button", { name: "Finish" })).boundingBox();
+      expect(box, `step ${step} has no Next button`).not.toBeNull();
+      tops.add(Math.round(box!.y));
+
+      const scroll = await page.evaluate(() => ({
+        page: document.documentElement.scrollHeight,
+        window: window.innerHeight,
+      }));
+      if (scroll.page > scroll.window) {
+        overflows.push(`step ${step}: ${scroll.page - scroll.window}px`);
+      }
+      if (step < 14) {
+        await next.click();
+        // The rail re-renders on the step change; the button must be settled
+        // before it is measured or this asserts a frame mid-transition.
+        await expect(page.getByRole("combobox", { name: "Choose a fold" })).toHaveValue(
+          String(step),
+        );
+      }
+    }
+
+    expect(overflows, `the page scrolls on: ${overflows.join(", ")}`).toEqual([]);
+    expect(
+      [...tops],
+      `Next sits at ${tops.size} different heights across the fold sequence`,
+    ).toHaveLength(1);
+  });
+}

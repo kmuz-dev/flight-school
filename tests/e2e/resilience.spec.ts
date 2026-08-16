@@ -127,26 +127,24 @@ test("a renderer that never downloads still leaves a foldable tutorial", async (
   expect(warnings.filter((w) => w.includes("[fold-engine]"))).not.toEqual([]);
 });
 
-test("the hangar renders its catalogue without WebGL", async ({ page }) => {
+test("the hangar shows its fleet without WebGL", async ({ page }) => {
   await withoutWebGL(page);
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
 
   await page.goto("/en/");
-  await expect(page.locator("[data-plane]")).toHaveCount(6);
-  const dart = page.locator("[data-plane='dart']");
+  await expect(page.locator(".hangar-dot")).toHaveCount(6);
 
-  // Beauty artwork is the default catalog surface, even on a machine without
-  // WebGL. The fold engine is not requested until the cadet asks for it.
-  await expect(dart.locator("img")).toBeVisible();
-  await expect(dart.locator("svg")).toHaveCount(0);
+  // Beauty artwork is the default surface, even on a machine without WebGL. The
+  // fold engine is not requested until the cadet asks for it.
+  await expect(page.locator(".hangar-aircraft img").first()).toBeVisible();
+  await expect(page.getByTestId("hangar-stage")).toHaveCount(0);
 
   // Explicit inspection then swaps to the canonical static engine and says so
   // instead of claiming that a flat SVG is interactive 3D.
-  await dart.getByRole("button", { name: /inspect .* in 3d/i }).click();
-  await expect(dart.locator("[data-fold-engine='fallback']")).toBeVisible();
-  await expect(dart.locator("svg")).toBeVisible();
-  await expect(dart.getByText(/3D unavailable - showing the static preview/i)).toBeVisible();
+  await page.getByTestId("hangar-inspect").click();
+  await expect(page.getByTestId("hangar-static-engine").locator("svg")).toBeVisible();
+  await expect(page.getByText(/3D unavailable - showing the static preview/i)).toBeVisible();
   expect(errors).toEqual([]);
 });
 

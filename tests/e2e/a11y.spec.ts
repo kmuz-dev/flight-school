@@ -98,23 +98,31 @@ test("night flight keeps its contrast", async ({ page }) => {
   expect(summarise(await scan(page))).toEqual([]);
 });
 
-test("every step on the progress strip is big enough to hit", async ({ page }) => {
-  // WCAG 2.5.8 asks 24x24 CSS px of any control a thumb has to find, and the
-  // strip is the one place on the site where twelve controls compete for a
-  // phone's width. axe does not check this - 2.5.8 is WCAG 2.2 and the scan
-  // above is tagged 2.1 - and it is exactly the kind of thing a later layout
-  // tweak shrinks without anyone noticing, so it is measured rather than
-  // trusted.
+test("the native fold selector has a usable target and expected keyboard semantics", async ({ page }) => {
   await page.goto("/en/plane/dart/fold/");
-  const steps = page.getByRole("button", { name: /go to step/i });
-  const count = await steps.count();
-  expect(count).toBeGreaterThan(1);
+  const selector = page.getByRole("combobox", { name: "Choose a fold" });
+  await expect(selector.locator("option")).toHaveCount(12);
+  const box = await selector.boundingBox();
+  expect(box, "fold selector has no box").not.toBeNull();
+  expect(box!.width).toBeGreaterThanOrEqual(44);
+  expect(box!.height).toBeGreaterThanOrEqual(44);
 
-  for (let i = 0; i < count; i += 1) {
-    const box = await steps.nth(i).boundingBox();
-    expect(box, `step ${i + 1} has no box`).not.toBeNull();
-    expect(box!.width, `step ${i + 1} is ${box!.width}px wide`).toBeGreaterThanOrEqual(24);
-    expect(box!.height, `step ${i + 1} is ${box!.height}px tall`).toBeGreaterThanOrEqual(24);
+  // The select is present in the static HTML. Wait for the client engine seam
+  // before sending keys so hydration cannot replace a pre-hydration choice.
+  await expect(page.getByRole("button", { name: "Play the fold" })).toBeEnabled();
+  await selector.focus();
+  await expect(selector).toBeFocused();
+  await selector.press("ArrowDown");
+  await selector.press("Enter");
+  await expect(selector).toHaveValue("1");
+  await expect(page.getByText(/step 02 \/ 12/i).first()).toBeVisible();
+  await expect(selector).toBeFocused();
+
+  for (const label of ["Why", "Fold terms"]) {
+    const summary = page.getByText(label, { exact: true });
+    const summaryBox = await summary.boundingBox();
+    expect(summaryBox, `${label} disclosure has no box`).not.toBeNull();
+    expect(summaryBox!.height, `${label} disclosure target is too short`).toBeGreaterThanOrEqual(36);
   }
 });
 

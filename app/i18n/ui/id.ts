@@ -6,26 +6,23 @@ import type { UiDictionary } from "../types";
 
 const ui: UiDictionary = {
   "brand.name": "Sekolah Terbang",
-
-  "nav.hangar": "Hanggar",
   "nav.wings": "Sayap: {count}",
   "nav.backToHangar": "Kembali ke hanggar",
   "nav.backToHangarShort": "Hanggar",
   "nav.dayFlight": "Penerbangan siang",
   "nav.nightFlight": "Penerbangan malam",
-
-  "hangar.title": "Hanggar",
   "hangar.subtitle":
     "Pilih pesawat, siapkan kertasmu, lalu pelajari setiap lipatan hingga penerbangan pertama.",
   "hangar.eyebrow": "Sekolah terbang untuk kertas - {count} pesawat di landasan",
-  "hangar.steps": "Langkah",
+  "hangar.folds": "{count} lipatan",
+  "hangar.bayHint": "Seret untuk memeriksa · tombol panah mengganti pesawat",
+  "hangar.chooseAircraft": "Pilih pesawat",
+  "hangar.previousAircraft": "Pesawat sebelumnya",
+  "hangar.nextAircraft": "Pesawat berikutnya",
+  "hangar.dotEarned": "{name}, sayap diraih",
+  "hangar.announce": "{name}, {tier}, {count} lipatan",
   "hangar.wingsEarned": "Sayap diraih",
-  "hangar.viewPlane": "Lihat pesawat",
-  "hangar.filterAll": "Semua",
-  "hangar.filterLabel": "Saring pesawat berdasarkan tingkat kesulitan",
-  "hangar.fleetOverview": "Ringkasan armada",
   "hangar.preview": "Lihat {name} dalam 3D",
-  "hangar.empty": "Tidak ada pesawat yang cocok dengan filter ini.",
 
   "tier.easy": "Pemula",
   "tier.medium": "Pilot",

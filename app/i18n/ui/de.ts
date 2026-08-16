@@ -6,26 +6,23 @@ import type { UiDictionary } from "../types";
 
 const ui: UiDictionary = {
   "brand.name": "Flugschule",
-
-  "nav.hangar": "Der Hangar",
   "nav.wings": "Schwingen: {count}",
   "nav.backToHangar": "Zurück zum Hangar",
   "nav.backToHangarShort": "Hangar",
   "nav.dayFlight": "Tagflug",
   "nav.nightFlight": "Nachtflug",
-
-  "hangar.title": "Der Hangar",
   "hangar.subtitle":
     "Wähle ein Flugzeug, prüfe dein Papier und lerne jeden Faltschritt bis zum ersten Flug.",
   "hangar.eyebrow": "Eine Flugschule für Papier - {count} Flugzeuge auf dem Vorfeld",
-  "hangar.steps": "Schritte",
+  "hangar.folds": "{count} Faltungen",
+  "hangar.bayHint": "Ziehen zum Ansehen · Pfeiltasten wechseln das Flugzeug",
+  "hangar.chooseAircraft": "Wähle ein Flugzeug",
+  "hangar.previousAircraft": "Vorheriges Flugzeug",
+  "hangar.nextAircraft": "Nächstes Flugzeug",
+  "hangar.dotEarned": "{name}, Schwingen verdient",
+  "hangar.announce": "{name}, {tier}, {count} Faltungen",
   "hangar.wingsEarned": "Schwingen verdient",
-  "hangar.viewPlane": "Flugzeug ansehen",
-  "hangar.filterAll": "Alle",
-  "hangar.filterLabel": "Flugzeuge nach Schwierigkeit filtern",
-  "hangar.fleetOverview": "Flottenübersicht",
   "hangar.preview": "{name} in 3D ansehen",
-  "hangar.empty": "Kein Flugzeug passt zu diesem Filter.",
 
   "tier.easy": "Anfänger",
   "tier.medium": "Pilot",

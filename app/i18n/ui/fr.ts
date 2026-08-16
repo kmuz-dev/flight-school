@@ -6,26 +6,23 @@ import type { UiDictionary } from "../types";
 
 const ui: UiDictionary = {
   "brand.name": "École de Vol",
-
-  "nav.hangar": "Le Hangar",
   "nav.wings": "Ailes : {count}",
   "nav.backToHangar": "Retour au hangar",
   "nav.backToHangarShort": "Hangar",
   "nav.dayFlight": "Vol de jour",
   "nav.nightFlight": "Vol de nuit",
-
-  "hangar.title": "Le Hangar",
   "hangar.subtitle":
     "Choisis un appareil, prépare ton papier et apprends chaque pli jusqu'au premier vol.",
   "hangar.eyebrow": "Une école de vol pour le papier - {count} appareils sur le tarmac",
-  "hangar.steps": "Étapes",
+  "hangar.folds": "{count} plis",
+  "hangar.bayHint": "Faites glisser pour inspecter · les flèches changent d'avion",
+  "hangar.chooseAircraft": "Choisissez un avion",
+  "hangar.previousAircraft": "Avion précédent",
+  "hangar.nextAircraft": "Avion suivant",
+  "hangar.dotEarned": "{name}, ailes obtenues",
+  "hangar.announce": "{name}, {tier}, {count} plis",
   "hangar.wingsEarned": "Ailes gagnées",
-  "hangar.viewPlane": "Voir l'avion",
-  "hangar.filterAll": "Tous",
-  "hangar.filterLabel": "Filtrer les appareils par difficulté",
-  "hangar.fleetOverview": "Vue d'ensemble de la flotte",
   "hangar.preview": "Voir {name} en 3D",
-  "hangar.empty": "Aucun appareil ne correspond à ce filtre.",
 
   "tier.easy": "Débutant",
   "tier.medium": "Pilote",

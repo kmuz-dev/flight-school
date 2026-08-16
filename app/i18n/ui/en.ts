@@ -6,25 +6,22 @@ import type { UiDictionary } from "../types";
 
 const ui: UiDictionary = {
   "brand.name": "Flight School",
-
-  "nav.hangar": "The Hangar",
   "nav.wings": "Wings: {count}",
   "nav.backToHangar": "Back to the hangar",
   "nav.backToHangarShort": "Hangar",
   "nav.dayFlight": "Day flight",
   "nav.nightFlight": "Night flight",
-
-  "hangar.title": "The Hangar",
   "hangar.subtitle": "Choose an aircraft, check your paper, and learn every fold from sheet to first flight.",
   "hangar.eyebrow": "A flight academy for paper - {count} aircraft on the floor",
-  "hangar.steps": "Steps",
+  "hangar.folds": "{count} folds",
+  "hangar.bayHint": "Drag to inspect · arrow keys change aircraft",
+  "hangar.chooseAircraft": "Choose an aircraft",
+  "hangar.previousAircraft": "Previous aircraft",
+  "hangar.nextAircraft": "Next aircraft",
+  "hangar.dotEarned": "{name}, wings earned",
+  "hangar.announce": "{name}, {tier}, {count} folds",
   "hangar.wingsEarned": "Wings earned",
-  "hangar.viewPlane": "View plane",
-  "hangar.filterAll": "All",
-  "hangar.filterLabel": "Filter aircraft by difficulty",
-  "hangar.fleetOverview": "Fleet overview",
   "hangar.preview": "Inspect {name} in 3D",
-  "hangar.empty": "No aircraft match this filter.",
 
   "tier.easy": "Beginner",
   "tier.medium": "Pilot",

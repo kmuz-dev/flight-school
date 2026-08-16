@@ -18,26 +18,27 @@ const FOLD = /\/en\/plane\/dart\/fold\/?$/;
 const WINGS = /\/en\/plane\/dart\/wings\/?$/;
 
 /**
- * The whole product loop, as a cadet walks it: pick a licence, read the
- * preflight card, fold the plane, take the certificate, and come back to a
- * hangar that remembers.
+ * The whole product loop, as a cadet walks it: choose an aircraft in the bay,
+ * read its preflight, fold it, take the wings, and come back to a hangar that
+ * remembers - which now means it opens on the NEXT aircraft rather than on the
+ * one just finished.
  */
-test("hangar to wings and back, with the badge on the card", async ({ page }) => {
+test("hangar to wings and back, and the bay moves on", async ({ page }) => {
   await page.goto("/en/");
 
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(/the hangar/i);
+  // A new cadet opens on the first aircraft on the difficulty ladder.
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(/the dart/i);
+  await expect(page.getByTestId("hangar-primary")).toBeVisible();
 
-  const dartCard = page.locator("[data-plane='dart']");
-  await expect(dartCard).toBeVisible();
-
-  // Filter chips are view state, not routing: the URL still means "the hangar".
-  await page.getByRole("button", { name: /^ace$/i }).click();
-  await expect(dartCard).toBeHidden();
-  await page.getByRole("button", { name: /^beginner$/i }).click();
-  await expect(dartCard).toBeVisible();
+  // Changing aircraft is view state, not routing: the URL still means "the
+  // hangar", and the bay comes back to where it was.
+  await page.getByTestId("hangar-next").click();
+  await expect(page.getByRole("heading", { level: 1 })).not.toHaveText(/^the dart$/i);
+  await page.getByTestId("hangar-prev").click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(/the dart/i);
   expect(new URL(page.url()).pathname).toMatch(HANGAR);
 
-  await dartCard.getByRole("link", { name: /the dart/i }).click();
+  await page.getByTestId("hangar-primary").click();
   await page.waitForURL(PREFLIGHT, { waitUntil: "commit" });
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(/the dart/i);
   await expect(page.getByText(/12 folds/i)).toBeVisible();
@@ -56,10 +57,16 @@ test("hangar to wings and back, with the badge on the card", async ({ page }) =>
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(/earned your wings/i);
   await expect(page.getByTestId("wings-stamp")).toBeVisible();
 
-  await page.getByRole("link", { name: /return to hangar/i }).click();
+  await page.getByTestId("wings-return").click();
   await page.waitForURL(HANGAR, { waitUntil: "commit" });
-  await expect(page.locator("[data-plane='dart']").getByTestId("wings-stamp")).toBeVisible();
   await expect(page.getByTestId("wings-counter")).toHaveText(/wings: 1/i);
+  // The Dart is folded, so the bay opens on the next unfinished aircraft and
+  // its marker in the strip is filled.
+  await expect(page.getByRole("heading", { level: 1 })).not.toHaveText(/^the dart$/i);
+  await expect(page.locator(".hangar-dot[data-plane='dart']")).toHaveAttribute(
+    "data-earned",
+    "true",
+  );
 });
 
 test("preflight offers a resume once there is progress", async ({ page }) => {
@@ -77,10 +84,11 @@ test("no console errors across the journey", async ({ page }) => {
   page.on("pageerror", (e) => errors.push(e.message));
 
   await page.goto("/en/");
-  await page.locator("[data-plane='dart']").getByRole("link", { name: /the dart/i }).click();
+  await page.getByTestId("hangar-primary").click();
   await page.waitForURL(PREFLIGHT, { waitUntil: "commit" });
+  // Never folded, so this is the unearned state rather than the stamp.
   await page.goto("/en/plane/dart/wings/");
-  await expect(page.getByTestId("wings-stamp")).toBeVisible();
+  await expect(page.getByTestId("wings-not-earned")).toBeVisible();
 
   expect(errors).toEqual([]);
 });

@@ -6,26 +6,23 @@ import type { UiDictionary } from "../types";
 
 const ui: UiDictionary = {
   "brand.name": "Escola de Voo",
-
-  "nav.hangar": "O Hangar",
   "nav.wings": "Asas: {count}",
   "nav.backToHangar": "Voltar ao hangar",
   "nav.backToHangarShort": "Hangar",
   "nav.dayFlight": "Voo diurno",
   "nav.nightFlight": "Voo noturno",
-
-  "hangar.title": "O Hangar",
   "hangar.subtitle":
     "Escolhe um avião, prepara o papel e aprende cada dobra até ao primeiro voo.",
   "hangar.eyebrow": "Uma escola de voo para o papel - {count} aviões na pista",
-  "hangar.steps": "Passos",
+  "hangar.folds": "{count} dobras",
+  "hangar.bayHint": "Arraste para inspecionar · as setas trocam de avião",
+  "hangar.chooseAircraft": "Escolha um avião",
+  "hangar.previousAircraft": "Avião anterior",
+  "hangar.nextAircraft": "Próximo avião",
+  "hangar.dotEarned": "{name}, asas conquistadas",
+  "hangar.announce": "{name}, {tier}, {count} dobras",
   "hangar.wingsEarned": "Asas conquistadas",
-  "hangar.viewPlane": "Ver avião",
-  "hangar.filterAll": "Todos",
-  "hangar.filterLabel": "Filtrar aviões por dificuldade",
-  "hangar.fleetOverview": "Visão geral da frota",
   "hangar.preview": "Ver {name} em 3D",
-  "hangar.empty": "Nenhum avião corresponde a este filtro.",
 
   "tier.easy": "Iniciante",
   "tier.medium": "Piloto",

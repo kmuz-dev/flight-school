@@ -9,26 +9,23 @@ import type { UiDictionary } from "../types";
 
 const ui: UiDictionary = {
   "brand.name": "フライトスクール",
-
-  "nav.hangar": "ハンガー",
   "nav.wings": "ウイング: {count}",
   "nav.backToHangar": "ハンガーにもどる",
   "nav.backToHangarShort": "ハンガー",
   "nav.dayFlight": "昼のフライト",
   "nav.nightFlight": "夜のフライト",
-
-  "hangar.title": "ハンガー",
   "hangar.subtitle":
     "機体をえらび、紙を用意して、初飛行までの折り方を学びましょう。",
   "hangar.eyebrow": "紙のためのフライトスクール - 駐機中の機体 {count} 機",
-  "hangar.steps": "ステップ",
+  "hangar.folds": "{count} 回の折り",
+  "hangar.bayHint": "ドラッグで観察 · 矢印キーで機体を切り替え",
+  "hangar.chooseAircraft": "機体を選ぶ",
+  "hangar.previousAircraft": "前の機体",
+  "hangar.nextAircraft": "次の機体",
+  "hangar.dotEarned": "{name}、ウイング獲得済み",
+  "hangar.announce": "{name}、{tier}、{count} 回の折り",
   "hangar.wingsEarned": "獲得したウイング",
-  "hangar.viewPlane": "機体を見る",
-  "hangar.filterAll": "すべて",
-  "hangar.filterLabel": "むずかしさで機体をしぼりこむ",
-  "hangar.fleetOverview": "機体一覧",
   "hangar.preview": "{name} を3Dで見る",
-  "hangar.empty": "この条件に合う機体はありません。",
 
   "tier.easy": "ビギナー",
   "tier.medium": "パイロット",
