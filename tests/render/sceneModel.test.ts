@@ -408,6 +408,13 @@ describe("ContactShadow", () => {
 describe("SceneModel", () => {
   const theme = STAGE_THEME;
 
+  it("uses the approved instructional light balance", () => {
+    expect(theme.keyIntensity).toBe(2.8);
+    expect(theme.fillIntensity).toBe(0.55);
+    expect(theme.hemiIntensity).toBe(0.65);
+    expect(theme.shadowOpacity).toBe(0.22);
+  });
+
   it("builds one mesh per facet and rebuilds only when the facet set changes", () => {
     const core = createCoreStub();
     const structure = makeStructure(3);

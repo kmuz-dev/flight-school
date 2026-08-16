@@ -71,6 +71,7 @@ export type StageTheme = {
   readonly hemiIntensity: number;
   readonly keyColor: number;
   readonly keyIntensity: number;
+  readonly displayKeyIntensity: number;
   readonly fillColor: number;
   readonly fillIntensity: number;
   /**
@@ -128,11 +129,12 @@ export const STAGE_THEME: StageTheme = {
   edgeOpacity: 0.22,
   hemiSky: 0xf7f3e9,
   hemiGround: 0xd9d2c2,
-  hemiIntensity: 0.9,
+  hemiIntensity: 0.65,
   keyColor: 0xfff6e2,
-  keyIntensity: 2.4,
+  keyIntensity: 2.8,
+  displayKeyIntensity: 2.4,
   fillColor: 0xcfe0f0,
-  fillIntensity: 0.75,
+  fillIntensity: 0.55,
   // The display rig is shared with the flat SVG - see `DISPLAY_RIG`, which
   // carries the measurements behind these numbers.
   displayHemiIntensity: DISPLAY_RIG.ambient,
@@ -140,7 +142,7 @@ export const STAGE_THEME: StageTheme = {
   rimColor: 0xffffff,
   rimIntensity: 0,
   crease: 0xd64541,
-  shadowOpacity: 0.16,
+  shadowOpacity: 0.22,
   displaySky: 0xf0e7d3,
   displayGround: 0xd8c9a8,
   contactShadow: 0x1a2b4a,
