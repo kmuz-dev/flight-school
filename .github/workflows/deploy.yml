@@ -9,16 +9,37 @@ on:
     types: [completed]
     branches: [main]
 
+# This workflow holds the deployment credentials, so it reads and nothing more.
+permissions:
+  contents: read
+
 jobs:
   deploy:
-    if: github.event.workflow_run.conclusion == 'success'
+    # `branches: [main]` above is a filter on the *head branch name* of the run
+    # that triggered this one, and CI also runs on `pull_request`. A fork whose
+    # own branch happens to be called `main` therefore produces a run that
+    # passes that filter, and checking out its head_sha here would execute a
+    # stranger's code inside a job holding the Cloudflare token. The event and
+    # repository checks are what actually pin this to our own pushes to main.
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-latest
+    # One deploy at a time. Without this, two runs can be inside `wrangler
+    # deploy` at once and the site ends up serving whichever finished last.
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v5
         with:
           # Deploy the commit CI actually verified, not whatever main has
           # drifted to while the suite was running.
           ref: ${{ github.event.workflow_run.head_sha }}
+          # Nothing here pushes; leaving a token in .git/config would only
+          # widen what a compromised build script could reach.
+          persist-credentials: false
       - uses: actions/setup-node@v5
         with:
           node-version: 22
@@ -26,23 +47,41 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-      # Inert until the repository carries the secret. Without this guard a
-      # fork, or a repo whose owner has not connected Cloudflare, fails every
-      # push with a credentials error that says nothing about what to do.
-      - name: Check for Cloudflare credentials
-        id: creds
+      # Two things have to hold before anything reaches the live site, and this
+      # is the last moment either can be judged: the repository carries
+      # Cloudflare credentials, and the commit CI verified is still the tip of
+      # main.
+      #
+      # The first keeps a fork, or a repo whose owner has not connected
+      # Cloudflare, from failing every push with a credentials error that says
+      # nothing about what to do. The second stops a rollback: CI runs finish in
+      # whatever order they finish, so an older commit's run can land after a
+      # newer one has already shipped, and without this it would happily publish
+      # itself over the newer release - with the live smoke suite, running the
+      # older commit's own specs, reporting success.
+      - name: Decide whether to ship
+        id: gate
         env:
           TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          if [ -n "$TOKEN" ]; then
-            echo "present=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "present=false" >> "$GITHUB_OUTPUT"
+          set -euo pipefail
+          if [ -z "$TOKEN" ]; then
+            echo "ship=false" >> "$GITHUB_OUTPUT"
             echo "::notice::No CLOUDFLARE_API_TOKEN secret; skipping deploy. Add one with Workers Scripts:Edit to ship on push."
+            exit 0
           fi
+          tip="$(gh api "repos/${GITHUB_REPOSITORY}/commits/main" --jq .sha)"
+          if [ "$tip" != "$HEAD_SHA" ]; then
+            echo "ship=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::main is now at ${tip}; ${HEAD_SHA} is stale, so this run will not deploy over a newer release."
+            exit 0
+          fi
+          echo "ship=true" >> "$GITHUB_OUTPUT"
 
       - name: Deploy to Cloudflare
-        if: steps.creds.outputs.present == 'true'
+        if: steps.gate.outputs.ship == 'true'
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -52,10 +91,10 @@ jobs:
       # local export. A deploy that serves a broken build should not be
       # something a person discovers.
       - name: Install Playwright browsers
-        if: steps.creds.outputs.present == 'true'
+        if: steps.gate.outputs.ship == 'true'
         run: npx playwright install --with-deps chromium
       - name: Smoke the live site
-        if: steps.creds.outputs.present == 'true'
+        if: steps.gate.outputs.ship == 'true'
         run: npx playwright test tests/e2e --project=chromium --reporter=github
         env:
           E2E_BASE_URL: https://flight-school.kudakw-mutasa.workers.dev
