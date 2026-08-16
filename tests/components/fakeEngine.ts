@@ -14,6 +14,7 @@ export type FakeEngineLog = {
   played: number;
   paused: number;
   replayed: number;
+  reset: number;
   disposed: number;
 };
 
@@ -35,6 +36,7 @@ export function createFakeEngineFactory(
     played: 0,
     paused: 0,
     replayed: 0,
+    reset: 0,
     disposed: 0,
   };
 
@@ -71,6 +73,9 @@ export function createFakeEngineFactory(
         paused: true,
       },
       setCameraPreset(): void {},
+      resetView(): void {
+        log.reset += 1;
+      },
       on(): () => void {
         return () => {};
       },

@@ -674,6 +674,15 @@ describe("FoldEngine render activity", () => {
 });
 
 describe("FoldEngine camera", () => {
+  it("constrains orbit and zoom while leaving pan disabled", () => {
+    const { controls } = mount({ engine: { display: true } });
+    expect(controls.enablePan).toBe(false);
+    expect(controls.minPolarAngle!).toBeGreaterThan(0);
+    expect(controls.maxPolarAngle!).toBeLessThan(Math.PI / 2);
+    expect(controls.minDistance!).toBeGreaterThan(0);
+    expect(controls.maxDistance!).toBeGreaterThan(controls.minDistance!);
+  });
+
   it("snaps straight to a preset under reduced motion", () => {
     const { engine, controls } = mount({ reducedMotion: true });
     engine.setCameraPreset("top");
@@ -685,6 +694,31 @@ describe("FoldEngine camera", () => {
     expect(actual.x).toBeCloseTo(expected.x, 4);
     expect(actual.y).toBeCloseTo(expected.y, 4);
     expect(actual.z).toBeCloseTo(expected.z, 4);
+  });
+
+  it("resets a dragged display camera to its authored view, target, and fitted distance", () => {
+    const displayView = { azimuthDeg: 121, elevationDeg: 31 };
+    const { engine, controls } = mount({
+      reducedMotion: true,
+      engine: { display: true, displayView },
+    });
+    const authoredTarget = engine["target"].clone();
+    const fittedDistance = engine["defaultDistance"] as number;
+    controls.target.set(400, -300, 200);
+    engine["camera"].position.set(-900, 800, 100);
+
+    engine.resetView();
+
+    expect(controls.target.toArray()).toEqual(authoredTarget.toArray());
+    expect(engine["camera"].position.distanceTo(authoredTarget)).toBeCloseTo(fittedDistance, 5);
+    const expected = orbitToPosition(
+      { ...displayView, distance: 1 },
+      new Vector3(),
+    ).normalize();
+    const actual = engine["camera"].position.clone().sub(authoredTarget).normalize();
+    expect(actual.x).toBeCloseTo(expected.x, 5);
+    expect(actual.y).toBeCloseTo(expected.y, 5);
+    expect(actual.z).toBeCloseTo(expected.z, 5);
   });
 
   it("tweens toward a preset, and a pointer-down on the canvas kills the tween", () => {

@@ -47,7 +47,9 @@ export type PreflightUiStrings = {
   readonly inspect3d: string;
   readonly showArtwork: string;
   readonly loading3d: string;
-  readonly staticFallback: string;
+  readonly resetView: string;
+  readonly unavailable3d: string;
+  readonly retry3d: string;
   readonly artworkAlt: string;
   readonly flightProfile: string;
   readonly rating: Readonly<Record<RatingKey, string>>;
@@ -85,7 +87,9 @@ export const PREFLIGHT_UI_KEYS = [
   "preflight.inspect3d",
   "preflight.showArtwork",
   "preflight.loading3d",
-  "preflight.staticFallback",
+  "preflight.resetView",
+  "preflight.unavailable3d",
+  "preflight.retry3d",
   "preflight.artworkAlt",
   "preflight.flightProfile",
   "preflight.getYourPaper",
@@ -134,7 +138,9 @@ export function preflightUiFromDictionary(ui: UiDictionary): PreflightUiStrings 
     inspect3d: t("preflight.inspect3d"),
     showArtwork: t("preflight.showArtwork"),
     loading3d: t("preflight.loading3d"),
-    staticFallback: t("preflight.staticFallback"),
+    resetView: t("preflight.resetView"),
+    unavailable3d: t("preflight.unavailable3d"),
+    retry3d: t("preflight.retry3d"),
     artworkAlt: t("preflight.artworkAlt"),
     flightProfile: t("preflight.flightProfile"),
     rating: {

@@ -61,6 +61,7 @@ export function HangarBay({
 }: HangarBayProps) {
   const bayRef = useRef<HTMLDivElement>(null);
   const mountRef = useRef<HTMLDivElement>(null);
+  const engineRef = useRef<FoldEngineHandle | null>(null);
   const nodesRef = useRef(new Map<string, HTMLElement>());
   const shadowRef = useRef<HTMLDivElement>(null);
   const flightsRef = useRef<Flight[]>([]);
@@ -87,6 +88,7 @@ export function HangarBay({
    * changes, so the effect cleans up and builds nothing.
    */
   const [inspectId, setInspectId] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
   /*
    * The stage that is actually drawing, tagged with WHOSE it is.
    *
@@ -241,6 +243,7 @@ export function HangarBay({
           });
         },
       });
+      engineRef.current = handle;
       handle.gotoStep(selected.stepCount - 1, { animate: false });
       window.addEventListener("resize", onResize);
     };
@@ -252,6 +255,7 @@ export function HangarBay({
       stopped = true;
       window.removeEventListener("resize", onResize);
       handle?.dispose();
+      if (engineRef.current === handle) engineRef.current = null;
       handle = null;
     };
   }, [
@@ -261,6 +265,7 @@ export function HangarBay({
     selected.structure,
     selected.stepCount,
     selected.presentation.displayView,
+    attempt,
   ]);
 
   /*
@@ -322,7 +327,7 @@ export function HangarBay({
    */
   const live = inspecting && stage?.planeId === selected.id ? stage.mode : null;
   const showStage = live === "webgl";
-  const showStaticEngine = live === "svg";
+  const unavailable = live === "svg";
 
   // The frame loop reads this rather than a class, because it writes the
   // shadow's opacity itself sixty times a second.
@@ -423,17 +428,21 @@ export function HangarBay({
           />
         ) : null}
 
-        {showStaticEngine ? (
-          <div data-testid="hangar-static-engine" className="hangar-static-engine">
-            <EngineSvg svg={selected.svg} className="h-full w-full" />
-          </div>
-        ) : null}
-
         <div className="hangar-bay-status">
           {inspecting && live !== "webgl" ? (
             <p aria-live="polite" className="hangar-badge">
-              {live === "svg" ? ui.staticFallback : ui.loading3d}
+              {unavailable ? ui.unavailable3d : ui.loading3d}
             </p>
+          ) : null}
+          {showStage ? (
+            <button
+              type="button"
+              data-testid="hangar-reset-view"
+              onClick={() => engineRef.current?.resetView()}
+              className={`hangar-reset ${FOCUS_RING}`}
+            >
+              {ui.resetView}
+            </button>
           ) : null}
         </div>
 
@@ -441,10 +450,21 @@ export function HangarBay({
           type="button"
           data-testid="hangar-inspect"
           aria-pressed={inspecting}
-          onClick={() => setInspectId(inspecting ? null : selected.id)}
+          onClick={() => {
+            if (unavailable) {
+              setStage(null);
+              setAttempt((value) => value + 1);
+              return;
+            }
+            setInspectId(inspecting ? null : selected.id);
+          }}
           className={`hangar-inspect ${FOCUS_RING}`}
         >
-          {inspecting ? ui.showArtwork : format(ui.inspect3d, { name: selected.name })}
+          {unavailable
+            ? ui.retry3d
+            : inspecting
+              ? ui.showArtwork
+              : format(ui.inspect3d, { name: selected.name })}
         </button>
       </div>
 

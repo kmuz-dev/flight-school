@@ -104,20 +104,38 @@ describe("Preflight", () => {
     expect(log.steps).toEqual([view.stepCount - 1]);
   });
 
-  it("keeps beauty artwork visible when 3D falls back, until the artwork fails", async () => {
-    renderPreflight("svg");
+  it("keeps beauty artwork visible when 3D falls back and offers a retry", async () => {
+    const { log } = renderPreflight("svg");
     const artwork = screen.getByTestId("preflight-artwork");
     const image = screen.getByRole("img", { name: `Finished paper aircraft: ${view.name}` });
 
     fireEvent.click(screen.getByRole("button", { name: `Inspect ${view.name} in 3D` }));
-    await waitFor(() => expect(screen.getByText(strings.staticFallback)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(strings.unavailable3d)).toBeInTheDocument());
     expect(artwork).toHaveClass("opacity-100");
     expect(screen.getByTestId("preflight-stage")).toHaveClass("opacity-0");
     expect(image).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: strings.retry3d }));
+    await waitFor(() => expect(log.created).toHaveLength(2));
+  });
 
+  it("uses the canonical SVG only after the beauty artwork also fails", async () => {
+    renderPreflight("svg");
+    const artwork = screen.getByTestId("preflight-artwork");
+    const image = screen.getByRole("img", { name: `Finished paper aircraft: ${view.name}` });
+    fireEvent.click(screen.getByRole("button", { name: `Inspect ${view.name} in 3D` }));
+    await waitFor(() => expect(screen.getByText(strings.unavailable3d)).toBeInTheDocument());
     fireEvent.error(image);
-    expect(artwork).toHaveClass("opacity-0");
-    expect(screen.getByTestId("preflight-stage")).toHaveClass("opacity-100");
+    expect(artwork).toHaveClass("opacity-100");
+    expect(artwork.innerHTML).toContain("<svg");
+    expect(screen.getByTestId("preflight-stage")).toHaveClass("opacity-0");
+  });
+
+  it("resets an inspected aircraft to its authored view", async () => {
+    const { log } = renderPreflight();
+    fireEvent.click(screen.getByRole("button", { name: `Inspect ${view.name} in 3D` }));
+    const reset = await screen.findByRole("button", { name: strings.resetView });
+    fireEvent.click(reset);
+    expect(log.reset).toBe(1);
   });
 
   it("derives the spec table from the fold sequence", () => {

@@ -335,13 +335,22 @@ describe("the Hangar bay", () => {
     expect(container.querySelectorAll(".hangar-aircraft")).toHaveLength(planes.length);
   });
 
-  it("labels a WebGL failure as the static preview it is", async () => {
-    renderHangar("svg");
+  it("keeps beauty art on a WebGL failure and offers a retry", async () => {
+    const { container, log } = renderHangar("svg");
     fireEvent.click(screen.getByTestId("hangar-inspect"));
 
-    await waitFor(() => expect(screen.getByText(strings.staticFallback)).toBeInTheDocument());
-    // And shows the canonical engine drawing rather than an empty stage.
-    expect(screen.getByTestId("hangar-static-engine").innerHTML).toContain("<svg");
+    await waitFor(() => expect(screen.getByText(strings.unavailable3d)).toBeInTheDocument());
+    expect(container.querySelector(".hangar-layer")).not.toHaveClass("is-hidden");
+    fireEvent.click(screen.getByRole("button", { name: strings.retry3d }));
+    await waitFor(() => expect(log.created).toHaveLength(2));
+  });
+
+  it("resets an inspected aircraft to its authored view", async () => {
+    const { log } = renderHangar();
+    fireEvent.click(screen.getByTestId("hangar-inspect"));
+    const reset = await screen.findByRole("button", { name: strings.resetView });
+    fireEvent.click(reset);
+    expect(log.reset).toBe(1);
   });
 
   // --- what the card grid took with it -------------------------------------

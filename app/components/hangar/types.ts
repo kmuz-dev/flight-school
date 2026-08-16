@@ -53,7 +53,9 @@ export type HangarUiStrings = {
   readonly inspect3d: string;
   readonly showArtwork: string;
   readonly loading3d: string;
-  readonly staticFallback: string;
+  readonly resetView: string;
+  readonly unavailable3d: string;
+  readonly retry3d: string;
 };
 
 export const HANGAR_UI_KEYS = [
@@ -74,7 +76,9 @@ export const HANGAR_UI_KEYS = [
   "hangar.preview",
   "preflight.showArtwork",
   "preflight.loading3d",
-  "preflight.staticFallback",
+  "preflight.resetView",
+  "preflight.unavailable3d",
+  "preflight.retry3d",
   "preflight.startFolding",
   "preflight.resume",
   "tier.easy",
@@ -110,7 +114,9 @@ export function hangarUiFromDictionary(ui: UiDictionary): HangarUiStrings {
     inspect3d: t("hangar.preview"),
     showArtwork: t("preflight.showArtwork"),
     loading3d: t("preflight.loading3d"),
-    staticFallback: t("preflight.staticFallback"),
+    resetView: t("preflight.resetView"),
+    unavailable3d: t("preflight.unavailable3d"),
+    retry3d: t("preflight.retry3d"),
   };
 }
 

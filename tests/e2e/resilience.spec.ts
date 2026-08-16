@@ -140,11 +140,13 @@ test("the hangar shows its fleet without WebGL", async ({ page }) => {
   await expect(page.locator(".hangar-aircraft img").first()).toBeVisible();
   await expect(page.getByTestId("hangar-stage")).toHaveCount(0);
 
-  // Explicit inspection then swaps to the canonical static engine and says so
-  // instead of claiming that a flat SVG is interactive 3D.
+  // Explicit inspection keeps the approved artwork, announces the failure,
+  // and offers another attempt instead of claiming that a flat SVG is 3D.
   await page.getByTestId("hangar-inspect").click();
-  await expect(page.getByTestId("hangar-static-engine").locator("svg")).toBeVisible();
-  await expect(page.getByText(/3D unavailable - showing the static preview/i)).toBeVisible();
+  await expect(page.getByText(/3D is unavailable\. Showing artwork\./i)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Retry 3D" })).toBeVisible();
+  await expect(page.locator(".hangar-aircraft img").first()).toBeVisible();
+  await expect(page.getByTestId("hangar-stage")).toHaveCSS("opacity", "0");
   expect(errors).toEqual([]);
 });
 
@@ -157,7 +159,8 @@ test("preflight keeps beauty artwork when 3D is unavailable", async ({ page }) =
   await expect(image).toBeVisible();
 
   await page.getByRole("button", { name: /inspect the dart in 3d/i }).click();
-  await expect(page.getByText(/3D unavailable - showing the static preview/i)).toBeVisible();
+  await expect(page.getByText(/3D is unavailable\. Showing artwork\./i)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Retry 3D" })).toBeVisible();
   await expect(artwork).toHaveCSS("opacity", "1");
   await expect(page.getByTestId("preflight-stage")).toHaveCSS("opacity", "0");
   await expect(image).toBeVisible();

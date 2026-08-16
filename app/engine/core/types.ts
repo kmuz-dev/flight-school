@@ -211,6 +211,8 @@ export interface FoldEngineHandle {
     readonly paused: boolean;
   };
   setCameraPreset(p: NonNullable<CameraHint["preset"]>): void;
+  /** Restore the authored display camera, fitted distance, and model target. */
+  resetView(): void;
   on(event: EngineEvent, cb: (payload: unknown) => void): () => void;
   resize(): void;
   dispose(): void;

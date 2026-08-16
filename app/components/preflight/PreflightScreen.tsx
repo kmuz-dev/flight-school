@@ -114,7 +114,9 @@ export function PreflightScreen({
             inspect3d={ui.inspect3d}
             showArtwork={ui.showArtwork}
             loading3d={ui.loading3d}
-            staticFallback={ui.staticFallback}
+            resetView={ui.resetView}
+            unavailable3d={ui.unavailable3d}
+            retry3d={ui.retry3d}
             {...(createEngine ? { createEngine } : {})}
           />
         </div>

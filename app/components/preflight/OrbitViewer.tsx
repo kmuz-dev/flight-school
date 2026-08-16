@@ -32,7 +32,9 @@ export type OrbitViewerProps = {
   inspect3d: string;
   showArtwork: string;
   loading3d: string;
-  staticFallback: string;
+  resetView: string;
+  unavailable3d: string;
+  retry3d: string;
   createEngine?: FoldEngineFactory;
 };
 
@@ -51,11 +53,15 @@ export function OrbitViewer({
   inspect3d,
   showArtwork,
   loading3d,
-  staticFallback,
+  resetView,
+  unavailable3d,
+  retry3d,
   createEngine,
 }: OrbitViewerProps) {
   const mountRef = useRef<HTMLDivElement>(null);
+  const engineRef = useRef<FoldEngineHandle | null>(null);
   const [requested, setRequested] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [ready, setReady] = useState(false);
   const [renderMode, setRenderMode] = useState<FoldEngineHandle["renderMode"] | null>(null);
   const [artFailed, setArtFailed] = useState(false);
@@ -98,6 +104,7 @@ export function OrbitViewer({
           });
         },
       });
+      engineRef.current = handle;
       handle.gotoStep(stepCount - 1, { animate: false });
       window.addEventListener("resize", onResize);
     };
@@ -109,13 +116,13 @@ export function OrbitViewer({
       stopped = true;
       window.removeEventListener("resize", onResize);
       handle?.dispose();
+      if (engineRef.current === handle) engineRef.current = null;
       handle = null;
     };
-  }, [requested, createEngine, structure, stepCount, displayView]);
+  }, [requested, attempt, createEngine, structure, stepCount, displayView]);
 
-  const showRenderedStage =
-    requested && ready && (renderMode === "webgl" || (renderMode === "svg" && artFailed));
-  const staticPreview = requested && ready && renderMode === "svg";
+  const showRenderedStage = requested && ready && renderMode === "webgl";
+  const unavailable = requested && ready && renderMode === "svg";
 
   return (
     <section
@@ -169,20 +176,37 @@ export function OrbitViewer({
       ) : null}
 
       <div className="absolute end-md bottom-md start-md z-10 flex flex-wrap items-center justify-between gap-sm">
-        {requested && (!ready || staticPreview) ? (
+        {requested && (!ready || unavailable) ? (
           <p aria-live="polite" className="rounded-full bg-raised/90 px-sm py-xs text-small text-ink-muted backdrop-blur-sm">
-            {!ready ? loading3d : staticFallback}
+            {!ready ? loading3d : unavailable3d}
           </p>
         ) : (
           <span />
         )}
+        {showRenderedStage ? (
+          <button
+            type="button"
+            onClick={() => engineRef.current?.resetView()}
+            className={`min-h-11 rounded-input border border-ink bg-raised/95 px-md py-sm text-small font-semibold shadow-sm backdrop-blur-sm hover:bg-paper ${FOCUS_RING}`}
+          >
+            {resetView}
+          </button>
+        ) : null}
         <button
           type="button"
           aria-pressed={requested}
-          onClick={() => setRequested((value) => !value)}
+          onClick={() => {
+            if (unavailable) {
+              setReady(false);
+              setRenderMode(null);
+              setAttempt((value) => value + 1);
+              return;
+            }
+            setRequested((value) => !value);
+          }}
           className={`ms-auto min-h-11 rounded-input border border-ink bg-raised/95 px-md py-sm text-small font-semibold shadow-sm backdrop-blur-sm hover:bg-paper ${FOCUS_RING}`}
         >
-          {requested ? showArtwork : format(inspect3d, { name: planeName })}
+          {unavailable ? retry3d : requested ? showArtwork : format(inspect3d, { name: planeName })}
         </button>
       </div>
     </section>

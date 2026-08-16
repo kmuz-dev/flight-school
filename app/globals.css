@@ -438,8 +438,7 @@ body {
 }
 
 /*
- * The live stage and the static engine both sit over the art, never instead of
- * it.
+ * The live stage sits over the art, never instead of it.
  *
  * The stage is shifted rather than inset, so it keeps the bay's full width -
  * and therefore the same aspect, the same fitted camera distance, and the same
@@ -464,20 +463,14 @@ body {
   opacity: 1;
 }
 
-.hangar-static-engine {
-  position: absolute;
-  inset: 8%;
-  z-index: 9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .hangar-bay-status {
   position: absolute;
   z-index: 18;
   bottom: clamp(26px, 4.5vh, 48px);
   inset-inline-start: clamp(24px, 4vw, 64px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .hangar-badge {
@@ -489,6 +482,23 @@ body {
   backdrop-filter: blur(10px);
   font-size: 0.875rem;
   color: rgb(247 243 233 / 0.82);
+}
+
+.hangar-reset {
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 1px solid rgb(247 243 233 / 0.18);
+  border-radius: 999px;
+  background: rgb(5 16 21 / 0.62);
+  backdrop-filter: blur(10px);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #f7f3e9;
+  cursor: pointer;
+}
+
+.hangar-reset:hover {
+  background: rgb(247 243 233 / 0.14);
 }
 
 .hangar-inspect {

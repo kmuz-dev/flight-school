@@ -171,6 +171,13 @@ export type RendererLike = {
 export type ControlsLike = {
   target: Vector3;
   enabled: boolean;
+  enableDamping?: boolean;
+  dampingFactor?: number;
+  enablePan?: boolean;
+  rotateSpeed?: number;
+  zoomSpeed?: number;
+  minPolarAngle?: number;
+  maxPolarAngle?: number;
   autoRotate?: boolean;
   autoRotateSpeed?: number;
   /** How close and how far the cadet may dolly; refit binds both to the model. */
@@ -283,7 +290,10 @@ export function createDefaultControls(
   camera: PerspectiveCamera,
   dom: HTMLElement,
 ): ControlsLike {
-  const controls = new OrbitControls(camera, dom);
+  return new OrbitControls(camera, dom);
+}
+
+function configureControls(controls: ControlsLike): void {
   controls.enableDamping = true;
   controls.dampingFactor = 0.08;
   controls.enablePan = false;
@@ -292,7 +302,6 @@ export function createDefaultControls(
   // Up is +Z, so polar 0 is straight overhead and PI/2 is the horizon.
   controls.minPolarAngle = MathUtils.degToRad(90 - MAX_ELEVATION_DEG);
   controls.maxPolarAngle = MathUtils.degToRad(90 - MIN_ELEVATION_DEG);
-  return controls;
 }
 
 type Listener = (payload: unknown) => void;
@@ -475,7 +484,10 @@ export class FoldEngine implements FoldEngineHandle {
       new Color(this.theme.hemiGround),
       this.display ? this.theme.displayHemiIntensity : this.theme.hemiIntensity,
     );
-    this.keyLight = new DirectionalLight(new Color(this.theme.keyColor), this.theme.keyIntensity);
+    this.keyLight = new DirectionalLight(
+      new Color(this.theme.keyColor),
+      this.display ? this.theme.displayKeyIntensity : this.theme.keyIntensity,
+    );
     // A display stage has nothing to receive a shadow map - the floor is gone
     // and the contact shadow is drawn, not cast. Without this the Preflight
     // hero, which runs at "full", would pay for a 1024-square depth pass that
@@ -502,6 +514,7 @@ export class FoldEngine implements FoldEngineHandle {
       this.camera,
       this.renderer.domElement,
     );
+    configureControls(this.controls);
     // A display surface turns on the spot; a tutorial stage never does, because
     // a moving camera during a fold makes it impossible to see what moved.
     this.controls.autoRotate = opts.autoRotate === true && !this.reducedMotion;
@@ -597,6 +610,15 @@ export class FoldEngine implements FoldEngineHandle {
     if (this.disposed) return;
     const next = resolveCameraHint({ preset }, this.orbit, this.defaultDistance);
     this.tweenCamera(next, true);
+  }
+
+  resetView(): void {
+    if (this.disposed) return;
+    this.controls.target.copy(this.target);
+    const authored = this.display && !this.pinnedPreset
+      ? this.displayView
+      : CAMERA_PRESETS[this.pinnedPreset ?? DEFAULT_PRESET];
+    this.tweenCamera({ ...authored, distance: this.defaultDistance }, true);
   }
 
   on(event: EngineEvent, cb: (payload: unknown) => void): () => void {
