@@ -19,6 +19,7 @@ import type { PlaneStructure } from "@/content/types";
 import type { CoreApi } from "./coreApi";
 import { FoldEngine } from "./renderer";
 import { createFallbackEngine, isWebGLAvailable } from "./fallback";
+import { reportRendererFault } from "@/engine/report";
 
 /**
  * The core math, as the render layer consumes it.
@@ -44,6 +45,12 @@ export const core: CoreApi = {
  * Mount a fold engine into `container`. Falls back to flat SVG rendering when
  * WebGL is unavailable or the 3D stage fails to start, so callers never have to
  * handle a missing engine.
+ *
+ * The two fallbacks are not the same event. Above the `try`, the machine has
+ * said it cannot do WebGL and the static stage is the correct answer, reported
+ * to the caller through `renderMode` and to nobody else. Inside it, the machine
+ * has said it CAN and the stage broke anyway, which is ours - so it is reported
+ * before the same degrade runs.
  */
 export function createFoldEngine(
   container: HTMLElement,
@@ -55,7 +62,8 @@ export function createFoldEngine(
   }
   try {
     return new FoldEngine(container, structure, opts, { core });
-  } catch {
+  } catch (cause) {
+    reportRendererFault(cause);
     container.replaceChildren();
     return createFallbackEngine(container, structure, opts, core);
   }

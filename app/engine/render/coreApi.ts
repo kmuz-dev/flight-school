@@ -14,6 +14,7 @@
  *   @/engine/core/svgRender -> renderStateToSvg
  */
 import type { FoldState, ValidationIssue } from "@/engine/core/types";
+import type { SvgOptions } from "@/engine/core/svgRender";
 import type { PlaneStructure } from "@/content/types";
 
 /**
@@ -72,5 +73,5 @@ export interface CoreApi {
   restTransform(state: FoldState): readonly number[];
 
   /** Flat 2D fallback rendering of a state, used with no WebGL and for thumbnails. */
-  renderStateToSvg(state: FoldState, options?: { readonly rest?: boolean }): string;
+  renderStateToSvg(state: FoldState, options?: SvgOptions): string;
 }

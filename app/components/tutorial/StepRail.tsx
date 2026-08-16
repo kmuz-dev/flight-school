@@ -1,20 +1,25 @@
 "use client";
 
 /**
- * The right-hand rail (SCREENS.md §3): everything about the CURRENT step.
- * Not a step list - the transport strip handles orientation.
+ * The instruction rail for one fold, with one clear navigation path.
+ *
+ * Fixed height inside the tutorial shell: the prose scrolls, Back and Next do
+ * not. That is what keeps the button a cadet reaches for in the same place on
+ * every fold - it used to sit after the content, so a step with a longer
+ * instruction or an extra fold term put it somewhere else.
  */
 import { FOCUS_RING } from "@/components/ui/focus";
 import { CreaseIcon } from "@/components/ui/CreaseIcon";
-import { format, pad2, type TutorialStepView, type TutorialUiStrings } from "./types";
+import { pad2, type TutorialStepView, type TutorialUiStrings } from "./types";
 
 export type StepRailProps = {
   ui: TutorialUiStrings;
   step: TutorialStepView;
-  totalSteps: number;
+  steps: readonly TutorialStepView[];
   isLastStep: boolean;
-  selfChecked: boolean;
-  onSelfCheck: (checked: boolean) => void;
+  /** The step's optional technique note, shown under the instruction. */
+  tip?: string;
+  onSelectStep: (index: number) => void;
   onBack: () => void;
   onNext: () => void;
 };
@@ -22,112 +27,105 @@ export type StepRailProps = {
 export function StepRail({
   ui,
   step,
-  totalSteps,
+  steps,
   isLastStep,
-  selfChecked,
-  onSelfCheck,
+  tip,
+  onSelectStep,
   onBack,
   onNext,
 }: StepRailProps) {
-  const current = step.index + 1;
-  const remaining = Math.max(0, totalSteps - current);
-
   return (
     <section
       aria-label={ui.stepRegionLabel}
-      className="flex flex-col gap-md border-[color:var(--color-ink-12)] bg-[color:var(--color-paper)] p-lg lg:border-s"
+      className="flex min-h-0 flex-col border-t border-ink-12 bg-paper lg:border-t-0 lg:border-s"
     >
-      <p className="font-mono text-micro tracking-[0.08em] text-[color:var(--color-red-ink)]">
-        {format(ui.stepLabel, { current: pad2(current), total: pad2(totalSteps) })}
-      </p>
+      {/*
+        The only scrolling region in the tutorial. Everything that varies with
+        the step - a longer instruction, a Why, a first-use fold term, a tip -
+        varies in here, where varying moves nothing else.
+      */}
+      <div className="flex min-h-0 flex-1 flex-col gap-lg overflow-y-auto px-lg pt-lg pb-md lg:px-xl lg:pt-xl">
+      <label className="flex scroll-mb-32 items-center justify-between gap-md font-mono text-micro text-ink-muted">
+        <span className="shrink-0">{ui.stepSelectLabel}</span>
+        <select
+          value={step.index}
+          onChange={(event) => onSelectStep(Number(event.target.value))}
+          className={`min-h-11 max-w-[70%] rounded-[6px] border border-ink-12 bg-raised px-sm py-xs font-sans text-small text-ink ${FOCUS_RING}`}
+        >
+          {steps.map((candidate, index) => (
+            <option key={candidate.id} value={index}>
+              {pad2(index + 1)} - {candidate.title}
+            </option>
+          ))}
+        </select>
+      </label>
 
-      <h2 className="font-display text-h2 font-bold uppercase leading-tight tracking-tight">
-        {step.title}
-      </h2>
-
-      <p className="text-instruction leading-relaxed text-[color:var(--color-ink-87)]">
-        {step.instruction}
-      </p>
+      <div className="scroll-mb-32 space-y-sm">
+        <h2 className="font-display text-h2 font-bold leading-[0.95] tracking-tight">
+          {step.title}
+        </h2>
+        <p className="text-instruction leading-relaxed text-ink-87">{step.instruction}</p>
+      </div>
 
       {step.why ? (
-        <aside className="border-s-4 border-[color:var(--color-sky)] bg-[color:var(--color-raised)] p-md">
-          <p className="font-mono text-micro tracking-[0.08em] text-[color:var(--color-sky-ink)]">
+        <details className="group scroll-mb-32 border-s-4 border-sky bg-raised p-md">
+          <summary className={`flex min-h-11 cursor-pointer items-center font-mono text-micro text-sky-ink ${FOCUS_RING}`}>
             {ui.why}
-          </p>
-          <p className="mt-xs text-small leading-relaxed text-[color:var(--color-ink-87)]">
-            {step.why}
-          </p>
-        </aside>
+          </summary>
+          <p className="mt-sm text-small leading-relaxed text-ink-87">{step.why}</p>
+        </details>
       ) : null}
 
       {step.glossary.length > 0 ? (
-        <div>
-          <p className="font-mono text-micro tracking-[0.08em] text-[color:var(--color-ink-muted)]">
+        <details className="group scroll-mb-32 border border-ink-12 bg-raised p-md">
+          <summary className={`flex min-h-11 cursor-pointer items-center font-mono text-micro text-ink-muted ${FOCUS_RING}`}>
             {ui.foldTerms}
-          </p>
-          <dl className="mt-xs flex flex-col gap-sm">
+          </summary>
+          <dl className="mt-md flex flex-col gap-md">
             {step.glossary.map((item) => (
-              /*
-                A <dl> may wrap each term/definition pair in one div and no
-                more, so the icon and the two halves of the pair are siblings
-                in a two-column grid rather than the icon-plus-nested-div a
-                flex row would want. The definition is pinned to the second
-                column so it sits under its term instead of under the mark.
-              */
               <div key={item.key} className="grid grid-cols-[auto_1fr] gap-x-sm">
                 <CreaseIcon variant={item.icon} />
                 <dt className="font-medium text-small">{item.term}</dt>
-                <dd className="col-start-2 text-small leading-snug text-[color:var(--color-ink-muted)]">
+                <dd className="col-start-2 text-small leading-snug text-ink-muted">
                   {item.definition}
                 </dd>
               </div>
             ))}
           </dl>
-        </div>
+        </details>
       ) : null}
-
-      <label className="flex items-center gap-sm border border-[color:var(--color-ink-12)] p-md text-small">
-        <input
-          type="checkbox"
-          checked={selfChecked}
-          onChange={(e) => onSelfCheck(e.target.checked)}
-          className={`size-[18px] accent-[color:var(--color-red)] ${FOCUS_RING}`}
-        />
-        {ui.selfCheck}
-      </label>
-
-      <p className="font-mono text-micro tracking-[0.08em] text-[color:var(--color-ink-muted)]">
-        {format(ui.foldsToWings, { count: remaining })}
-      </p>
+      {tip ? (
+        <p className="font-mono text-micro leading-relaxed italic text-ink-muted">
+          <span className="not-italic">{ui.tipLabel} </span>
+          {tip}
+        </p>
+      ) : null}
+      </div>
 
       {/*
-        On a phone the rail stacks under the stage, which puts Back and Next
-        below a screenful of why-box and glossary - the cadet has one hand on
-        the paper and should not have to scroll to advance. Sticking the action
-        row to the bottom of the viewport keeps it in reach at every step; the
-        opaque background is what stops the prose showing through behind it.
-        This is a reach fix only. It was briefly credited with fixing the
-        mobile Finish failures too; that was the top bar overflowing the
-        viewport, and the credit was wrong.
+        Outside the scrolling region, so it holds its place on every fold and on
+        every screen. SCREENS.md asks for Back and Next to stay visible on
+        mobile without covering the instructions; a row pinned below a scroller
+        does that by construction, where the sticky row it replaces could only
+        approximate it by watching an IntersectionObserver.
       */}
-      <div className="sticky bottom-0 z-10 -mx-lg flex gap-sm bg-[color:var(--color-paper)] px-lg pt-sm pb-md lg:static lg:mx-0 lg:px-0 lg:pt-0 lg:pb-0">
+      <div className="flex shrink-0 gap-sm border-t border-ink-12 bg-paper px-lg pt-sm pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:px-xl lg:pt-md lg:pb-xl">
         <button
           type="button"
           onClick={onBack}
           disabled={step.index === 0}
-          className={`flex-1 border border-[color:var(--color-ink)] px-md py-sm font-medium disabled:opacity-38 ${FOCUS_RING}`}
+          className={`min-h-11 flex-1 rounded-[6px] border border-ink px-md py-sm font-medium disabled:opacity-38 ${FOCUS_RING}`}
         >
           {ui.back}
         </button>
         <button
           type="button"
           onClick={onNext}
-          className={`flex-[2] bg-[color:var(--color-red-ink)] px-md py-sm font-semibold text-[color:var(--color-on-red)] ${FOCUS_RING}`}
+          className={`min-h-11 flex-[2] rounded-[6px] bg-red-ink px-md py-sm font-semibold text-on-red ${FOCUS_RING}`}
         >
           {isLastStep ? ui.finish : ui.nextFold}
         </button>
       </div>
-
     </section>
   );
 }

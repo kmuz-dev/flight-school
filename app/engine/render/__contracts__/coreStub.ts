@@ -16,6 +16,7 @@
  * against the real core - see tests/integration/geometry.test.ts.
  */
 import type { Facet, FoldState, Iso2, Vec2 } from "@/engine/core/types";
+import type { SvgOptions } from "@/engine/core/svgRender";
 import type { PlaneId, PlaneStructure } from "@/content/types";
 import type { CoreApi, PoseMap } from "../coreApi";
 
@@ -58,7 +59,7 @@ export type CoreStubCall =
   | { readonly fn: "computeFoldState"; readonly n: number }
   | { readonly fn: "posesForState"; readonly facets: number }
   | { readonly fn: "poseAtProgress"; readonly t: number }
-  | { readonly fn: "renderStateToSvg" }
+  | { readonly fn: "renderStateToSvg"; readonly options?: SvgOptions }
   | { readonly fn: "restTransform" }
   | { readonly fn: "validateSequence" };
 
@@ -123,8 +124,8 @@ export function createCoreStub(): CoreStub {
       return [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
     },
 
-    renderStateToSvg(state: FoldState): string {
-      calls.push({ fn: "renderStateToSvg" });
+    renderStateToSvg(state: FoldState, options?: SvgOptions): string {
+      calls.push({ fn: "renderStateToSvg", options });
       return `<svg data-facets="${state.facets.length}" viewBox="0 0 210 297"></svg>`;
     },
   };

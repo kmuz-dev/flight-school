@@ -3,6 +3,10 @@
  * without WebGL, so this mounts the core's flat SVG of the current fold state
  * and emits exactly the same events as the 3D stage. The React shell needs no
  * branch - it holds a `FoldEngineHandle` either way.
+ *
+ * It imports neither Three.js nor GSAP, directly or transitively, which is what
+ * lets the seam in `app/engine/index.ts` reach it statically and hand it out
+ * when the renderer chunk cannot be fetched at all. Keep it that way.
  */
 import type {
   AnnotationAnchor,
@@ -12,7 +16,15 @@ import type {
 } from "@/engine/core/types";
 import type { PlaneStructure } from "@/content/types";
 import type { CoreApi } from "./coreApi";
-import { stepDuration } from "./timeline";
+import { stepDuration } from "./duration";
+import { resolveDisplayView } from "@/engine/view";
+
+/**
+ * All the core this stage needs. Narrower than `CoreApi` on purpose: there are
+ * no poses to compute without a 3D scene, and the seam can satisfy this from
+ * what it already exports statically.
+ */
+export type FallbackCore = Pick<CoreApi, "computeFoldState" | "renderStateToSvg">;
 
 const HIDDEN_ANCHOR: AnnotationAnchor = { x: 0, y: 0, visible: false };
 
@@ -42,7 +54,7 @@ export function createFallbackEngine(
   container: HTMLElement,
   structure: PlaneStructure,
   opts: EngineOptions,
-  core: CoreApi,
+  core: FallbackCore,
 ): FoldEngineHandle {
   const doc = container.ownerDocument;
   const mount = doc.createElement("div");
@@ -65,7 +77,12 @@ export function createFallbackEngine(
 
   const paint = (index: number): void => {
     const state = core.computeFoldState(structure, index);
-    mount.innerHTML = core.renderStateToSvg(state);
+    const display = opts.display === true;
+    mount.innerHTML = core.renderStateToSvg(state, {
+      rest: opts.rest === true || display,
+      display,
+      displayView: display ? resolveDisplayView(opts) : undefined,
+    });
   };
 
   /**
@@ -86,6 +103,9 @@ export function createFallbackEngine(
   opts.onReady?.();
 
   return {
+    renderMode: "svg",
+    // A static SVG has no frame loop to suspend.
+    setRenderActive(): void {},
     gotoStep(n: number): void {
       if (disposed) return;
       stepIndex = Math.max(0, Math.min(n, lastIndex));

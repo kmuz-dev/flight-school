@@ -10,39 +10,16 @@ import { gsap } from "gsap";
 import type { FoldState, FoldStep } from "@/engine/core/types";
 import type { PlaneStructure } from "@/content/types";
 import type { CoreApi, PoseMap } from "./coreApi";
+import { REDUCED_MOTION_SECONDS, stepDuration } from "./duration";
 
-/** DESIGN.md: fold animations run 800-1500ms depending on fold size. */
-export const MIN_FOLD_SECONDS = 0.8;
-export const MAX_FOLD_SECONDS = 1.5;
-/** Reduced motion: jump to the end state (React crossfades the stage). */
-export const REDUCED_MOTION_SECONDS = 0.001;
-
-/**
- * Duration for a step: honour `step.duration`, otherwise derive it from how much
- * paper moves. A 180-degree flat fold is the slowest; a table rotation is quick.
- */
-export function stepDuration(step: FoldStep | undefined): number {
-  if (step?.duration !== undefined && step.duration > 0) return step.duration;
-  const action = step?.action;
-  if (!action) return MIN_FOLD_SECONDS;
-  const span = MAX_FOLD_SECONDS - MIN_FOLD_SECONDS;
-  switch (action.type) {
-    case "fold": {
-      const fraction = Math.min(Math.abs(action.angle) / 180, 1);
-      return MIN_FOLD_SECONDS + span * fraction;
-    }
-    case "flip":
-      return MIN_FOLD_SECONDS + span * 0.5;
-    case "unfold":
-      return MIN_FOLD_SECONDS + span * 0.35;
-    case "rotate": {
-      const fraction = Math.min(Math.abs(action.degrees) / 180, 1);
-      return MIN_FOLD_SECONDS * 0.75 + span * 0.25 * fraction;
-    }
-    case "cut":
-      return MIN_FOLD_SECONDS;
-  }
-}
+// Re-exported so the timeline stays the one name callers reach for; the
+// arithmetic itself lives in `./duration`, which the GSAP-free fallback shares.
+export {
+  MIN_FOLD_SECONDS,
+  MAX_FOLD_SECONDS,
+  REDUCED_MOTION_SECONDS,
+  stepDuration,
+} from "./duration";
 
 export type StepTimelineOptions = {
   readonly core: CoreApi;

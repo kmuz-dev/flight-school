@@ -7,9 +7,9 @@
  * The engine is a child concern: FoldStage creates it and hands the handle up.
  */
 import type { FoldEngineFactory } from "@/engine";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FoldEngineHandle, PaperFormat } from "@/engine/core/types";
-import type { PlaneStructure, Tier } from "@/content/types";
+import type { PlaneStructure } from "@/content/types";
 import { recordCompletion, recordStep, usePlaneProgress } from "@/lib/progress";
 import { FoldStage } from "./FoldStage";
 import { TransportBar } from "./TransportBar";
@@ -28,11 +28,11 @@ export type TutorialScreenProps = {
   structure: PlaneStructure;
   steps: readonly TutorialStepView[];
   planeName: string;
-  tier: Tier;
   paperFormat: PaperFormat;
   hangarHref: string;
   initialStep?: number;
   createEngine?: FoldEngineFactory;
+  loadEngine?: () => Promise<FoldEngineFactory>;
   onComplete?: () => void;
 };
 
@@ -41,11 +41,11 @@ export function TutorialScreen({
   structure,
   steps,
   planeName,
-  tier,
   paperFormat,
   hangarHref,
   initialStep = 0,
   createEngine,
+  loadEngine,
   onComplete,
 }: TutorialScreenProps) {
   const total = steps.length;
@@ -53,13 +53,17 @@ export function TutorialScreen({
     Math.max(0, Math.min(initialStep, total - 1)),
   );
   const [engine, setEngine] = useState<FoldEngineHandle | null>(null);
-  const [isPlaying, setIsPlaying] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [preset, setPreset] = useState<CameraPreset>("threeQuarter");
-  const [selfChecked, setSelfChecked] = useState(false);
+  const autoPlayNextRef = useRef(false);
 
   const step = steps[stepIndex];
   const isLastStep = stepIndex === total - 1;
+  const progressText = format(ui.stepLabel, {
+    current: pad2(stepIndex + 1),
+    total: pad2(total),
+  });
 
   // Engine events drive the readouts; the engine remains the source of truth
   // for playback so scrubbing and auto-play stay in agreement.
@@ -77,17 +81,6 @@ export function TutorialScreen({
       offComplete();
     };
   }, [engine]);
-
-  // Per-step UI state is derived from stepIndex, so it is adjusted during
-  // render rather than in an effect - resetting it in an effect would render
-  // once with the previous step's state and cascade.
-  const [renderedStep, setRenderedStep] = useState(stepIndex);
-  if (renderedStep !== stepIndex) {
-    setRenderedStep(stepIndex);
-    setSelfChecked(false);
-    setProgress(0);
-    setIsPlaying(true);
-  }
 
   /**
    * Resume where the cadet left off.
@@ -108,8 +101,25 @@ export function TutorialScreen({
   }
 
   // Side effects of a step change: command the engine and remember the place.
+  // Only an explicit Next asks the new step to auto-play. Resume, Back, direct
+  // selection, and first entry all land at the start frame in a paused state.
   useEffect(() => {
-    engine?.gotoStep(stepIndex);
+    if (!engine) {
+      recordStep(structure.id, stepIndex);
+      return;
+    }
+    const shouldAutoPlay = autoPlayNextRef.current;
+    autoPlayNextRef.current = false;
+    engine.gotoStep(stepIndex);
+    if (shouldAutoPlay && engine.renderMode === "webgl") {
+      setIsPlaying(true);
+      setProgress(0);
+    } else {
+      engine.timeline.pause();
+      engine.timeline.progress(0);
+      setIsPlaying(false);
+      setProgress(engine.renderMode === "svg" ? 1 : 0);
+    }
     recordStep(structure.id, stepIndex);
   }, [engine, stepIndex, structure.id]);
 
@@ -119,10 +129,31 @@ export function TutorialScreen({
       onComplete?.();
       return;
     }
+    autoPlayNextRef.current = true;
     setStepIndex((i) => Math.min(i + 1, total - 1));
   }, [isLastStep, onComplete, structure.id, total]);
 
-  const goBack = useCallback(() => setStepIndex((i) => Math.max(0, i - 1)), []);
+  const goBack = useCallback(() => {
+    autoPlayNextRef.current = false;
+    setStepIndex((i) => Math.max(0, i - 1));
+  }, []);
+
+  const selectStep = useCallback(
+    (index: number) => {
+      autoPlayNextRef.current = false;
+      const next = Math.max(0, Math.min(index, total - 1));
+      if (next === stepIndex && engine) {
+        engine.gotoStep(next);
+        engine.timeline.pause();
+        engine.timeline.progress(0);
+        setIsPlaying(false);
+        setProgress(engine.renderMode === "svg" ? 1 : 0);
+        return;
+      }
+      setStepIndex(next);
+    },
+    [engine, stepIndex, total],
+  );
 
   const togglePlay = useCallback(() => {
     if (!engine) return;
@@ -153,38 +184,50 @@ export function TutorialScreen({
   if (!step) return null;
 
   return (
-    <main className="flex min-h-screen flex-col">
-      <header className="flex items-center justify-between gap-md border-b border-[color:var(--color-ink-12)] px-lg py-md">
-        {/*
-          Every child here shrinks (min-w-0 + truncate on the name) and the
-          linear bar drops below sm. A phone that cannot fit this row does not
-          wrap it - mobile Chrome zooms the whole page out to make it fit, and
-          every tap after that lands a dozen pixels off its target. Orientation
-          is not lost on a phone: the mono counter stays, the transport strip
-          shows a segment per fold, and the rail repeats STEP nn / nn.
-        */}
-        <div className="flex min-w-0 items-center gap-md">
-          <a href={hangarHref} className={`shrink-0 font-mono text-micro tracking-[0.08em] ${FOCUS_RING}`}>
-            {ui.backToHangar}
-          </a>
-          <h1 className="truncate font-display text-h3 font-bold uppercase tracking-tight">
-            {planeName}
-          </h1>
-          {/*
-            The licence placard is the first thing to go on a narrow screen.
-            It is 148px of a 412px row that never shrinks, and with it there
-            the plane name - the one element that says which aircraft is on the
-            table - truncated to nothing and the placard ran straight through
-            the step counter. The tier was already read on the way in, from the
-            hangar card and the preflight header; the name was not.
-          */}
-          <span className="hidden shrink-0 border border-[color:var(--color-ink)] px-sm py-[2px] font-mono text-micro tracking-[0.08em] sm:inline-block">
-            {ui.license[tier]}
-          </span>
-        </div>
-        <div className="flex shrink-0 items-center gap-md">
+    <>
+      <a
+        href="#tutorial-main"
+        className={`fixed top-sm start-sm z-50 -translate-y-24 rounded-[6px] bg-ink px-md py-sm text-paper transition-transform focus:translate-y-0 ${FOCUS_RING}`}
+      >
+        {ui.skipToContent}
+      </a>
+      {/*
+        A fixed-height workspace, not a document.
+
+        The tutorial is a tool a cadet operates with paper in their hands: the
+        stage, the transport and Next have to be where they were last time, and
+        nothing should send them hunting down the page for the button that
+        advances the fold. So the shell is exactly one viewport tall and never
+        scrolls; only the instruction prose scrolls, inside the rail.
+
+        `dvh` rather than `vh` because on a phone `vh` is the tallest the
+        viewport ever gets, so a 100vh shell is guaranteed to be taller than the
+        window whenever the browser's own chrome is showing.
+
+        This replaces `min-h-screen`, which let the page grow past the viewport
+        by whatever the current step happened to contain. It grew: on a 390x844
+        phone the fourteen folds of the Hammer produced fourteen different page
+        heights, between 253 and 566px past the window, and Next landed at six
+        different places.
+      */}
+      <main
+        id="tutorial-main"
+        className="flex h-[100dvh] flex-col overflow-hidden"
+        tabIndex={-1}
+      >
+      <header className="grid shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-md gap-y-xs border-b border-ink-12 px-md py-sm sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:px-lg sm:py-md">
+        <a
+          href={hangarHref}
+          className={`col-start-1 row-start-1 font-mono text-micro tracking-[0.08em] ${FOCUS_RING}`}
+        >
+          {ui.backToHangar}
+        </a>
+        <h1 className="col-span-2 row-start-2 min-w-0 font-display text-h3 font-bold leading-none tracking-tight sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:truncate">
+          {planeName}
+        </h1>
+        <div className="col-start-2 row-start-1 flex shrink-0 items-center gap-sm sm:col-start-3">
           <p className="font-mono text-micro text-[color:var(--color-ink-muted)]">
-            {format(ui.progressLabel, { current: pad2(stepIndex + 1), total: pad2(total) })}
+            {progressText}
           </p>
           <div
             className="hidden h-[4px] w-[120px] bg-[color:var(--color-ink-12)] sm:block"
@@ -192,25 +235,39 @@ export function TutorialScreen({
             aria-valuenow={stepIndex + 1}
             aria-valuemin={1}
             aria-valuemax={total}
-            aria-label={ui.progressLabel}
+            aria-label={progressText}
           >
             <div
               className="h-full bg-[color:var(--color-sky)]"
               style={{ width: `${((stepIndex + 1) / total) * 100}%` }}
             />
           </div>
-          <a href={hangarHref} className={`border border-[color:var(--color-ink)] px-sm py-[2px] font-mono text-micro ${FOCUS_RING}`}>
-            {ui.exit}
-          </a>
         </div>
       </header>
 
-      <div className="grid flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_380px]">
-        <div className="flex flex-col gap-md p-lg">
+      <p className="sr-only" aria-live="polite" aria-atomic="true">
+        {format(ui.stepAnnouncement, {
+          current: stepIndex + 1,
+          total,
+          title: step.title,
+        })}
+      </p>
+
+      {/*
+        Stacked on a phone, the two rows split the shell evenly rather than
+        being sized by their contents: the stage keeps a usable share and the
+        rail scrolls its own prose inside the other half - which on a 390x844
+        phone still shows the title and the whole instruction before anything
+        needs scrolling. `minmax(0,...)` on both is what actually lets them
+        shrink; a grid track's default `auto` minimum refuses to go below its
+        content, which is how an overflowing page gets built out of children
+        that all individually behave.
+      */}
+      <div className="grid min-h-0 flex-1 grid-cols-1 grid-rows-[minmax(0,1fr)_minmax(0,1fr)] lg:grid-cols-[minmax(0,3fr)_minmax(320px,1fr)] lg:grid-rows-1">
+        <div className="flex min-h-0 min-w-0 flex-col gap-md p-md sm:p-lg">
           <FoldStage
             structure={structure}
             ui={ui}
-            stepIndex={stepIndex}
             isPlaying={isPlaying}
             paperFormat={paperFormat}
             annotationLabel={step.annotationLabel}
@@ -218,43 +275,31 @@ export function TutorialScreen({
             onSelectPreset={selectPreset}
             onEngineChange={setEngine}
             {...(createEngine ? { createEngine } : {})}
+            {...(loadEngine ? { loadEngine } : {})}
           />
           <TransportBar
             ui={ui}
-            stepIndex={stepIndex}
-            totalSteps={total}
             isPlaying={isPlaying}
             progress={progress}
             durationSeconds={duration}
             engine={engine}
-            onPrev={goBack}
-            onNext={goNext}
             onTogglePlay={togglePlay}
             onReplay={replay}
-            onSeekStep={setStepIndex}
           />
         </div>
 
         <StepRail
           ui={ui}
           step={step}
-          totalSteps={total}
+          steps={steps}
           isLastStep={isLastStep}
-          selfChecked={selfChecked}
-          onSelfCheck={setSelfChecked}
+          onSelectStep={selectStep}
           onBack={goBack}
           onNext={goNext}
+          {...(step.tip === undefined ? {} : { tip: step.tip })}
         />
       </div>
-
-      {step.tip ? (
-        <footer className="border-t border-[color:var(--color-ink-12)] bg-[color:var(--color-raised)] px-lg py-sm">
-          <p className="font-mono text-micro italic text-[color:var(--color-ink-muted)]">
-            <span className="not-italic">{ui.tipLabel} </span>
-            {step.tip}
-          </p>
-        </footer>
-      ) : null}
-    </main>
+      </main>
+    </>
   );
 }

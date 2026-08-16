@@ -11,7 +11,7 @@
  */
 import { useRouter } from "next/navigation";
 import type { PaperFormat } from "@/engine/core/types";
-import type { PlaneId, PlaneStructure, Tier } from "@/content/types";
+import type { PlaneId, PlaneStructure } from "@/content/types";
 import type { TutorialStepView, TutorialUiStrings } from "@/components/tutorial/types";
 import { TutorialScreen } from "@/components/tutorial/TutorialScreen";
 import { usePaperChoice } from "@/lib/progress";
@@ -28,7 +28,6 @@ export type FoldRouteProps = {
   readonly defaultPaper: PaperFormat;
   readonly planeId: PlaneId;
   readonly planeName: string;
-  readonly tier: Tier;
   readonly hangarHref: string;
   readonly completionHref: string;
 };
@@ -39,7 +38,6 @@ export function FoldRoute({
   defaultPaper,
   planeId,
   planeName,
-  tier,
   hangarHref,
   completionHref,
 }: FoldRouteProps) {
@@ -56,7 +54,6 @@ export function FoldRoute({
       structure={variant.structure}
       steps={variant.steps}
       planeName={planeName}
-      tier={tier}
       paperFormat={variant.paperFormat}
       hangarHref={hangarHref}
       onComplete={() => router.push(completionHref)}

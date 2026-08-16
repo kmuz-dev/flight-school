@@ -8,7 +8,7 @@
  * `createEngine` defaults to the contract-conforming stub; integration swaps in
  * the real engine behind the identical `FoldEngineHandle` seam.
  */
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { AnnotationAnchor, FoldEngineHandle, PaperFormat } from "@/engine/core/types";
 import type { PlaneStructure } from "@/content/types";
 import { loadFoldEngine, type FoldEngineFactory } from "@/engine";
@@ -17,8 +17,6 @@ import { Chip } from "@/components/ui/Chip";
 import { FOCUS_RING } from "@/components/ui/focus";
 import {
   CAMERA_PRESETS,
-  format,
-  pad2,
   type CameraPreset,
   type TutorialUiStrings,
 } from "./types";
@@ -33,8 +31,6 @@ function toAnchor(payload: unknown): AnnotationAnchor | null {
 export type FoldStageProps = {
   structure: PlaneStructure;
   ui: TutorialUiStrings;
-  /** 0-based. */
-  stepIndex: number;
   isPlaying: boolean;
   paperFormat: PaperFormat;
   annotationLabel?: string | undefined;
@@ -48,6 +44,8 @@ export type FoldStageProps = {
   onSelectPreset: (preset: CameraPreset) => void;
   onEngineChange: (handle: FoldEngineHandle | null) => void;
   createEngine?: FoldEngineFactory;
+  /** Async loader injection. Production uses loadFoldEngine; tests delay it. */
+  loadEngine?: () => Promise<FoldEngineFactory>;
   /** Overrides the cadet's stored scene; tests pin it, the app does not. */
   theme?: Theme;
 };
@@ -55,7 +53,6 @@ export type FoldStageProps = {
 export function FoldStage({
   structure,
   ui,
-  stepIndex,
   isPlaying,
   paperFormat,
   annotationLabel,
@@ -64,17 +61,57 @@ export function FoldStage({
   onSelectPreset,
   onEngineChange,
   createEngine,
+  loadEngine,
   theme,
 }: FoldStageProps) {
   const scene = useTheme();
   const activeTheme = theme ?? scene;
+  const sectionRef = useRef<HTMLElement>(null);
   const mountRef = useRef<HTMLDivElement>(null);
+  const engineRef = useRef<FoldEngineHandle | null>(null);
+  const intersectsRef = useRef(true);
+  const documentVisibleRef = useRef(true);
   const onEngineChangeRef = useRef(onEngineChange);
   const [engineAnchor, setEngineAnchor] = useState<AnnotationAnchor | null>(null);
+  const [renderMode, setRenderMode] = useState<FoldEngineHandle["renderMode"] | null>(null);
+
+  const syncRenderActivity = useCallback(() => {
+    engineRef.current?.setRenderActive(intersectsRef.current && documentVisibleRef.current);
+  }, []);
 
   useEffect(() => {
     onEngineChangeRef.current = onEngineChange;
   }, [onEngineChange]);
+
+  useEffect(() => {
+    const stage = sectionRef.current;
+    const doc = stage?.ownerDocument;
+    if (!stage || !doc) return;
+
+    documentVisibleRef.current = !doc.hidden;
+    const onVisibilityChange = (): void => {
+      documentVisibleRef.current = !doc.hidden;
+      syncRenderActivity();
+    };
+    doc.addEventListener("visibilitychange", onVisibilityChange);
+
+    const Observer = doc.defaultView?.IntersectionObserver;
+    const observer =
+      typeof Observer === "function"
+        ? new Observer((entries) => {
+            const entry = entries[0];
+            if (!entry) return;
+            intersectsRef.current = entry.isIntersecting;
+            syncRenderActivity();
+          })
+        : null;
+    observer?.observe(stage);
+
+    return () => {
+      observer?.disconnect();
+      doc.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [syncRenderActivity]);
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -93,6 +130,9 @@ export function FoldStage({
       // stands up only once it has a bend - which is exactly when it stops
       // being a sheet and starts being a plane.
       handle = create(mount, structure, { rest: true, theme: activeTheme });
+      engineRef.current = handle;
+      setRenderMode(handle.renderMode);
+      syncRenderActivity();
       offAnnotation = handle.on("annotation", (payload) => {
         setEngineAnchor(toAnchor(payload));
       });
@@ -101,7 +141,7 @@ export function FoldStage({
     };
 
     if (createEngine) start(createEngine);
-    else void loadFoldEngine().then(start);
+    else void (loadEngine ?? loadFoldEngine)().then(start);
 
     return () => {
       stopped = true;
@@ -109,19 +149,22 @@ export function FoldStage({
       offAnnotation?.();
       onEngineChangeRef.current(null);
       setEngineAnchor(null);
+      setRenderMode(null);
       handle?.dispose();
       handle = null;
+      engineRef.current = null;
     };
-  }, [createEngine, structure, activeTheme]);
+  }, [createEngine, loadEngine, structure, activeTheme, syncRenderActivity]);
 
   const anchor = engineAnchor ?? annotation ?? null;
   const showAnnotation = annotationLabel !== undefined && anchor !== null && anchor.visible;
-  const statusTemplate = isPlaying ? ui.playingFold : ui.pausedFold;
+  const statusText = renderMode === "svg" ? ui.staticFallback : isPlaying ? ui.playingFold : ui.pausedFold;
 
   return (
     <section
+      ref={sectionRef}
       aria-label={ui.stageLabel}
-      className="relative isolate min-h-[320px] flex-1 overflow-hidden rounded-card border border-ink-12"
+      className="relative isolate min-h-0 flex-1 overflow-hidden rounded-card border border-ink-12"
       style={{ background: "linear-gradient(170deg, var(--color-raised), var(--color-paper))" }}
     >
       {/* Graph-paper backdrop */}
@@ -147,48 +190,54 @@ export function FoldStage({
         </div>
       ) : null}
 
-      <p className="pointer-events-none absolute top-md start-md font-mono text-micro tracking-[0.12em] text-ink-muted uppercase">
-        {ui.viewHint}
-      </p>
+      {renderMode !== "svg" ? (
+        <p className="pointer-events-none absolute top-md start-md hidden font-mono text-micro tracking-[0.12em] text-ink-muted uppercase sm:block">
+          {ui.viewHint}
+        </p>
+      ) : null}
+
+      {renderMode !== "svg" ? (
+        <div
+          role="group"
+          aria-label={ui.cameraGroupLabel}
+          className="absolute top-md end-md hidden gap-xs sm:flex"
+        >
+          {CAMERA_PRESETS.map((preset) => {
+            const active = preset === activePreset;
+            return (
+              <button
+                key={preset}
+                type="button"
+                aria-pressed={active}
+                onClick={() => onSelectPreset(preset)}
+                className={`px-sm py-xs font-mono text-micro font-semibold tracking-[0.12em] uppercase transition-colors duration-150 ease-move ${
+                  active
+                    ? "bg-ink text-paper"
+                    : "border border-ink-12 bg-ink-12/40 text-ink hover:bg-ink-12"
+                } ${FOCUS_RING}`}
+              >
+                {ui.camera[preset]}
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
 
       <div
-        role="group"
-        aria-label={ui.cameraGroupLabel}
-        className="absolute top-md end-md flex gap-xs"
+        className={`absolute start-md max-w-[calc(100%_-_2rem)] ${renderMode === "svg" ? "top-md" : "bottom-md"}`}
+        role="status"
+        aria-live="polite"
       >
-        {CAMERA_PRESETS.map((preset) => {
-          const active = preset === activePreset;
-          return (
-            <button
-              key={preset}
-              type="button"
-              aria-pressed={active}
-              onClick={() => onSelectPreset(preset)}
-              className={`px-sm py-xs font-mono text-micro font-semibold tracking-[0.12em] uppercase transition-colors duration-150 ease-move ${
-                active
-                  ? "bg-ink text-paper"
-                  : "border border-ink-12 bg-ink-12/40 text-ink hover:bg-ink-12"
-              } ${FOCUS_RING}`}
-            >
-              {ui.camera[preset]}
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="absolute bottom-md start-md">
-        <Chip variant="quiet" className="bg-paper/90 text-ink">
+        <Chip variant="quiet" className="bg-paper/95 text-ink">
           <span
             aria-hidden="true"
-            className={`size-2 rounded-full ${isPlaying ? "animate-pulse bg-red" : "bg-ink-38"}`}
+            className={`size-2 shrink-0 rounded-full ${renderMode === "svg" ? "bg-sky" : isPlaying ? "animate-pulse bg-red" : "bg-ink-38"}`}
           />
-          <span data-testid="stage-status">
-            {format(statusTemplate, { step: pad2(stepIndex + 1) })}
-          </span>
+          <span data-testid="stage-status">{statusText}</span>
         </Chip>
       </div>
 
-      <p className="pointer-events-none absolute end-md bottom-md font-mono text-micro tracking-[0.12em] text-ink-muted uppercase">
+      <p className="pointer-events-none absolute end-md bottom-md hidden font-mono text-micro tracking-[0.12em] text-ink-muted uppercase sm:block">
         {ui.paper[paperFormat]}
       </p>
     </section>

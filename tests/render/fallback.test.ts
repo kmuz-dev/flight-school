@@ -7,6 +7,7 @@ import { createFallbackEngine, isWebGLAvailable } from "@/engine/render/fallback
 import { createCoreStub, makeStructure } from "@/engine/render/__contracts__/coreStub";
 import { createFakeDom } from "./fakeDom";
 import type { AnnotationAnchor } from "@/engine/core/types";
+import { CAMERA_PRESETS } from "@/engine/view";
 
 const flush = (): Promise<void> => new Promise<void>((resolve) => queueMicrotask(resolve));
 
@@ -41,6 +42,47 @@ describe("createFallbackEngine", () => {
     expect(node?.innerHTML).toContain("<svg");
     expect(core.calls.some((c) => c.fn === "renderStateToSvg")).toBe(true);
     expect(node?.dataset.theme).toBe("night");
+    expect(engine.renderMode).toBe("svg");
+    engine.dispose();
+  });
+
+  it("passes finished-aircraft presentation options to the static renderer", () => {
+    const { container } = createFakeDom();
+    const core = createCoreStub();
+    const displayView = { azimuthDeg: 128, elevationDeg: 33 };
+    const engine = createFallbackEngine(
+      container as unknown as HTMLElement,
+      makeStructure(3),
+      { display: true, displayView },
+      core,
+    );
+
+    expect(core.calls.find((call) => call.fn === "renderStateToSvg")).toEqual({
+      fn: "renderStateToSvg",
+      options: { display: true, rest: true, displayView },
+    });
+    engine.dispose();
+  });
+
+  it("gives a camera preset precedence over displayView without renderer math", () => {
+    const { container } = createFakeDom();
+    const core = createCoreStub();
+    const engine = createFallbackEngine(
+      container as unknown as HTMLElement,
+      makeStructure(3),
+      {
+        display: true,
+        rest: false,
+        displayView: { azimuthDeg: 128, elevationDeg: 33 },
+        cameraPreset: "top",
+      },
+      core,
+    );
+
+    expect(core.calls.find((call) => call.fn === "renderStateToSvg")).toEqual({
+      fn: "renderStateToSvg",
+      options: { display: true, rest: true, displayView: CAMERA_PRESETS.top },
+    });
     engine.dispose();
   });
 
@@ -82,6 +124,8 @@ describe("createFallbackEngine", () => {
     expect(engine.timeline.paused).toBe(true);
     expect(engine.timeline.duration).toBeGreaterThan(0);
     expect(() => {
+      engine.setRenderActive(false);
+      engine.setRenderActive(true);
       engine.timeline.play();
       engine.timeline.pause();
       engine.setCameraPreset("top");

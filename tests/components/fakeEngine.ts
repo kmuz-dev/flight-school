@@ -9,10 +9,17 @@ import type { PlaneStructure } from "@/content/types";
 export type FakeEngineLog = {
   readonly created: { structure: PlaneStructure; opts: EngineOptions }[];
   readonly steps: number[];
+  readonly stepAnimations: boolean[];
+  readonly renderActive: boolean[];
+  played: number;
+  paused: number;
+  replayed: number;
   disposed: number;
 };
 
-export function createFakeEngineFactory(): {
+export function createFakeEngineFactory(
+  renderMode: FoldEngineHandle["renderMode"] = "webgl",
+): {
   factory: (
     container: HTMLElement,
     structure: PlaneStructure,
@@ -20,7 +27,16 @@ export function createFakeEngineFactory(): {
   ) => FoldEngineHandle;
   log: FakeEngineLog;
 } {
-  const log: FakeEngineLog = { created: [], steps: [], disposed: 0 };
+  const log: FakeEngineLog = {
+    created: [],
+    steps: [],
+    stepAnimations: [],
+    renderActive: [],
+    played: 0,
+    paused: 0,
+    replayed: 0,
+    disposed: 0,
+  };
 
   const factory = (
     _container: HTMLElement,
@@ -30,13 +46,24 @@ export function createFakeEngineFactory(): {
     log.created.push({ structure, opts: opts ?? {} });
     opts?.onReady?.();
     return {
-      gotoStep(n: number): void {
-        log.steps.push(n);
+      renderMode,
+      setRenderActive(active: boolean): void {
+        log.renderActive.push(active);
       },
-      replay(): void {},
+      gotoStep(n: number, stepOpts?: { animate?: boolean }): void {
+        log.steps.push(n);
+        log.stepAnimations.push(stepOpts?.animate !== false);
+      },
+      replay(): void {
+        log.replayed += 1;
+      },
       timeline: {
-        play(): void {},
-        pause(): void {},
+        play(): void {
+          log.played += 1;
+        },
+        pause(): void {
+          log.paused += 1;
+        },
         progress(): number {
           return 1;
         },

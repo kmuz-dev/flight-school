@@ -34,6 +34,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import type {
   AnnotationAnchor,
   CameraHint,
+  DisplayView,
   EngineEvent,
   EngineOptions,
   FoldEngineHandle,
@@ -41,7 +42,13 @@ import type {
   FoldStep,
 } from "@/engine/core/types";
 import type { PlaneStructure } from "@/content/types";
-import { HERO_VIEW } from "@/engine/view";
+import {
+  CAMERA_PRESETS,
+  DEFAULT_PRESET,
+  HERO_VIEW,
+  resolveDisplayView,
+  type CameraPreset,
+} from "@/engine/view";
 import type { CoreApi, PoseMap } from "./coreApi";
 import { Annotations, annotationChanged } from "./annotations";
 import {
@@ -58,22 +65,10 @@ import {
 } from "./sceneModel";
 import { createStepTimeline, type StepTimeline } from "./timeline";
 
-export type CameraPreset = NonNullable<CameraHint["preset"]>;
-
-/**
- * Camera presets, per the engine spec. Azimuth is measured in the table plane
- * from +Y (the top of the sheet, where a plane's nose points) rotating toward
- * +X; elevation is measured up from the table.
- */
-export const CAMERA_PRESETS: Readonly<
-  Record<CameraPreset, { readonly azimuthDeg: number; readonly elevationDeg: number }>
-> = {
-  front: { azimuthDeg: 0, elevationDeg: 5 },
-  threeQuarter: { azimuthDeg: -35, elevationDeg: 25 },
-  top: { azimuthDeg: 0, elevationDeg: 85 },
-};
-
-export const DEFAULT_PRESET: CameraPreset = "threeQuarter";
+// Keep the established renderer import surface while the values themselves
+// live in the Three-free view module shared with SVG fallback rendering.
+export { CAMERA_PRESETS, DEFAULT_PRESET } from "@/engine/view";
+export type { CameraPreset } from "@/engine/view";
 
 /** Never look from under the table, never sit exactly on the +Z pole. */
 export const MIN_ELEVATION_DEG = 2;
@@ -287,6 +282,7 @@ export function createDefaultControls(
 type Listener = (payload: unknown) => void;
 
 export class FoldEngine implements FoldEngineHandle {
+  readonly renderMode = "webgl" as const;
   private readonly core: CoreApi;
   private readonly structure: PlaneStructure;
   private readonly theme: StageTheme;
@@ -340,6 +336,8 @@ export class FoldEngine implements FoldEngineHandle {
   private readonly rest: boolean;
   /** Present a finished aircraft rather than a table. See EngineOptions.display. */
   private readonly display: boolean;
+  /** Per-aircraft hero angle, kept independent from instructional presets. */
+  private readonly displayView: DisplayView;
   private readonly target = new Vector3();
   /** What the current step spans, so a resize re-frames the same geometry. */
   private stepBounds: ModelBounds | null = null;
@@ -350,6 +348,7 @@ export class FoldEngine implements FoldEngineHandle {
   private width = 0;
   private height = 0;
   private raf = 0;
+  private renderActive = true;
   private disposed = false;
   private lastAnnotation: AnnotationAnchor | null = null;
   private readonly reducedMotion: boolean;
@@ -375,8 +374,12 @@ export class FoldEngine implements FoldEngineHandle {
     this.theme = stageTheme(this.themeName);
     // Read before anything is built: these decide what the stage IS, and the
     // scene furniture below branches on them.
-    this.rest = opts.rest === true;
     this.display = opts.display === true;
+    // Display is a finished aircraft, so it always uses the geometry-derived
+    // resting frame. This is also how `renderStateToSvg({ display: true })`
+    // behaves, keeping WebGL and fallback representations congruent.
+    this.rest = opts.rest === true || this.display;
+    this.displayView = resolveDisplayView(opts);
     // A display surface is already showing a finished aircraft; only a tutorial
     // has a fold to finish first.
     this.liftProgress = this.display ? 1 : 0;
@@ -413,7 +416,7 @@ export class FoldEngine implements FoldEngineHandle {
     // preset and cannot be asked for by a fold step.
     this.orbit = {
       ...(this.display && !this.pinnedPreset
-        ? HERO_VIEW
+        ? this.displayView
         : CAMERA_PRESETS[this.pinnedPreset ?? DEFAULT_PRESET]),
       distance: this.defaultDistance,
     };
@@ -519,16 +522,33 @@ export class FoldEngine implements FoldEngineHandle {
 
   // --- FoldEngineHandle -----------------------------------------------------
 
+  setRenderActive(active: boolean): void {
+    if (this.disposed || active === this.renderActive) return;
+    this.renderActive = active;
+    if (!active) {
+      if (this.raf !== 0) this.view?.cancelAnimationFrame(this.raf);
+      this.raf = 0;
+      return;
+    }
+
+    // Paint synchronously before scheduling the continuing loop. A stage that
+    // changed steps while offscreen therefore never flashes its previous fold.
+    this.renderFrame();
+    this.startLoop();
+  }
+
   gotoStep(n: number, opts?: { animate?: boolean }): void {
     if (this.disposed) return;
     const animate = opts?.animate !== false;
     this.setStep(n, animate ? "play" : "end");
+    if (!this.renderActive) this.renderFrame();
   }
 
   replay(): void {
     if (this.disposed) return;
     this.annotations.setVisible(true);
     this.stepTimeline?.restart();
+    if (!this.renderActive) this.renderFrame();
   }
 
   readonly timeline: FoldEngineHandle["timeline"];
@@ -712,7 +732,7 @@ export class FoldEngine implements FoldEngineHandle {
     const hint: CameraHint | undefined = this.pinnedPreset
       ? { preset: this.pinnedPreset }
       : this.display
-        ? { ...HERO_VIEW, distance: this.defaultDistance }
+        ? { ...this.displayView, distance: this.defaultDistance }
         : step?.camera;
     const next = resolveCameraHint(hint, this.orbit, this.defaultDistance);
     this.tweenCamera(next, mode !== "start");
@@ -943,11 +963,20 @@ export class FoldEngine implements FoldEngineHandle {
 
   private startLoop(): void {
     const view = this.view;
-    if (!view || typeof view.requestAnimationFrame !== "function") return;
+    if (
+      !view ||
+      typeof view.requestAnimationFrame !== "function" ||
+      this.disposed ||
+      !this.renderActive ||
+      this.raf !== 0
+    ) {
+      return;
+    }
     const frame = (nowMs: number): void => {
-      if (this.disposed) return;
-      this.raf = view.requestAnimationFrame(frame);
+      this.raf = 0;
+      if (this.disposed || !this.renderActive) return;
       this.renderFrame(nowMs);
+      if (!this.disposed && this.renderActive) this.raf = view.requestAnimationFrame(frame);
     };
     this.raf = view.requestAnimationFrame(frame);
   }

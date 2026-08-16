@@ -10,9 +10,6 @@ import type { PlaneStructure } from "@/content/types";
 import type { GlossaryEntry, PlaneStrings } from "@/i18n/types";
 import type { CreaseIconVariant, GlossaryItemView, TutorialStepView } from "./types";
 
-/** `PlaneStrings.tips` key used when a step declares no tip of its own. */
-export const PLANE_TIP_KEY = "default";
-
 /**
  * `PlaneStrings` has no per-step titles yet (see the report to the integrator).
  * Accepting them as an optional extra keeps this additive: the day the content
@@ -55,7 +52,7 @@ export function buildTutorialSteps(
         : undefined;
 
     const why = step.hasWhy ? strings.why[step.id] : undefined;
-    const tip = strings.tips[step.id] ?? strings.tips[PLANE_TIP_KEY];
+    const tip = strings.tips[step.id];
 
     const view: TutorialStepView = {
       id: step.id,

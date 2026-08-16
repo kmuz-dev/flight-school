@@ -6,6 +6,7 @@ import { area } from "@/engine/core/polygon";
 import { isoDet } from "@/engine/core/iso2";
 import { posesForState, poseAtProgress, transformPoint } from "@/engine/core/pose";
 import { renderStateToSvg } from "@/engine/core/svgRender";
+import { HERO_VIEW } from "@/engine/view";
 import type { FoldState, FoldStep, Line2 } from "@/engine/core/types";
 import type { PlaneStructure } from "@/content/types";
 import { dart } from "@/content/planes/dart";
@@ -543,6 +544,33 @@ describe("18. svg projection", () => {
     // cropping its own shadow away.
     const viewBox = (svg: string) => svg.match(/viewBox="([^"]+)"/)![1]!.split(" ").map(Number);
     expect(viewBox(shown)[3]!).toBeGreaterThan(viewBox(plain)[3]!);
+  });
+
+  it("uses a supplied display view and keeps the hero view as the default", () => {
+    const finished = computeFoldState(dart, dart.steps.length - 1);
+    const defaultSvg = renderStateToSvg(finished, { display: true });
+    const explicitHeroSvg = renderStateToSvg(finished, {
+      display: true,
+      displayView: { azimuthDeg: HERO_VIEW.azimuthDeg, elevationDeg: HERO_VIEW.elevationDeg },
+    });
+    const sideSvg = renderStateToSvg(finished, {
+      display: true,
+      displayView: { azimuthDeg: 70, elevationDeg: 34 },
+    });
+
+    expect(explicitHeroSvg).toBe(defaultSvg);
+    expect(sideSvg).not.toBe(defaultSvg);
+  });
+
+  it("ignores display presentation metadata on instructional SVGs", () => {
+    const state = computeFoldState(dart, 4);
+    const instructional = renderStateToSvg(state, { showCreaseMarks: true });
+    const withAccidentalDisplayView = renderStateToSvg(state, {
+      showCreaseMarks: true,
+      displayView: { azimuthDeg: 62, elevationDeg: 41 },
+    });
+
+    expect(withAccidentalDisplayView).toBe(instructional);
   });
 });
 

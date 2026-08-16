@@ -57,7 +57,6 @@ export default async function TutorialPage({
       defaultPaper={nativePaper as PaperFormat}
       planeId={structure.id}
       planeName={strings.name}
-      tier={structure.tier}
       hangarHref={hangarHref(locale)}
       completionHref={completionHref(locale, planeId)}
     />

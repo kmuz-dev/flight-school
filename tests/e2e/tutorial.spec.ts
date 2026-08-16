@@ -16,11 +16,13 @@ test.describe("the Dart tutorial", () => {
   test("shows the first step's instruction and its why", async ({ page }) => {
     await expect(page.getByRole("heading", { level: 2 })).toContainText("Fold it in half");
     await expect(page.getByText(/fold the right edge over/i)).toBeVisible();
+    await page.getByText("Why", { exact: true }).click();
     await expect(page.getByText(/backbone/i)).toBeVisible();
   });
 
   test("teaches fold terms on first use", async ({ page }) => {
     const rail = page.getByRole("region", { name: /current step/i });
+    await rail.getByText("Fold terms", { exact: true }).click();
     await expect(rail.getByText("Valley fold")).toBeVisible();
     await expect(page.getByText(/crease dips down/i)).toBeVisible();
   });
@@ -48,13 +50,13 @@ test.describe("the Dart tutorial", () => {
     await expect(page.getByText(/step 01 \/ 12/i).first()).toBeVisible();
   });
 
-  test("the progress strip jumps to a step", async ({ page }) => {
-    await page.getByRole("button", { name: "Go to step 05" }).click();
+  test("the native fold selector jumps to a step", async ({ page }) => {
+    await page.getByRole("combobox", { name: "Choose a fold" }).selectOption("4");
     await expect(page.getByText(/step 05 \/ 12/i).first()).toBeVisible();
   });
 
   test("remembers progress and resumes after a reload", async ({ page }) => {
-    await page.getByRole("button", { name: "Go to step 04" }).click();
+    await page.getByRole("combobox", { name: "Choose a fold" }).selectOption("3");
     await expect(page.getByText(/step 04 \/ 12/i).first()).toBeVisible();
     const stored = await page.evaluate(() => localStorage.getItem("flightschool.v1"));
     expect(stored).toContain('"step":3');

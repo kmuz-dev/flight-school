@@ -5,7 +5,7 @@
  * thumbnails when WebGL is unavailable, and (if the 3D engine ever had to be
  * abandoned) static per-step diagrams from the same fold data.
  */
-import type { FoldState, Vec3 } from "./types";
+import type { DisplayView, FoldState, Vec3 } from "./types";
 import { identityMat4, multiply, posesForState, transformPoint, translation, type Mat4 } from "./pose";
 import { restTransform } from "./rest";
 import { boundingBox } from "./polygon";
@@ -49,6 +49,8 @@ export type SvgOptions = {
    * lying in its authoring frame.
    */
   readonly display?: boolean;
+  /** Finished-aircraft camera angle. Defaults to `HERO_VIEW`. */
+  readonly displayView?: DisplayView;
 };
 
 const DEFAULTS = {
@@ -79,8 +81,6 @@ const DEFAULTS = {
  *
  * Table space is x right, y forward (nose to tail), z up.
  */
-const BASIS = viewBasis(HERO_VIEW.azimuthDeg, HERO_VIEW.elevationDeg);
-
 /**
  * The lamps of `LIGHT_RIG`, pre-normalised, with the weights and colours the
  * paper theme's stage uses.
@@ -179,11 +179,11 @@ function shadeEdge(fillHex: string): string {
   return toHex([rgb[0] * 0.82, rgb[1] * 0.82, rgb[2] * 0.83]);
 }
 
-function shadeFacet(albedoHex: string, normal: Vec3, faceUp: boolean): string {
+function shadeFacet(albedoHex: string, normal: Vec3, faceUp: boolean, eye: Vec3): string {
   const base = parseHex(albedoHex);
   if (!base) return albedoHex;
   // Two-sided: paper is lit by whichever face the viewer is on.
-  const n: Vec3 = dot(normal, BASIS.eye) < 0 ? [-normal[0], -normal[1], -normal[2]] : normal;
+  const n: Vec3 = dot(normal, eye) < 0 ? [-normal[0], -normal[1], -normal[2]] : normal;
   const sky = (n[2] + 1) / 2;
   const out: [number, number, number] = [0, 0, 0];
   for (let c = 0; c < 3; c += 1) {
@@ -235,8 +235,13 @@ function groundShadow(
 
 export function renderStateToSvg(state: FoldState, options: SvgOptions = {}): string {
   const opts = { ...DEFAULTS, ...options };
-  const poses = posesForState(state);
   const display = opts.display === true;
+  // `displayView` is presentation metadata, not a general-purpose tutorial
+  // camera. A caller cannot accidentally rotate a fold diagram by passing the
+  // finished-aircraft option without also opting into display rendering.
+  const displayView = display ? (opts.displayView ?? HERO_VIEW) : HERO_VIEW;
+  const basis = viewBasis(displayView.azimuthDeg, displayView.elevationDeg);
+  const poses = posesForState(state);
   const settled = opts.rest === true || display ? restTransform(state) : null;
 
   // The model's own box in table space, measured after rest and before the
@@ -281,14 +286,14 @@ export function renderStateToSvg(state: FoldState, options: SvgOptions = {}): st
 
   const projected = state.facets.map((facet) => {
     const pose = posed(facet.id);
-    const pts = facet.polygon.map((p) => project(BASIS, at(pose, p)));
+    const pts = facet.polygon.map((p) => project(basis, at(pose, p)));
     // Mean closeness to the camera breaks ties the layer index cannot: bigger
     // is nearer, so it sorts last and paints on top. This has to be measured
     // along the view direction, not up the z axis - z alone only happens to be
     // the view direction when the camera is directly overhead, which is the one
     // angle this no longer uses.
     const depth = pose
-      ? facet.polygon.reduce((sum, p) => sum + closeness(BASIS, transformPoint(pose, p)), 0) /
+      ? facet.polygon.reduce((sum, p) => sum + closeness(basis, transformPoint(pose, p)), 0) /
         Math.max(1, facet.polygon.length)
       : 0;
     const det =
@@ -309,9 +314,9 @@ export function renderStateToSvg(state: FoldState, options: SvgOptions = {}): st
   const shadowPts: [number, number][] = [];
   if (display && bounds) {
     const g = groundShadow(bounds, liftMm);
-    const o = project(BASIS, [g.cx, g.cy, 0]);
-    const ex = project(BASIS, [g.cx + g.rx, g.cy, 0]);
-    const ey = project(BASIS, [g.cx, g.cy + g.ry, 0]);
+    const o = project(basis, [g.cx, g.cy, 0]);
+    const ex = project(basis, [g.cx + g.rx, g.cy, 0]);
+    const ey = project(basis, [g.cx, g.cy + g.ry, 0]);
     const a = [ex[0] - o[0], ex[1] - o[1]];
     const b = [ey[0] - o[0], ey[1] - o[1]];
     const m = [a[0]!, a[1]!, b[0]!, b[1]!, o[0], o[1]].map((n) => n.toFixed(4)).join(" ");
@@ -337,7 +342,7 @@ export function renderStateToSvg(state: FoldState, options: SvgOptions = {}): st
   const body = projected
     .map(({ facet, pts, faceUp, normal }) => {
       const d = pts.map(([x, y]) => `${x.toFixed(3)},${y.toFixed(3)}`).join(" ");
-      const fill = shadeFacet(faceUp ? opts.paperColor : opts.backColor, normal, faceUp);
+      const fill = shadeFacet(faceUp ? opts.paperColor : opts.backColor, normal, faceUp, basis.eye);
       // The outline is stroked in the facet's OWN shaded colour, darkened, not
       // in one ink for the whole model. A uniform hairline round every facet
       // turned a folded sheet into a wireframe drawing of one, and it was doing
@@ -356,8 +361,8 @@ export function renderStateToSvg(state: FoldState, options: SvgOptions = {}): st
         const pose = facet ? posed(facet.id) : undefined;
         if (!pose) return "";
         const [a, b] = mark.segment;
-        const pa = project(BASIS, transformPoint(pose, a));
-        const pb = project(BASIS, transformPoint(pose, b));
+        const pa = project(basis, transformPoint(pose, a));
+        const pb = project(basis, transformPoint(pose, b));
         return `<line x1="${pa[0].toFixed(3)}" y1="${pa[1].toFixed(3)}" x2="${pb[0].toFixed(3)}" y2="${pb[1].toFixed(3)}" stroke="rgba(26,43,74,0.25)" stroke-width="0.3" stroke-dasharray="2 2"/>`;
       })
       .join("");

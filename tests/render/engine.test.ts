@@ -257,6 +257,10 @@ function bobOf(m: Mounted, nowMs: number): number {
 }
 
 describe("FoldEngine display staging", () => {
+  it("identifies the live renderer truthfully", () => {
+    expect(mount().engine.renderMode).toBe("webgl");
+  });
+
   /**
    * A hangar card is a 3:2 decoration and six of them share one phone. None of
    * this is visible in anything a card renders, so nothing else would catch a
@@ -308,13 +312,38 @@ describe("FoldEngine display staging", () => {
     expect(engine["orbit"].azimuthDeg).toBe(HERO_VIEW.azimuthDeg);
     expect(engine["orbit"].elevationDeg).toBe(HERO_VIEW.elevationDeg);
 
-    const pinned = mount({ engine: { display: true, cameraPreset: "top" } });
+    const pinned = mount({
+      engine: {
+        display: true,
+        displayView: { azimuthDeg: 118, elevationDeg: 37 },
+        cameraPreset: "top",
+      },
+    });
     expect(pinned.engine["orbit"].azimuthDeg).toBe(CAMERA_PRESETS.top.azimuthDeg);
+    expect(pinned.engine["orbit"].elevationDeg).toBe(CAMERA_PRESETS.top.elevationDeg);
 
     // And a fold step's own hint never moves a display stage off it.
     const { engine: held } = mount({ engine: { display: true }, steps: 4 });
     held.gotoStep(2, { animate: false });
     expect(held["orbit"].azimuthDeg).toBe(HERO_VIEW.azimuthDeg);
+  });
+
+  it("holds a supplied aircraft display view across step changes", () => {
+    const displayView = { azimuthDeg: 118, elevationDeg: 37 };
+    const { engine } = mount({ engine: { display: true, displayView }, steps: 4 });
+    expect(engine["orbit"].azimuthDeg).toBe(displayView.azimuthDeg);
+    expect(engine["orbit"].elevationDeg).toBe(displayView.elevationDeg);
+
+    engine.gotoStep(2, { animate: false });
+    expect(engine["orbit"].azimuthDeg).toBe(displayView.azimuthDeg);
+    expect(engine["orbit"].elevationDeg).toBe(displayView.elevationDeg);
+  });
+
+  it("makes display imply the same geometry-derived rest used by SVG", () => {
+    const { engine, core } = mount({ engine: { display: true, rest: false } });
+
+    expect(engine["rest"]).toBe(true);
+    expect(core.calls.some((call) => call.fn === "restTransform")).toBe(true);
   });
 
   it("frames the ground the shadow lands on, not just the lifted plane", () => {
@@ -514,6 +543,50 @@ describe("FoldEngine closing lift", () => {
     expect(tween).not.toBeNull();
     m.engine.dispose();
     expect(tween!.isActive()).toBe(false);
+  });
+});
+
+describe("FoldEngine render activity", () => {
+  it("suspends and resumes one RAF chain idempotently", () => {
+    const { engine, view } = mount();
+    expect(view.requestAnimationFrame).toHaveBeenCalledTimes(1);
+
+    engine.setRenderActive(false);
+    expect(view.cancelAnimationFrame).toHaveBeenCalledTimes(1);
+    engine.setRenderActive(false);
+    expect(view.cancelAnimationFrame).toHaveBeenCalledTimes(1);
+
+    engine.setRenderActive(true);
+    expect(view.requestAnimationFrame).toHaveBeenCalledTimes(2);
+    engine.setRenderActive(true);
+    expect(view.requestAnimationFrame).toHaveBeenCalledTimes(2);
+  });
+
+  it("paints a changed step once while inactive without changing timeline pause state", () => {
+    const { engine, renderer } = mount();
+    engine.timeline.pause();
+    engine.setRenderActive(false);
+    const before = renderer.renderCount();
+
+    engine.gotoStep(2, { animate: false });
+
+    expect(renderer.renderCount()).toBe(before + 1);
+    expect(engine.timeline.paused).toBe(true);
+  });
+
+  it("can be disposed while inactive and remains inert", () => {
+    const m = mount();
+    live.splice(live.indexOf(m), 1);
+    m.engine.setRenderActive(false);
+    m.engine.dispose();
+
+    expect(() => {
+      m.engine.setRenderActive(true);
+      m.engine.gotoStep(2);
+      m.engine.replay();
+    }).not.toThrow();
+    expect(m.view.requestAnimationFrame).toHaveBeenCalledTimes(1);
+    expect(m.renderer.disposeSpy).toHaveBeenCalledTimes(1);
   });
 });
 

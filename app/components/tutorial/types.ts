@@ -6,8 +6,7 @@
  * (built from the flat `UiDictionary`) and `TutorialStepView` carries the
  * per-step prose (built from `PlaneStrings` + the glossary).
  */
-import type { PaperFormat, CameraHint, EngineOptions, FoldEngineHandle } from "@/engine/core/types";
-import type { PlaneStructure, Tier } from "@/content/types";
+import type { PaperFormat, CameraHint } from "@/engine/core/types";
 
 export type CameraPreset = NonNullable<CameraHint["preset"]>;
 
@@ -46,10 +45,11 @@ export type TutorialStepView = {
  * are filled with `format()`.
  */
 export type TutorialUiStrings = {
+  readonly skipToContent: string;
   readonly backToHangar: string;
-  readonly exit: string;
   readonly progressLabel: string;
-  readonly license: Readonly<Record<Tier, string>>;
+  /** Announces a changed step without moving keyboard focus. */
+  readonly stepAnnouncement: string;
   readonly stageLabel: string;
   readonly viewHint: string;
   readonly cameraGroupLabel: string;
@@ -61,26 +61,20 @@ export type TutorialUiStrings = {
   readonly transportLabel: string;
   readonly play: string;
   readonly pause: string;
-  readonly prevStep: string;
-  readonly nextStep: string;
   readonly replay: string;
   /** "STEP {current} / {total}". */
   readonly stepLabel: string;
-  /** "{elapsed} / {total} - SPEED {speed}x". */
+  /** "{elapsed} / {total}". */
   readonly timeReadout: string;
   readonly scrubLabel: string;
-  readonly stripLabel: string;
-  /** "Go to step {step}". */
-  readonly goToStep: string;
+  readonly stepSelectLabel: string;
+  readonly staticFallback: string;
   readonly stepRegionLabel: string;
   readonly why: string;
   readonly foldTerms: string;
-  readonly selfCheck: string;
   readonly back: string;
   readonly nextFold: string;
   readonly finish: string;
-  /** "{count} FOLDS TO YOUR WINGS". */
-  readonly foldsToWings: string;
   readonly tipLabel: string;
 };
 

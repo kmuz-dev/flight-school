@@ -13,7 +13,18 @@
  * camera convention is neither fold math nor stage plumbing: it is the shared
  * vocabulary the two use to agree about where the viewer is standing.
  */
-import type { Vec3 } from "./core/types";
+import type { CameraHint, DisplayView, EngineOptions, Vec3 } from "./core/types";
+
+export type CameraPreset = NonNullable<CameraHint["preset"]>;
+
+/** Instructional camera presets, shared by WebGL and the SVG fallback. */
+export const CAMERA_PRESETS: Readonly<Record<CameraPreset, DisplayView>> = {
+  front: { azimuthDeg: 0, elevationDeg: 5 },
+  threeQuarter: { azimuthDeg: -35, elevationDeg: 25 },
+  top: { azimuthDeg: 0, elevationDeg: 85 },
+};
+
+export const DEFAULT_PRESET: CameraPreset = "threeQuarter";
 
 /**
  * The angle a FINISHED plane is shown from: hangar cards, the preflight hero,
@@ -37,6 +48,15 @@ import type { Vec3 } from "./core/types";
  * planes the silhouette comes out around 1.8:1, against a 3:2 hangar card.
  */
 export const HERO_VIEW = { azimuthDeg: 145, elevationDeg: 25 } as const;
+
+/** `cameraPreset` is an explicit diagnostic pin and therefore wins. */
+export function resolveDisplayView(
+  options: Pick<EngineOptions, "cameraPreset" | "displayView">,
+): DisplayView {
+  return options.cameraPreset
+    ? CAMERA_PRESETS[options.cameraPreset]
+    : (options.displayView ?? HERO_VIEW);
+}
 
 export type ViewBasis = {
   /** Screen +x, in table space. */

@@ -93,6 +93,19 @@ function deepestStack(plane: PlaneStructure): number {
   return deepest;
 }
 
+function restingDimensions(plane: PlaneStructure): readonly [number, number, number] {
+  const final = computeFoldState(plane, plane.steps.length - 1);
+  const rest = restFrame(final).matrix;
+  const points = final.facets.flatMap((facet) => {
+    const pose = multiply(rest, poseForFacet(facet));
+    return facet.polygon.map((point) => transformPoint(pose, point));
+  });
+  return [0, 1, 2].map((axis) => {
+    const values = points.map((point) => point[axis]!);
+    return Math.max(...values) - Math.min(...values);
+  }) as unknown as readonly [number, number, number];
+}
+
 describe.each(Object.entries(PLANES))("%s: authored geometry", (id, plane) => {
   it("leaves no wedges before the wings are opened", () => {
     // Every crease endpoint must be constructed, never rounded to a tidy
@@ -193,8 +206,45 @@ describe.each(Object.entries(PLANES))("%s: authored geometry", (id, plane) => {
   });
 });
 
+describe("the Dart's defining structure", () => {
+  const dart = PLANES.dart!;
+
+  it("keeps a needle nose rather than acquiring a folded-back front", () => {
+    const final = computeFoldState(dart, dart.steps.length - 1);
+    const polygons = final.facets.map(facetInTable);
+    const box = boundingBox(polygons);
+    const noseX = polygons
+      .flatMap((polygon) => polygon)
+      .filter((point) => Math.abs(point[1] - box.min[1]) < 1e-8)
+      .map((point) => point[0]);
+
+    expect(noseX.length).toBeGreaterThan(0);
+    expect(Math.max(...noseX) - Math.min(...noseX), "Dart nose width").toBeLessThan(1e-8);
+  });
+
+  it("retains the exact central crease and folded spine", () => {
+    const centerCreases = [dart.steps[0]!, dart.steps[6]!].map((step) => step.action);
+    for (const action of centerCreases) {
+      if (action.type !== "fold") throw new Error("expected central fold");
+      expect(action.crease.a[0]).toBe(0);
+      expect(action.crease.b[0]).toBe(0);
+    }
+    expect(centerCreases.map((action) => (action.type === "fold" ? action.direction : null))).toEqual([
+      "valley",
+      "mountain",
+    ]);
+  });
+});
+
 describe("the Harrier's tip fins", () => {
   const harrier = PLANES.harrier!;
+
+  it("keeps a broad glider planform rather than collapsing toward a Dart", () => {
+    const [harrierSpan, harrierLength] = restingDimensions(harrier);
+    const [dartSpan, dartLength] = restingDimensions(PLANES.dart!);
+    expect(harrierSpan / harrierLength).toBeGreaterThan(0.6);
+    expect(harrierSpan / harrierLength).toBeGreaterThan((dartSpan / dartLength) * 2);
+  });
 
   it("hinge outboard of the wings, which is what makes both bends legal", () => {
     // Partial folds have to nest: a later crease may not cross a facet that is
@@ -226,6 +276,15 @@ describe("the Harrier's tip fins", () => {
     const rest = restFrame(final).matrix;
     const fins = final.facets.filter((f) => f.bend.length === 2);
     expect(fins.length).toBeGreaterThan(0);
+    const finCenters = fins.map((fin) => {
+      const pose = multiply(rest, poseForFacet(fin));
+      return (
+        fin.polygon.reduce((sum, point) => sum + transformPoint(pose, point)[0], 0) /
+        fin.polygon.length
+      );
+    });
+    expect(finCenters.some((x) => x < -50), "port tip fin").toBe(true);
+    expect(finCenters.some((x) => x > 50), "starboard tip fin").toBe(true);
     for (const fin of fins) {
       const withFin = multiply(rest, poseForFacet(fin));
       const wingOnly = multiply(

@@ -107,6 +107,18 @@ export type CameraHint = {
   readonly target?: Vec3;
 };
 
+/**
+ * Required camera angles for a finished-aircraft presentation surface.
+ *
+ * Unlike `CameraHint`, a display view is not instructional and cannot name a
+ * fold preset or override the fitted distance. It answers only where the
+ * viewer stands around the geometry-derived resting aircraft.
+ */
+export type DisplayView = {
+  readonly azimuthDeg: number;
+  readonly elevationDeg: number;
+};
+
 export type FoldStep = {
   /** Stable id, doubles as the i18n key: e.g. "dart.step-04". */
   readonly id: string;
@@ -183,6 +195,13 @@ export type AnnotationAnchor = {
  * React owns all DOM/UI; the engine never imports React.
  */
 export interface FoldEngineHandle {
+  /** Truthful rendering capability exposed to the React shell. */
+  readonly renderMode: "webgl" | "svg";
+  /**
+   * Suspend or resume drawing without changing the fold timeline's play state.
+   * Repeated calls with the same value are intentionally harmless.
+   */
+  setRenderActive(active: boolean): void;
   gotoStep(n: number, opts?: { animate?: boolean }): void;
   replay(): void;
   readonly timeline: {
@@ -260,5 +279,11 @@ export type EngineOptions = {
    * has no stage to dress.
    */
   readonly display?: boolean;
+  /**
+   * Per-aircraft hero angle for a display surface. Ignored unless `display` is
+   * enabled, and overridden by an explicit `cameraPreset` for diagnostics.
+   * Defaults to the catalogue-wide `HERO_VIEW`.
+   */
+  readonly displayView?: DisplayView;
   readonly onReady?: () => void;
 };
