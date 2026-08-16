@@ -57,11 +57,10 @@ import {
   createBackdropTexture,
   createStageFloorMaterial,
   displayBounds,
-  stageTheme,
+  STAGE_THEME,
   unionBounds,
   type ModelBounds,
   type StageTheme,
-  type ThemeName,
 } from "./sceneModel";
 import { createStepTimeline, type StepTimeline } from "./timeline";
 
@@ -294,7 +293,6 @@ export class FoldEngine implements FoldEngineHandle {
   private readonly core: CoreApi;
   private readonly structure: PlaneStructure;
   private readonly theme: StageTheme;
-  private readonly themeName: ThemeName;
   private readonly quality: StageQuality;
 
   private readonly container: HTMLElement;
@@ -379,8 +377,7 @@ export class FoldEngine implements FoldEngineHandle {
     this.container = container;
     this.structure = structure;
     this.core = deps.core;
-    this.themeName = opts.theme === "night" ? "night" : "paper";
-    this.theme = stageTheme(this.themeName);
+    this.theme = STAGE_THEME;
     // Read before anything is built: these decide what the stage IS, and the
     // scene furniture below branches on them.
     this.display = opts.display === true;

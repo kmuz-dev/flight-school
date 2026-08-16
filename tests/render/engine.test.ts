@@ -7,7 +7,7 @@ import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
 import { gsap } from "gsap";
 import { BufferGeometry, LineSegments, Mesh, Vector3 } from "three";
 import { CAMERA_PRESETS, FoldEngine, floatPhase, orbitToPosition } from "@/engine/render/renderer";
-import { stageTheme } from "@/engine/render/sceneModel";
+import { STAGE_THEME } from "@/engine/render/sceneModel";
 import { HERO_VIEW } from "@/engine/view";
 import { PLANES } from "@/content";
 import { createCoreStub, makeStructure } from "@/engine/render/__contracts__/coreStub";
@@ -507,7 +507,7 @@ describe("FoldEngine float", () => {
     }
     // A still shadow is the shadow the theme names, not a faint one.
     expect((m.engine["shadow"] as { opacity: number }).opacity).toBeCloseTo(
-      stageTheme("paper").shadowOpacity,
+      STAGE_THEME.shadowOpacity,
       9,
     );
   });

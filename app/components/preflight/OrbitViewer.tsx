@@ -11,7 +11,6 @@ import { loadFoldEngine, type FoldEngineFactory } from "@/engine";
 import type { FoldEngineHandle } from "@/engine/core/types";
 import type { PlaneStructure } from "@/content/types";
 import { EngineSvg } from "@/components/ui/EngineSvg";
-import { useTheme } from "@/lib/theme";
 import type { DisplayView } from "@/engine/core/types";
 import { FOCUS_RING } from "@/components/ui/focus";
 import { format } from "@/components/ui/format";
@@ -60,7 +59,6 @@ export function OrbitViewer({
   const [ready, setReady] = useState(false);
   const [renderMode, setRenderMode] = useState<FoldEngineHandle["renderMode"] | null>(null);
   const [artFailed, setArtFailed] = useState(false);
-  const theme = useTheme();
 
   useEffect(() => {
     if (!requested) return;
@@ -89,7 +87,6 @@ export function OrbitViewer({
         display: true,
         displayView,
         rest: true,
-        theme,
         onReady: () => {
           // Both engines currently signal readiness during construction. A
           // microtask lets the factory return its authoritative handle first,
@@ -114,7 +111,7 @@ export function OrbitViewer({
       handle?.dispose();
       handle = null;
     };
-  }, [requested, createEngine, structure, stepCount, displayView, theme]);
+  }, [requested, createEngine, structure, stepCount, displayView]);
 
   const showRenderedStage =
     requested && ready && (renderMode === "webgl" || (renderMode === "svg" && artFailed));

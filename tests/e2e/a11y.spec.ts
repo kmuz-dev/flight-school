@@ -25,12 +25,12 @@ const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"];
  * Let every colour transition land before reading colours off the page.
  *
  * axe measures contrast from the computed styles at the instant it runs, and a
- * `transition-colors` caught halfway through is measuring two colours that were
- * never meant to be seen together. The hangar's filter chips cross the palette
- * over 150ms when the theme toggles - ink navy on cream becoming cream on ink
- * navy - and somewhere in the middle they pass through each other. That made
- * the night scan fail about one run in three, and only in a full suite, where
- * the machine is busy enough for the scan to land inside the window.
+ * transition caught halfway through is measuring two colours that were never
+ * meant to be seen together. The hangar hands the beauty art over to a live
+ * stage across 300ms, and the aircraft it is fading between is the ground a
+ * badge sits on. A scan landing inside that window failed about one run in
+ * three, and only in a full suite, where the machine is busy enough to land
+ * there at all.
  *
  * Waiting on the animations themselves rather than sleeping: a sleep is a guess
  * that gets tuned upward every time it flakes. Anything that never finishes -
@@ -88,15 +88,6 @@ for (const { name, path } of SCREENS) {
     expect(summarise(await scan(page))).toEqual([]);
   });
 }
-
-test("night flight keeps its contrast", async ({ page }) => {
-  // The palette swaps wholesale in Night Flight, so passing in daylight says
-  // nothing about the dark scene. Same scan, other theme.
-  await page.goto("/en/");
-  await page.getByTestId("theme-toggle").click();
-  await expect(page.locator("html.night")).toHaveCount(1);
-  expect(summarise(await scan(page))).toEqual([]);
-});
 
 test("the native fold selector has a usable target and expected keyboard semantics", async ({ page }) => {
   await page.goto("/en/plane/dart/fold/");

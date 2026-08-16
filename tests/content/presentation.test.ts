@@ -7,7 +7,7 @@ import {
   AIRCRAFT_PRESENTATIONS,
   getAircraftPresentation,
 } from "@/content/presentation";
-import { STAGE_THEMES } from "@/engine/render/sceneModel";
+import { STAGE_THEME } from "@/engine/render/sceneModel";
 
 const AIRCRAFT_ASSET_DIR = path.join(process.cwd(), "app/assets/aircraft");
 const CANONICAL_REFERENCE_DIR = path.join(process.cwd(), "docs/aircraft-art/references");
@@ -331,8 +331,8 @@ describe("aircraft presentation manifest", () => {
     const image = await decodedRgba(artworkFile(id));
     const contrast = averageCompositeContrast(
       image,
-      rgb(STAGE_THEMES.paper.displaySky),
-      rgb(STAGE_THEMES.paper.displayGround),
+      rgb(STAGE_THEME.displaySky),
+      rgb(STAGE_THEME.displayGround),
     );
     expect(contrast, `${id} on the display gradient`).toBeGreaterThanOrEqual(
       MINIMUM_AVERAGE_OBJECT_CONTRAST,

@@ -124,9 +124,11 @@ export function closeness(basis: ViewBasis, p: Vec3): number {
  *   - `fill` low and opposite, cool and weaker. It keeps the shadow side from
  *     going dead, and the warm/cool split across a fold is most of what makes
  *     the result look like paper in a room rather than grey card.
- *   - `rim` from behind, to separate the silhouette from the backdrop. Off in
- *     the paper theme, which has a light ground and needs no help; strong in
- *     Night Flight, where the aircraft would otherwise dissolve into it.
+ *   - `rim` from behind, to separate the silhouette from the backdrop. Aimed
+ *     but burning at zero, because the one ground the stage paints is light and
+ *     a light ground needs no help. The lamp stays in the rig rather than being
+ *     deleted: the Hangar's photographed room is a dark ground the stage now
+ *     draws through to, and restoring a lamp is easier than rebuilding one.
  */
 export const LIGHT_RIG = {
   key: [-0.55, -0.75, 1.2] as Vec3,
@@ -144,11 +146,10 @@ export const LIGHT_RIG = {
  * resembled each other. Directions were shared from the start; these are the
  * other half of the same convention.
  *
- * These are the LIGHT theme's numbers. The flat SVG is built once at build time
- * and has no theme, so it always uses them; Night Flight's stage overrides them
- * in `STAGE_THEMES`, because a dark ground needs the opposite treatment - a
- * strong rim to keep the aircraft off the backdrop, which a light ground does
- * not need at all.
+ * One set, for the one ground the stage paints. There used to be a second, for
+ * Night Flight's dark scene, and the difference was mostly the rim: a dark
+ * ground needs a strong one to keep the aircraft off the backdrop, a light
+ * ground needs none at all. Only the light numbers remain.
  *
  * `ambient` is the one that matters. It is the light that reaches every surface
  * facing up, which is most of a paper aeroplane, so it is also the light that

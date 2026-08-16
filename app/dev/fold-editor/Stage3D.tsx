@@ -45,7 +45,7 @@ export function Stage3D({ structure, stepIndex, onHandle, onProgress }: Stage3DP
 
     void loadFoldEngine().then((create) => {
       if (stopped) return;
-      const handle = create(mount, structure, { theme: "paper" });
+      const handle = create(mount, structure);
       handleRef.current = handle;
       off = handle.on("progress", (payload) => {
         onProgressRef.current(typeof payload === "number" ? payload : 1);

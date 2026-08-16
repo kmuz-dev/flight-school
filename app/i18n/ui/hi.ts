@@ -9,8 +9,6 @@ const ui: UiDictionary = {
   "nav.wings": "पंख: {count}",
   "nav.backToHangar": "हैंगर पर वापस जाएँ",
   "nav.backToHangarShort": "हैंगर",
-  "nav.dayFlight": "दिन की उड़ान",
-  "nav.nightFlight": "रात की उड़ान",
   "hangar.subtitle":
     "एक विमान चुनो, कागज़ तैयार करो और पहली उड़ान तक हर मोड़ सीखो।",
   "hangar.eyebrow": "कागज़ के लिए एक उड़ान अकादमी - मैदान पर {count} विमान",
@@ -135,8 +133,6 @@ const ui: UiDictionary = {
   "error.body":
     "इस स्क्रीन पर कुछ गड़बड़ हो गई। तुम्हारी प्रगति सुरक्षित है, इसलिए तुम ठीक वहीं से आगे बढ़ सकते हो जहाँ छोड़ा था।",
   "error.retry": "फिर से कोशिश करें",
-
-  "a11y.themeToggle": "दिन और रात की उड़ान के बीच बदलें",
   "a11y.localePicker": "भाषा चुनें",
   "a11y.skipToContent": "मुख्य सामग्री पर जाएँ",
 };

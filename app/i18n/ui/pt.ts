@@ -9,8 +9,6 @@ const ui: UiDictionary = {
   "nav.wings": "Asas: {count}",
   "nav.backToHangar": "Voltar ao hangar",
   "nav.backToHangarShort": "Hangar",
-  "nav.dayFlight": "Voo diurno",
-  "nav.nightFlight": "Voo noturno",
   "hangar.subtitle":
     "Escolhe um avião, prepara o papel e aprende cada dobra até ao primeiro voo.",
   "hangar.eyebrow": "Uma escola de voo para o papel - {count} aviões na pista",
@@ -135,8 +133,6 @@ const ui: UiDictionary = {
   "error.body":
     "Alguma coisa correu mal neste ecrã. O teu progresso está guardado, por isso podes continuar exatamente onde ficaste.",
   "error.retry": "Tentar de novo",
-
-  "a11y.themeToggle": "Alternar entre voo diurno e voo noturno",
   "a11y.localePicker": "Escolher um idioma",
   "a11y.skipToContent": "Saltar para o conteúdo principal",
 };

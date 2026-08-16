@@ -11,8 +11,6 @@ const ui: UiDictionary = {
   "nav.wings": "윙: {count}",
   "nav.backToHangar": "격납고로 돌아가기",
   "nav.backToHangarShort": "격납고",
-  "nav.dayFlight": "낮 비행",
-  "nav.nightFlight": "밤 비행",
   "hangar.subtitle": "비행기를 고르고 종이를 준비한 뒤 첫 비행까지 모든 접기를 배워 보세요.",
   "hangar.eyebrow": "종이를 위한 비행 학교 - 계류장에 {count}대",
   "hangar.folds": "{count}번 접기",
@@ -135,8 +133,6 @@ const ui: UiDictionary = {
   "error.body":
     "이 화면에서 뭔가 잘못됐어요. 진행 상황은 저장돼 있으니 멈춘 자리에서 그대로 이어서 하면 돼요.",
   "error.retry": "다시 시도",
-
-  "a11y.themeToggle": "낮 비행과 밤 비행 전환",
   "a11y.localePicker": "언어 선택",
   "a11y.skipToContent": "주요 콘텐츠로 건너뛰기",
 };

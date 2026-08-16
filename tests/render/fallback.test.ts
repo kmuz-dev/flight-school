@@ -30,7 +30,7 @@ describe("createFallbackEngine", () => {
     const engine = createFallbackEngine(
       container as unknown as HTMLElement,
       structure,
-      { theme: "night" },
+      {},
       core,
     );
     return { container, core, structure, engine };
@@ -41,7 +41,6 @@ describe("createFallbackEngine", () => {
     const node = container.children[0];
     expect(node?.innerHTML).toContain("<svg");
     expect(core.calls.some((c) => c.fn === "renderStateToSvg")).toBe(true);
-    expect(node?.dataset.theme).toBe("night");
     expect(engine.renderMode).toBe("svg");
     engine.dispose();
   });

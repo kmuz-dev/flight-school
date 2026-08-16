@@ -12,8 +12,6 @@ const ui: UiDictionary = {
   "nav.wings": "ウイング: {count}",
   "nav.backToHangar": "ハンガーにもどる",
   "nav.backToHangarShort": "ハンガー",
-  "nav.dayFlight": "昼のフライト",
-  "nav.nightFlight": "夜のフライト",
   "hangar.subtitle":
     "機体をえらび、紙を用意して、初飛行までの折り方を学びましょう。",
   "hangar.eyebrow": "紙のためのフライトスクール - 駐機中の機体 {count} 機",
@@ -138,8 +136,6 @@ const ui: UiDictionary = {
   "error.body":
     "この画面で何かがうまくいきませんでした。進みぐあいは保存してあるので、やめたところからそのまま続けられます。",
   "error.retry": "もう一度ためす",
-
-  "a11y.themeToggle": "昼のフライトと夜のフライトを切りかえる",
   "a11y.localePicker": "言語をえらぶ",
   "a11y.skipToContent": "メインコンテンツへ移動",
 };

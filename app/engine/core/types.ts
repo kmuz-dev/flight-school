@@ -219,8 +219,6 @@ export interface FoldEngineHandle {
 }
 
 export type EngineOptions = {
-  /** "night" swaps stage backdrop/lighting per DESIGN.md. */
-  readonly theme?: "paper" | "night";
   /** Force the no-WebGL fallback (also auto-detected). */
   readonly forceFallback?: boolean;
   /**

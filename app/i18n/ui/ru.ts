@@ -13,8 +13,6 @@ const ui: UiDictionary = {
   "nav.wings": "Крылья: {count}",
   "nav.backToHangar": "Вернуться в ангар",
   "nav.backToHangarShort": "Ангар",
-  "nav.dayFlight": "Дневной полёт",
-  "nav.nightFlight": "Ночной полёт",
   "hangar.subtitle":
     "Выбери самолёт, подготовь бумагу и освой каждый сгиб до первого полёта.",
   "hangar.eyebrow": "Лётная школа для бумаги - самолётов на площадке: {count}",
@@ -139,8 +137,6 @@ const ui: UiDictionary = {
   "error.body":
     "На этом экране что-то пошло не так. Твой прогресс сохранён, так что можно продолжить ровно с того места, где ты остановился.",
   "error.retry": "Попробовать снова",
-
-  "a11y.themeToggle": "Переключить дневной и ночной полёт",
   "a11y.localePicker": "Выбрать язык",
   "a11y.skipToContent": "Перейти к основному содержимому",
 };

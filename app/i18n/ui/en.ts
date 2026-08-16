@@ -9,8 +9,6 @@ const ui: UiDictionary = {
   "nav.wings": "Wings: {count}",
   "nav.backToHangar": "Back to the hangar",
   "nav.backToHangarShort": "Hangar",
-  "nav.dayFlight": "Day flight",
-  "nav.nightFlight": "Night flight",
   "hangar.subtitle": "Choose an aircraft, check your paper, and learn every fold from sheet to first flight.",
   "hangar.eyebrow": "A flight academy for paper - {count} aircraft on the floor",
   "hangar.folds": "{count} folds",
@@ -134,8 +132,6 @@ const ui: UiDictionary = {
   "error.body":
     "Something went wrong on this screen. Your progress is saved, so you can pick up right where you left off.",
   "error.retry": "Try again",
-
-  "a11y.themeToggle": "Switch between day and night flight",
   "a11y.localePicker": "Choose a language",
   "a11y.skipToContent": "Skip to main content",
 };

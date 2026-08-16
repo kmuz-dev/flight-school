@@ -39,8 +39,29 @@ describe("storage", () => {
     expect(readStored()).toEqual({ progress: {}, completed: {} });
   });
 
-  it("rejects an unknown theme value", () => {
-    store.set("flightschool.v1", JSON.stringify({ progress: {}, completed: {}, theme: "neon" }));
-    expect(readStored().theme).toBeUndefined();
+  /*
+   * Night Flight is gone but the key it was written into is not, and a cadet
+   * who chose it must not lose a single wing to that. The read is field by
+   * field, so a retired name is dropped rather than carried, and everything
+   * beside it survives - which is the whole reason the schema stayed at v1.
+   */
+  it("keeps everything else when a blob still carries a retired theme", () => {
+    store.set(
+      "flightschool.v1",
+      JSON.stringify({
+        progress: { dart: { step: 3, updatedAt: "2026-08-09T10:00:00.000Z" } },
+        completed: { dart: { at: "2026-08-09T10:00:00.000Z" } },
+        locale: "ja",
+        theme: "night",
+        paperChoice: { dart: "a4" },
+      }),
+    );
+
+    const stored = readStored();
+    expect(stored.progress.dart?.step).toBe(3);
+    expect(stored.completed.dart).toBeDefined();
+    expect(stored.locale).toBe("ja");
+    expect(stored.paperChoice?.dart).toBe("a4");
+    expect("theme" in stored).toBe(false);
   });
 });

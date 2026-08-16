@@ -5,7 +5,7 @@
  *
  * localStorage is a shared mutable resource with no change notification inside
  * a tab, so three screens reading it independently would drift (fold a plane,
- * go back to the hangar, and the wings stamp would be missing until reload).
+ * go back to the hangar, and the wings marker would be missing until reload).
  * This module owns a single cached snapshot behind `useSyncExternalStore`, so
  * every subscriber re-renders together on any write, and cross-tab `storage`
  * events invalidate it too.
@@ -29,13 +29,6 @@ function invalidate(): void {
   cache = null;
   for (const listener of listeners) listener();
 }
-
-/**
- * Tell every subscriber the stored blob changed. Progress owns the snapshot, so
- * anything else that writes the same key (the theme) has to say so through here
- * or its own screen would be the last to know.
- */
-export const invalidateStored = invalidate;
 
 function subscribe(listener: () => void): () => void {
   if (!windowBound && typeof window !== "undefined") {

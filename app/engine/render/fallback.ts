@@ -59,7 +59,6 @@ export function createFallbackEngine(
   const doc = container.ownerDocument;
   const mount = doc.createElement("div");
   mount.dataset.foldEngine = "fallback";
-  mount.dataset.theme = opts.theme === "night" ? "night" : "paper";
   mount.style.cssText =
     "display:flex;align-items:center;justify-content:center;width:100%;height:100%";
   container.appendChild(mount);

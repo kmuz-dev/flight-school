@@ -20,13 +20,12 @@ import {
 import type { PlaneStructure } from "@/content/types";
 import type { CoreApi } from "./coreApi";
 import { isWebGLAvailable } from "./fallback";
-import { SceneModel, stageTheme, type ThemeName } from "./sceneModel";
+import { SceneModel, STAGE_THEME } from "./sceneModel";
 import { CAMERA_PRESETS, framingDistance, orbitToPosition } from "./renderer";
 
 export type ThumbnailOptions = {
   readonly width?: number;
   readonly height?: number;
-  readonly theme?: ThemeName;
   readonly pixelRatio?: number;
 };
 
@@ -98,7 +97,7 @@ function drawThumbnail(
 ): string {
   const width = options.width ?? DEFAULT_WIDTH;
   const height = options.height ?? DEFAULT_HEIGHT;
-  const theme = stageTheme(options.theme);
+  const theme = STAGE_THEME;
 
   const scene = new Scene();
   const model = new SceneModel(theme);

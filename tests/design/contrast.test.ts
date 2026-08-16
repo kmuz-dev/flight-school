@@ -18,7 +18,7 @@ import { describe, expect, it } from "vitest";
 const CSS = readFileSync(path.resolve(import.meta.dirname, "../../app/globals.css"), "utf8");
 
 /** The tokens declared in a block, as raw CSS values. */
-function block(name: "@theme" | ".night"): Record<string, string> {
+function block(name: "@theme"): Record<string, string> {
   const start = CSS.indexOf(name);
   if (start < 0) throw new Error(`no ${name} block in globals.css`);
   const open = CSS.indexOf("{", start);
@@ -74,19 +74,21 @@ function contrast(fg: Rgba, bg: Rgba): number {
 /** WCAG AA for normal-size text. Everything below is micro to instruction size. */
 const AA = 4.5;
 
+/*
+ * One scene, since Night Flight was retired.
+ *
+ * The product still has a dark surface - the Hangar's photographed bay - but it
+ * is not a second palette and could not be checked here if it were: its type
+ * sits on a photograph, so the ground is a pixel rather than a token. The axe
+ * scan in `tests/e2e/a11y.spec.ts` measures that one from the rendered page,
+ * which is the only place it can honestly be measured.
+ */
 const SCENES = [
   {
     name: "daylight",
     tokens: block("@theme"),
     grounds: ["--color-paper", "--color-raised"],
     /** Foregrounds that carry prose, on both grounds. */
-    text: ["--color-ink", "--color-ink-87", "--color-ink-muted", "--color-red-ink", "--color-sky-ink"],
-  },
-  {
-    name: "Night Flight",
-    // Night redeclares only what changes, so it inherits the rest of the theme.
-    tokens: { ...block("@theme"), ...block(".night") },
-    grounds: ["--color-paper", "--color-raised"],
     text: ["--color-ink", "--color-ink-87", "--color-ink-muted", "--color-red-ink", "--color-sky-ink"],
   },
 ] as const;
@@ -111,7 +113,7 @@ describe("the palette meets DESIGN.md's AA rule", () => {
 
     it(`${scene.name}: that red surface is still visible against the page`, () => {
       // WCAG 1.4.11: a control's own boundary needs 3:1 against what is behind
-      // it, which is what stops a dark red button from sinking into the night.
+      // it, which is what stops a primary action sinking into its own page.
       for (const ground of scene.grounds) {
         const ratio = contrast(parse(scene.tokens["--color-red-ink"]!), parse(scene.tokens[ground]!));
         expect(ratio, `${ground} -> ${ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(3);

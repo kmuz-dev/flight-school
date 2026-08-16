@@ -98,7 +98,7 @@ export function loadFoldEngine(): Promise<FoldEngineFactory> {
 export type { CoreApi, PoseMap } from "./render/coreApi";
 export type { ThumbnailOptions } from "./render/thumbnail";
 export type { CameraPreset, Orbit } from "./render/renderer";
-export type { StageTheme, ThemeName } from "./render/sceneModel";
+export type { StageTheme } from "./render/sceneModel";
 export type { StepTimeline, StepTimelineOptions } from "./render/timeline";
 export type {
   AnnotationAnchor,

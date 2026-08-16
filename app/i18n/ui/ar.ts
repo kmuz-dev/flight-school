@@ -16,8 +16,6 @@ const ui: UiDictionary = {
   "nav.wings": "الأجنحة: {count}",
   "nav.backToHangar": "العودة إلى الحظيرة",
   "nav.backToHangarShort": "الحظيرة",
-  "nav.dayFlight": "طيران نهاري",
-  "nav.nightFlight": "طيران ليلي",
   "hangar.subtitle": "اختر طائرة، وجهّز الورق، وتعلّم كل طيّة حتى أول تحليق.",
   "hangar.eyebrow": "مدرسة طيران للورق - {count} طائرات في الساحة",
   "hangar.folds": "{count} طيّة",
@@ -140,8 +138,6 @@ const ui: UiDictionary = {
   "error.body":
     "حدث خطأ ما في هذه الشاشة. تقدّمك محفوظ، فيمكنك المتابعة من حيث توقّفت تمامًا.",
   "error.retry": "حاول من جديد",
-
-  "a11y.themeToggle": "التبديل بين الطيران النهاري والليلي",
   "a11y.localePicker": "اختر لغة",
   "a11y.skipToContent": "انتقل إلى المحتوى الرئيسي",
 };

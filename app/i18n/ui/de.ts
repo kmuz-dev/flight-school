@@ -9,8 +9,6 @@ const ui: UiDictionary = {
   "nav.wings": "Schwingen: {count}",
   "nav.backToHangar": "Zurück zum Hangar",
   "nav.backToHangarShort": "Hangar",
-  "nav.dayFlight": "Tagflug",
-  "nav.nightFlight": "Nachtflug",
   "hangar.subtitle":
     "Wähle ein Flugzeug, prüfe dein Papier und lerne jeden Faltschritt bis zum ersten Flug.",
   "hangar.eyebrow": "Eine Flugschule für Papier - {count} Flugzeuge auf dem Vorfeld",
@@ -135,8 +133,6 @@ const ui: UiDictionary = {
   "error.body":
     "Auf diesem Bildschirm ist etwas schiefgegangen. Dein Fortschritt ist gespeichert, du kannst genau dort weitermachen, wo du aufgehört hast.",
   "error.retry": "Noch einmal versuchen",
-
-  "a11y.themeToggle": "Zwischen Tagflug und Nachtflug wechseln",
   "a11y.localePicker": "Eine Sprache wählen",
   "a11y.skipToContent": "Zum Hauptinhalt springen",
 };

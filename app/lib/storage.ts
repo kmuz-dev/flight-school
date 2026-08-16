@@ -1,39 +1,23 @@
 /**
  * localStorage schema (SPEC.md §6). Versioned single key; unknown or corrupt
  * data is discarded silently. All reads are SSR/export-safe.
+ *
+ * The key is deliberately unchanged across the Night Flight retirement. A blob
+ * written by an older build carries a `theme` field this schema no longer names,
+ * and the field-by-field read below simply does not copy it forward - so a cadet
+ * who chose Night Flight keeps every wing they earned under it, and the dead
+ * value is dropped the next time anything is written. Bumping the version to
+ * v2 would have been the same work plus the loss of everyone's progress.
  */
 import type { PlaneId } from "@/content/types";
 import type { PaperFormat } from "@/engine/core/types";
 
 const KEY = "flightschool.v1";
 
-/** The class Night Flight keys off, set on `<html>` (globals.css). */
-export const NIGHT_CLASS = "night";
-
-/**
- * Read the stored theme and put the class on `<html>` before anything paints.
- *
- * This runs as an inline script at the top of the body, ahead of React, because
- * the alternative is a cream flash on every navigation for a cadet who chose
- * Night Flight: a static export ships one prerendered HTML per route, and no
- * amount of client state can beat first paint. It is the only piece of the
- * stored schema read outside this module, which is why it lives next to the key
- * it reads rather than in the layout that inlines it.
- */
-export const THEME_BOOT_SCRIPT =
-  `(function(){try{` +
-  `var s=JSON.parse(localStorage.getItem(${JSON.stringify(KEY)})||"null");` +
-  `var t=s&&s.theme;` +
-  `if(t!=="night"&&t!=="paper"){` +
-  `t=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"night":"paper";}` +
-  `if(t==="night")document.documentElement.classList.add(${JSON.stringify(NIGHT_CLASS)});` +
-  `}catch(e){}})();`;
-
 export type Stored = {
   progress: Partial<Record<PlaneId, { step: number; updatedAt: string }>>;
   completed: Partial<Record<PlaneId, { at: string }>>;
   locale?: string;
-  theme?: "paper" | "night";
   paperChoice?: Partial<Record<PlaneId, PaperFormat>>;
 };
 
@@ -51,7 +35,6 @@ export function readStored(): Stored {
       progress: typeof p.progress === "object" && p.progress !== null ? p.progress : {},
       completed: typeof p.completed === "object" && p.completed !== null ? p.completed : {},
       locale: typeof p.locale === "string" ? p.locale : undefined,
-      theme: p.theme === "night" || p.theme === "paper" ? p.theme : undefined,
       paperChoice:
         typeof p.paperChoice === "object" && p.paperChoice !== null ? p.paperChoice : undefined,
     };

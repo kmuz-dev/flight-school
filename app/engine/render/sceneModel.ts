@@ -36,12 +36,16 @@ import type { Facet, FoldState, Vec2 } from "@/engine/core/types";
 import { DISPLAY_RIG } from "@/engine/view";
 import type { PoseMap } from "./coreApi";
 
-export type ThemeName = "paper" | "night";
 
 /**
- * Stage palette. Colours are the DESIGN.md tokens: the light stage is the
- * cream/ink two-ink system, Night Flight is the deep-navy scene change with rim
- * light on the paper rather than an inversion.
+ * Stage palette, in the DESIGN.md cream/ink two-ink system.
+ *
+ * One palette, not a pair. Night Flight used to supply a second - a deep-navy
+ * scene change with a rim light on the paper - and every consumer from the
+ * renderer down to the fold-editor carried a theme argument to choose between
+ * them. The dark ground the product still has is the Hangar's photographed
+ * room, and that is a photograph rather than a palette: the stage draws through
+ * to it (`EngineOptions.transparent`) instead of matching it.
  */
 export type StageTheme = {
   /** Scene clear colour behind the stage floor. */
@@ -78,6 +82,15 @@ export type StageTheme = {
   readonly displayHemiIntensity: number;
   readonly displayFillIntensity: number;
   readonly rimColor: number;
+  /**
+   * Zero on this ground, and kept as a field rather than deleted.
+   *
+   * A rim separates a silhouette from a backdrop, and a light backdrop needs no
+   * help - it was Night Flight's dark scene that did. The lamp is still built
+   * and still aimed, because the Hangar's photographed room is a dark ground
+   * that may yet want one, and a rig missing a lamp is a harder thing to
+   * restore than a lamp set to zero.
+   */
   readonly rimIntensity: number;
   readonly crease: number;
   readonly shadowOpacity: number;
@@ -95,73 +108,35 @@ export type StageTheme = {
   readonly contactShadow: number;
 };
 
-export const STAGE_THEMES: Readonly<Record<ThemeName, StageTheme>> = {
-  paper: {
-    background: 0xefe9da,
-    floor: 0xfbf8f0,
-    grid: 0x1a2b4a,
-    gridStrength: 0.16,
-    gridSize: 20,
-    paperFront: 0xfdfbf4,
-    paperBack: 0xeae2d0,
-    edge: 0x1a2b4a,
-    edgeOpacity: 0.22,
-    hemiSky: 0xf7f3e9,
-    hemiGround: 0xd9d2c2,
-    hemiIntensity: 0.9,
-    keyColor: 0xfff6e2,
-    keyIntensity: 2.4,
-    fillColor: 0xcfe0f0,
-    fillIntensity: 0.75,
-    // The display rig is shared with the flat SVG - see `DISPLAY_RIG`, which
-    // carries the measurements behind these numbers.
-    displayHemiIntensity: DISPLAY_RIG.ambient,
-    displayFillIntensity: DISPLAY_RIG.fill,
-    rimColor: 0xffffff,
-    rimIntensity: 0,
-    crease: 0xd64541,
-    shadowOpacity: 0.16,
-    displaySky: 0xf0e7d3,
-    displayGround: 0xd8c9a8,
-    contactShadow: 0x1a2b4a,
-  },
-  night: {
-    background: 0x0b1220,
-    floor: 0x121c2e,
-    grid: 0xf7f3e9,
-    gridStrength: 0.14,
-    gridSize: 20,
-    paperFront: 0xf4efe3,
-    paperBack: 0xd0c9b8,
-    edge: 0xf7f3e9,
-    edgeOpacity: 0.3,
-    hemiSky: 0x1b2a45,
-    hemiGround: 0x04070d,
-    hemiIntensity: 0.45,
-    keyColor: 0xdce8f5,
-    keyIntensity: 1.5,
-    fillColor: 0x2a3a57,
-    fillIntensity: 0.5,
-    /**
-     * Night Flight already lights for form rather than for legibility - a low
-     * hemisphere and a strong rim - so its display stage is its tutorial stage.
-     * It was never the scene that looked flat.
-     */
-    displayHemiIntensity: 0.45,
-    displayFillIntensity: 0.5,
-    rimColor: 0xe8effa,
-    rimIntensity: 2.6,
-    crease: 0xe8615c,
-    shadowOpacity: 0.45,
-    displaySky: 0x16223a,
-    displayGround: 0x0e1626,
-    contactShadow: 0x04070d,
-  },
+export const STAGE_THEME: StageTheme = {
+  background: 0xefe9da,
+  floor: 0xfbf8f0,
+  grid: 0x1a2b4a,
+  gridStrength: 0.16,
+  gridSize: 20,
+  paperFront: 0xfdfbf4,
+  paperBack: 0xeae2d0,
+  edge: 0x1a2b4a,
+  edgeOpacity: 0.22,
+  hemiSky: 0xf7f3e9,
+  hemiGround: 0xd9d2c2,
+  hemiIntensity: 0.9,
+  keyColor: 0xfff6e2,
+  keyIntensity: 2.4,
+  fillColor: 0xcfe0f0,
+  fillIntensity: 0.75,
+  // The display rig is shared with the flat SVG - see `DISPLAY_RIG`, which
+  // carries the measurements behind these numbers.
+  displayHemiIntensity: DISPLAY_RIG.ambient,
+  displayFillIntensity: DISPLAY_RIG.fill,
+  rimColor: 0xffffff,
+  rimIntensity: 0,
+  crease: 0xd64541,
+  shadowOpacity: 0.16,
+  displaySky: 0xf0e7d3,
+  displayGround: 0xd8c9a8,
+  contactShadow: 0x1a2b4a,
 };
-
-export function stageTheme(name: ThemeName | undefined): StageTheme {
-  return STAGE_THEMES[name === "night" ? "night" : "paper"];
-}
 
 /**
  * A tiling paper-fibre map, generated rather than shipped.

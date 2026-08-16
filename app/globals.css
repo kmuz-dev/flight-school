@@ -16,12 +16,6 @@
   --color-warning: #c98a2c;
   --color-error: #b03a2e;
 
-  /* Color - Night Flight (dark scene change) */
-  --color-night: #0e1626;
-  --color-night-raised: #16223a;
-  --color-night-red: #e8615c;
-  --color-night-green: #6fa97f;
-
   /* Ink opacity steps (the only permitted neutrals) */
   --color-ink-87: rgb(26 43 74 / 0.87);
   --color-ink-60: rgb(26 43 74 / 0.6);
@@ -38,8 +32,7 @@
    * which is why DESIGN.md assigns those steps to "borders, rules, and icons"
    * rather than to prose. So the accents keep their hexes wherever they are a
    * surface or a mark, and darken here for the one job they are too light to
-   * do. Night Flight already establishes that an accent shifts to suit its
-   * ground; this is the same move towards a light one.
+   * do.
    *
    * Ratios are measured against both light grounds, white and paper cream.
    */
@@ -60,10 +53,10 @@
    * carried further toward manila, which is where the airmail fiction was
    * pointing anyway.
    *
-   * `STAGE_THEMES[*].displaySky` / `.displayGround` in
+   * `STAGE_THEME.displaySky` / `.displayGround` in
    * `app/engine/render/sceneModel.ts` carry the same two values, because the
-   * live GL stage paints its own backdrop and a card must not flash when it
-   * wakes. Change both or neither.
+   * live GL stage paints its own backdrop and the artwork behind it must not
+   * flash when it wakes. Change both or neither.
    */
   --color-stage-sky: #f0e7d3;
   --color-stage-ground: #d8c9a8;
@@ -105,47 +98,13 @@
 }
 
 /*
- * Patterns that are drawn in ink rather than filled with it: the diagonal hatch
- * behind a hangar card's plane, and the sky band in the airmail chevron. Both
- * are outside the token set because neither is a surface or a text colour, and
- * both have to flip with the scene.
+ * Patterns that are drawn in ink rather than filled with it: the sky band in
+ * the airmail chevron, and the diagonal hatch behind a drawing. Outside the
+ * token set because neither is a surface nor a text colour.
  */
 :root {
   --hatch: rgb(26 43 74 / 0.055);
   --chevron-band: #1a2b4a;
-}
-
-/* Night Flight is a class toggle on <html>, a scene change rather than inversion. */
-.night {
-  /* 1e: the navy band reads as ink here, so the third stripe becomes sky. */
-  --hatch: rgb(247 243 233 / 0.045);
-  --chevron-band: #7fa8c9;
-  --color-paper: #0e1626;
-  --color-raised: #16223a;
-  --color-red: #e8615c;
-  --color-green: #6fa97f;
-  --color-ink: #f7f3e9;
-  --color-ink-87: rgb(247 243 233 / 0.87);
-  --color-ink-60: rgb(247 243 233 / 0.6);
-  --color-ink-38: rgb(247 243 233 / 0.38);
-  --color-ink-12: rgb(247 243 233 / 0.12);
-
-  /* The dark scene never had the contrast problem: its ground was already
-     nowhere near the paper's value. Deep navy over deeper navy, unchanged. */
-  --color-stage-sky: #16223a;
-  --color-stage-ground: #0e1626;
-
-  /*
-   * In the dark scene the lifted accents are already legible as text - red
-   * reaches 5.42 on the deep navy, sky 7.19 - so the text variants are simply
-   * the accents themselves. What flips is the label on a red surface: a
-   * lifted red is a light colour, so it carries deep navy the way ink sits on
-   * a rubber stamp, and white on it would fail at 3.10.
-   */
-  --color-red-ink: #e8615c; /* 5.42 on night, 4.75 on raised */
-  --color-on-red: #0e1626; /* 5.42 on red-ink */
-  --color-sky-ink: #7fa8c9; /* 7.19 on night, 6.30 on raised */
-  --color-ink-muted: rgb(247 243 233 / 0.7); /* 8.40 on night, 7.66 on raised */
 }
 
 body {
@@ -155,11 +114,6 @@ body {
   /* Paper grain (from the approved .dc.html reference) */
   background-image: radial-gradient(rgb(26 43 74 / 0.045) 1px, transparent 1px);
   background-size: 3px 3px;
-}
-
-.night body,
-html.night body {
-  background-image: radial-gradient(rgb(247 243 233 / 0.035) 1px, transparent 1px);
 }
 
 /* Airmail chevron bar (exact pattern from the approved reference) */

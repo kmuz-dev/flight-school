@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Archivo_Narrow, Instrument_Sans, IBM_Plex_Mono } from "next/font/google";
-import { THEME_BOOT_SCRIPT } from "@/lib/storage";
 import "./globals.css";
 
 const archivoNarrow = Archivo_Narrow({
@@ -36,11 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${archivoNarrow.variable} ${instrumentSans.variable} ${plexMono.variable}`}
       suppressHydrationWarning
     >
-      <body>
-        {/* First thing in the body so Night Flight is on before anything paints. */}
-        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

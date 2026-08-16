@@ -9,8 +9,6 @@ const ui: UiDictionary = {
   "nav.wings": "Ailes : {count}",
   "nav.backToHangar": "Retour au hangar",
   "nav.backToHangarShort": "Hangar",
-  "nav.dayFlight": "Vol de jour",
-  "nav.nightFlight": "Vol de nuit",
   "hangar.subtitle":
     "Choisis un appareil, prépare ton papier et apprends chaque pli jusqu'au premier vol.",
   "hangar.eyebrow": "Une école de vol pour le papier - {count} appareils sur le tarmac",
@@ -135,8 +133,6 @@ const ui: UiDictionary = {
   "error.body":
     "Quelque chose s'est mal passé sur cet écran. Ta progression est enregistrée, tu peux reprendre exactement où tu en étais.",
   "error.retry": "Réessayer",
-
-  "a11y.themeToggle": "Basculer entre vol de jour et vol de nuit",
   "a11y.localePicker": "Choisir une langue",
   "a11y.skipToContent": "Aller au contenu principal",
 };

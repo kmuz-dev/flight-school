@@ -21,7 +21,7 @@ import {
   displayBounds,
   facetGeometry,
   facetSignature,
-  stageTheme,
+  STAGE_THEME,
   unionBounds,
 } from "@/engine/render/sceneModel";
 import { createCoreStub, LAYER_Z_MM, makeStructure } from "@/engine/render/__contracts__/coreStub";
@@ -143,7 +143,7 @@ describe("createPaperMaterial", () => {
   });
 
   it("applies every patch, and refuses to compile quietly if one stops matching", () => {
-    const material = createPaperMaterial(stageTheme("paper"));
+    const material = createPaperMaterial(STAGE_THEME);
     const compile = (fragment: string, vertex = ShaderLib.physical.vertexShader) => {
       const shader = { uniforms: {}, vertexShader: vertex, fragmentShader: fragment };
       material.onBeforeCompile(shader as never, null as never);
@@ -170,7 +170,7 @@ describe("createPaperMaterial", () => {
   });
 
   it("hangs the fibre grain on the sheet, not on the facet", () => {
-    const material = createPaperMaterial(stageTheme("paper"));
+    const material = createPaperMaterial(STAGE_THEME);
     // Sampled from paper-space millimetres, so a crease that splits one facet
     // into two leaves the grain running continuously across the join.
     expect(material.roughnessMap).not.toBeNull();
@@ -248,7 +248,7 @@ describe("displayBounds", () => {
 
 describe("createBackdropTexture", () => {
   it("grades from the ground stop at the bottom to the sky stop at the top", () => {
-    const theme = stageTheme("paper");
+    const theme = STAGE_THEME;
     const texture = createBackdropTexture(theme);
     const data = texture.image.data as Uint8Array;
 
@@ -267,7 +267,7 @@ describe("createBackdropTexture", () => {
   });
 
   it("rises monotonically, so the grade never bands", () => {
-    const texture = createBackdropTexture(stageTheme("night"));
+    const texture = createBackdropTexture(STAGE_THEME);
     const data = texture.image.data as Uint8Array;
     for (let i = 1; i < 128; i += 1) {
       expect(data[i * 4]!).toBeGreaterThanOrEqual(data[(i - 1) * 4]!);
@@ -298,15 +298,11 @@ describe("the display ground", () => {
     return parseInt(hex[1]!, 16);
   }
 
-  it.each([
-    ["paper", "@theme"],
-    ["night", ".night"],
-  ] as const)("matches the CSS the still card paints, in %s", (name, block) => {
-    const start = CSS.indexOf(block);
+  it("matches the CSS the still artwork is painted on", () => {
+    const start = CSS.indexOf("@theme");
     expect(start).toBeGreaterThanOrEqual(0);
-    const theme = stageTheme(name);
-    expect(token(start, "--color-stage-sky")).toBe(theme.displaySky);
-    expect(token(start, "--color-stage-ground")).toBe(theme.displayGround);
+    expect(token(start, "--color-stage-sky")).toBe(STAGE_THEME.displaySky);
+    expect(token(start, "--color-stage-ground")).toBe(STAGE_THEME.displayGround);
   });
 
   // Relative luminance, the same measure DESIGN.md's contrast rule uses.
@@ -321,8 +317,8 @@ describe("the display ground", () => {
   const contrast = (a: number, b: number): number =>
     (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
 
-  it.each(["paper", "night"] as const)("stays darker than the paper at both stops, in %s", (name) => {
-    const theme = stageTheme(name);
+  it("stays darker than the paper at both stops", () => {
+    const theme = STAGE_THEME;
     // The sign is the load-bearing half, and it is what the old ground got
     // wrong: its sky stop was pure white, BRIGHTER than the lit paper, while
     // its ground stop was fractionally darker. An aircraft whose ground crosses
@@ -332,12 +328,12 @@ describe("the display ground", () => {
     expect(luminance(theme.displayGround)).toBeLessThan(luminance(theme.displaySky));
   });
 
-  it.each(["paper", "night"] as const)("separates where the aircraft sits, in %s", (name) => {
-    const ground = luminance(stageTheme(name).displayGround);
+  it("separates where the aircraft sits", () => {
+    const ground = luminance(STAGE_THEME.displayGround);
     // Not a text ratio. The plane floats low in the frame and its shadow lands
     // on the ground stop, so that is the stop that has to carry the reading.
-    // Kraft scores 1.44 and Night Flight 15.9; the ground this replaced managed
-    // 1.03, which is another way of saying the plane was invisible.
+    // Kraft scores 1.44; the ground this replaced managed 1.03, which is
+    // another way of saying the plane was invisible.
     expect(contrast(ground, PAPER_ON_SCREEN)).toBeGreaterThan(1.35);
   });
 });
@@ -351,7 +347,7 @@ describe("ContactShadow", () => {
   };
 
   it("takes the model's footprint plus a spread, offset toward where the light is not", () => {
-    const shadow = new ContactShadow(stageTheme("paper"));
+    const shadow = new ContactShadow(STAGE_THEME);
     shadow.fit(bounds, 12, -7, 30);
 
     expect(shadow.mesh.scale.x).toBeCloseTo(190, 9); // 160 wide + 30 spread
@@ -370,7 +366,7 @@ describe("ContactShadow", () => {
    * If the pool held still, the lift would read as a zoom.
    */
   it("goes wider and fainter as the plane rises, and exact at neutral", () => {
-    const theme = stageTheme("paper");
+    const theme = STAGE_THEME;
     const shadow = new ContactShadow(theme);
     shadow.fit(bounds, 0, 0, 0);
 
@@ -397,7 +393,7 @@ describe("ContactShadow", () => {
   });
 
   it("clamps, so a stage that overdrives it cannot invert the pool", () => {
-    const shadow = new ContactShadow(stageTheme("night"));
+    const shadow = new ContactShadow(STAGE_THEME);
     shadow.follow(50);
     const far = shadow.opacity;
     shadow.follow(1);
@@ -408,7 +404,7 @@ describe("ContactShadow", () => {
 });
 
 describe("SceneModel", () => {
-  const theme = stageTheme("paper");
+  const theme = STAGE_THEME;
 
   it("builds one mesh per facet and rebuilds only when the facet set changes", () => {
     const core = createCoreStub();

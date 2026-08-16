@@ -12,7 +12,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { AnnotationAnchor, FoldEngineHandle, PaperFormat } from "@/engine/core/types";
 import type { PlaneStructure } from "@/content/types";
 import { loadFoldEngine, type FoldEngineFactory } from "@/engine";
-import { useTheme, type Theme } from "@/lib/theme";
 import { Chip } from "@/components/ui/Chip";
 import { FOCUS_RING } from "@/components/ui/focus";
 import {
@@ -47,7 +46,6 @@ export type FoldStageProps = {
   /** Async loader injection. Production uses loadFoldEngine; tests delay it. */
   loadEngine?: () => Promise<FoldEngineFactory>;
   /** Overrides the cadet's stored scene; tests pin it, the app does not. */
-  theme?: Theme;
 };
 
 export function FoldStage({
@@ -62,10 +60,7 @@ export function FoldStage({
   onEngineChange,
   createEngine,
   loadEngine,
-  theme,
 }: FoldStageProps) {
-  const scene = useTheme();
-  const activeTheme = theme ?? scene;
   const sectionRef = useRef<HTMLElement>(null);
   const mountRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<FoldEngineHandle | null>(null);
@@ -129,7 +124,7 @@ export function FoldStage({
       // `rest` but never `display`: the tutorial is a table, and the model
       // stands up only once it has a bend - which is exactly when it stops
       // being a sheet and starts being a plane.
-      handle = create(mount, structure, { rest: true, theme: activeTheme });
+      handle = create(mount, structure, { rest: true });
       engineRef.current = handle;
       setRenderMode(handle.renderMode);
       syncRenderActivity();
@@ -154,7 +149,7 @@ export function FoldStage({
       handle = null;
       engineRef.current = null;
     };
-  }, [createEngine, loadEngine, structure, activeTheme, syncRenderActivity]);
+  }, [createEngine, loadEngine, structure, syncRenderActivity]);
 
   const anchor = engineAnchor ?? annotation ?? null;
   const showAnnotation = annotationLabel !== undefined && anchor !== null && anchor.visible;

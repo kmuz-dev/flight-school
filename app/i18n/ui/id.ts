@@ -9,8 +9,6 @@ const ui: UiDictionary = {
   "nav.wings": "Sayap: {count}",
   "nav.backToHangar": "Kembali ke hanggar",
   "nav.backToHangarShort": "Hanggar",
-  "nav.dayFlight": "Penerbangan siang",
-  "nav.nightFlight": "Penerbangan malam",
   "hangar.subtitle":
     "Pilih pesawat, siapkan kertasmu, lalu pelajari setiap lipatan hingga penerbangan pertama.",
   "hangar.eyebrow": "Sekolah terbang untuk kertas - {count} pesawat di landasan",
@@ -135,8 +133,6 @@ const ui: UiDictionary = {
   "error.body":
     "Ada yang salah di layar ini. Kemajuanmu tersimpan, jadi kamu bisa lanjut persis dari tempat kamu berhenti.",
   "error.retry": "Coba lagi",
-
-  "a11y.themeToggle": "Ganti antara penerbangan siang dan malam",
   "a11y.localePicker": "Pilih bahasa",
   "a11y.skipToContent": "Lewati ke konten utama",
 };

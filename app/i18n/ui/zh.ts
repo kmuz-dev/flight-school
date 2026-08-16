@@ -9,8 +9,6 @@ const ui: UiDictionary = {
   "nav.wings": "飞行徽章：{count}",
   "nav.backToHangar": "返回机库",
   "nav.backToHangarShort": "机库",
-  "nav.dayFlight": "日间飞行",
-  "nav.nightFlight": "夜间飞行",
   "hangar.subtitle": "挑一架飞机，准备好纸张，学习从纸片到首次飞行的每一次折叠。",
   "hangar.eyebrow": "属于纸飞机的飞行学校 - 停机坪上有 {count} 架",
   "hangar.folds": "{count} 次折叠",
@@ -132,8 +130,6 @@ const ui: UiDictionary = {
   "error.body":
     "这个页面出了点问题。你的进度已经保存，可以从刚才停下的地方接着来。",
   "error.retry": "再试一次",
-
-  "a11y.themeToggle": "在日间飞行和夜间飞行之间切换",
   "a11y.localePicker": "选择语言",
   "a11y.skipToContent": "跳到主要内容",
 };
