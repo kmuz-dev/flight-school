@@ -57,7 +57,7 @@ test("a cadet with no WebGL still earns their wings", async ({ page }) => {
 
   await page.getByRole("button", { name: "Finish", exact: true }).click();
   await page.waitForURL(WINGS, { waitUntil: "commit" });
-  await expect(page.getByTestId("certified-stamp")).toBeVisible();
+  await expect(page.getByTestId("wings-stamp")).toBeVisible();
 });
 
 /**
@@ -112,7 +112,7 @@ test("a renderer that never downloads still leaves a foldable tutorial", async (
   await expect(page.getByText(/step 12 \/ 12/i).first()).toBeVisible();
   await page.getByRole("button", { name: "Finish", exact: true }).click();
   await page.waitForURL(WINGS, { waitUntil: "commit" });
-  await expect(page.getByTestId("certified-stamp")).toBeVisible();
+  await expect(page.getByTestId("wings-stamp")).toBeVisible();
 
   // A failed chunk is a network event, not a defect to report to the cadet. The
   // browser's own "Failed to fetch dynamically imported module" is the one
@@ -199,7 +199,7 @@ test("the whole fold is walkable from the keyboard", async ({ page }) => {
   await finish.focus();
   await page.keyboard.press("Enter");
   await page.waitForURL(WINGS, { waitUntil: "commit" });
-  await expect(page.getByTestId("certified-stamp")).toBeVisible();
+  await expect(page.getByTestId("wings-stamp")).toBeVisible();
 });
 
 test("reduced motion still reaches every fold", async ({ page }) => {

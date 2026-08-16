@@ -6,6 +6,7 @@ import { hangarHref, preflightHref, tutorialHref } from "@/lib/paths";
 import { finishedPlaneSvg } from "@/components/hangar/viewModel";
 import { CompletionScreen } from "@/components/completion/CompletionScreen";
 import { buildFleet, completionUiFromDictionary } from "@/components/completion/types";
+import { getAircraftPresentation } from "@/content/presentation";
 import type { PlaneId } from "@/content/types";
 
 export function generateStaticParams() {
@@ -35,6 +36,7 @@ export default async function WingsPage({
         tier: structure.tier,
         stepCount: structure.steps.length,
         svg: finishedPlaneSvg(structure, { width: 520, height: 400 }),
+        presentation: getAircraftPresentation(structure.id),
         fleet: buildFleet(PLANES, planesDict, (id) => preflightHref(locale, id)),
       }}
       locale={locale}

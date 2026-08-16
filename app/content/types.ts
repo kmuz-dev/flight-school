@@ -18,6 +18,11 @@ export type Tier = "easy" | "medium" | "advanced";
 /** 1-5 gauge value. */
 export type Rating = 1 | 2 | 3 | 4 | 5;
 
+/** The shared vocabulary for the estimated flight profile. */
+export type RatingKey = "speed" | "distance" | "airtime" | "ease";
+
+export const RATING_KEYS: readonly RatingKey[] = ["speed", "distance", "airtime", "ease"];
+
 export type PlaneStructure = {
   readonly id: PlaneId;
   readonly tier: Tier;
@@ -35,12 +40,7 @@ export type PlaneStructure = {
      */
     readonly prep: Readonly<Record<PaperFormat, readonly FoldStep[]>>;
   };
-  readonly ratings: {
-    readonly speed: Rating;
-    readonly distance: Rating;
-    readonly airtime: Rating;
-    readonly ease: Rating;
-  };
+  readonly ratings: Readonly<Record<RatingKey, Rating>>;
   readonly steps: readonly FoldStep[];
   /** Per-plane accent (hangar card, stage details) - must come from DESIGN.md palette. */
   readonly accent: string;

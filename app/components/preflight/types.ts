@@ -1,16 +1,16 @@
 /**
- * View-model types for Preflight (SCREENS.md §2): Stitch's visual frame
- * carrying Claude Design's information set.
+ * View-model types for Preflight (SCREENS.md §2).
  *
  * Everything the screen states about a plane is derived from its structure -
  * step count, crease mix, paper - so the spec table cannot drift from the fold
  * sequence the cadet is about to follow.
  */
-import type { PlaneStructure, Rating, Tier } from "@/content/types";
+import type { PlaneStructure, Rating, RatingKey, Tier } from "@/content/types";
 import type { PlanesDictionary, UiDictionary } from "@/i18n/types";
 import type { PlaneId } from "@/content/types";
-import type { RatingKey } from "@/components/hangar/types";
 import type { PaperPickerStrings } from "./PaperPicker";
+import type { AircraftPresentation } from "@/content/presentation";
+import { getAircraftPresentation } from "@/content/presentation";
 
 /** The two sheets a plane's own sequence can be authored against. */
 export type AuthoredFormat = "letter-a4" | "square";
@@ -30,26 +30,30 @@ export type PreflightView = {
   /** Authored planes only: the composed prep+plane form is never shown here. */
   readonly paperFormat: AuthoredFormat;
   readonly creases: CreaseMix;
-  /** Position in the catalog, for the manifest line. 1-based. */
-  readonly index: number;
-  readonly total: number;
   /** Build-time engine render, behind the live viewer. */
   readonly svg: string;
+  readonly presentation: AircraftPresentation;
   readonly structure: PlaneStructure;
 };
 
 export type PreflightUiStrings = {
+  readonly skipToContent: string;
   readonly backToHangar: string;
+  readonly backToHangarShort: string;
   readonly eyebrow: string;
   readonly localePickerLabel: string;
   readonly orbitHint: string;
-  readonly specimen: string;
   readonly viewerLabel: string;
+  readonly inspect3d: string;
+  readonly showArtwork: string;
+  readonly loading3d: string;
+  readonly staticFallback: string;
+  readonly artworkAlt: string;
   readonly flightProfile: string;
   readonly rating: Readonly<Record<RatingKey, string>>;
   /** "{label}: {value} out of 5". */
   readonly ratingGauge: string;
-  readonly license: Readonly<Record<Tier, string>>;
+  readonly tier: Readonly<Record<Tier, string>>;
   readonly getYourPaper: string;
   readonly paper: string;
   readonly weight: string;
@@ -67,18 +71,22 @@ export type PreflightUiStrings = {
   readonly startFolding: string;
   /** "Resume at step {step}". */
   readonly resume: string;
-  /** "Aircraft {index} of {total} on the hangar floor". */
-  readonly manifestLine: string;
   readonly tipLabel: string;
 };
 
 export const PREFLIGHT_UI_KEYS = [
   "nav.backToHangar",
+  "nav.backToHangarShort",
   "preflight.eyebrow",
   "a11y.localePicker",
+  "a11y.skipToContent",
   "preflight.orbitHint",
-  "preflight.specimen",
   "preflight.viewerLabel",
+  "preflight.inspect3d",
+  "preflight.showArtwork",
+  "preflight.loading3d",
+  "preflight.staticFallback",
+  "preflight.artworkAlt",
   "preflight.flightProfile",
   "preflight.getYourPaper",
   "preflight.paper",
@@ -94,6 +102,7 @@ export const PREFLIGHT_UI_KEYS = [
   "preflight.paperChoice.index-4x6",
   "preflight.paperNeedsPrep",
   "preflight.paperNoPrep",
+  "preflight.paperResetsProgress",
   "preflight.weightValue",
   "preflight.foldsValue",
   "preflight.creasesAllValley",
@@ -101,27 +110,32 @@ export const PREFLIGHT_UI_KEYS = [
   "preflight.throwTip",
   "preflight.startFolding",
   "preflight.resume",
-  "preflight.manifestLine",
   "rating.speed",
   "rating.distance",
   "rating.airtime",
   "rating.ease",
   "rating.gauge",
-  "tutorial.license.easy",
-  "tutorial.license.medium",
-  "tutorial.license.advanced",
+  "tier.easy",
+  "tier.medium",
+  "tier.advanced",
   "tutorial.tipLabel",
 ] as const;
 
 export function preflightUiFromDictionary(ui: UiDictionary): PreflightUiStrings {
   const t = (key: string): string => ui[key] ?? key;
   return {
+    skipToContent: t("a11y.skipToContent"),
     backToHangar: t("nav.backToHangar"),
+    backToHangarShort: t("nav.backToHangarShort"),
     eyebrow: t("preflight.eyebrow"),
     localePickerLabel: t("a11y.localePicker"),
     orbitHint: t("preflight.orbitHint"),
-    specimen: t("preflight.specimen"),
     viewerLabel: t("preflight.viewerLabel"),
+    inspect3d: t("preflight.inspect3d"),
+    showArtwork: t("preflight.showArtwork"),
+    loading3d: t("preflight.loading3d"),
+    staticFallback: t("preflight.staticFallback"),
+    artworkAlt: t("preflight.artworkAlt"),
     flightProfile: t("preflight.flightProfile"),
     rating: {
       speed: t("rating.speed"),
@@ -130,10 +144,10 @@ export function preflightUiFromDictionary(ui: UiDictionary): PreflightUiStrings 
       ease: t("rating.ease"),
     },
     ratingGauge: t("rating.gauge"),
-    license: {
-      easy: t("tutorial.license.easy"),
-      medium: t("tutorial.license.medium"),
-      advanced: t("tutorial.license.advanced"),
+    tier: {
+      easy: t("tier.easy"),
+      medium: t("tier.medium"),
+      advanced: t("tier.advanced"),
     },
     getYourPaper: t("preflight.getYourPaper"),
     paper: t("preflight.paper"),
@@ -159,10 +173,10 @@ export function preflightUiFromDictionary(ui: UiDictionary): PreflightUiStrings 
       },
       needsPrep: t("preflight.paperNeedsPrep"),
       noPrep: t("preflight.paperNoPrep"),
+      resetsProgress: t("preflight.paperResetsProgress"),
     },
     startFolding: t("preflight.startFolding"),
     resume: t("preflight.resume"),
-    manifestLine: t("preflight.manifestLine"),
     tipLabel: t("tutorial.tipLabel"),
   };
 }
@@ -183,12 +197,10 @@ export function creaseMix(structure: PlaneStructure): CreaseMix {
 export function buildPreflightView(
   structure: PlaneStructure,
   dict: PlanesDictionary,
-  catalogIds: readonly string[],
   svg: string,
 ): PreflightView | null {
   const strings = dict.planes[structure.id as PlaneId];
   if (!strings) return null;
-  const index = catalogIds.indexOf(structure.id);
   return {
     id: structure.id,
     name: strings.name,
@@ -200,9 +212,8 @@ export function buildPreflightView(
     ratings: structure.ratings,
     paperFormat: structure.paper.format as AuthoredFormat,
     creases: creaseMix(structure),
-    index: index >= 0 ? index + 1 : 1,
-    total: catalogIds.length,
     svg,
+    presentation: getAircraftPresentation(structure.id),
     structure,
   };
 }

@@ -25,7 +25,6 @@ export default async function PreflightPage({
   const view = buildPreflightView(
     structure,
     getPlanes(locale),
-    PLANE_IDS,
     finishedPlaneSvg(structure, { width: 760, height: 520 }),
   );
   if (!view) notFound();

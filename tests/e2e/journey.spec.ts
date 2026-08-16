@@ -49,12 +49,12 @@ test("hangar to wings and back, with the badge on the card", async ({ page }) =>
   // Jump the sequence rather than walking it: tutorial.spec.ts already clicks
   // every fold, and repeating that walk here only doubles the suite's heaviest
   // WebGL test without adding coverage of the hangar-to-wings loop.
-  await page.getByRole("button", { name: "Go to step 12" }).click();
+  await page.getByRole("combobox", { name: "Choose a fold" }).selectOption("11");
   await page.getByRole("button", { name: "Finish" }).click();
 
   await page.waitForURL(WINGS, { waitUntil: "commit" });
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(/earned your wings/i);
-  await expect(page.getByTestId("certified-stamp")).toBeVisible();
+  await expect(page.getByTestId("wings-stamp")).toBeVisible();
 
   await page.getByRole("link", { name: /return to hangar/i }).click();
   await page.waitForURL(HANGAR, { waitUntil: "commit" });
@@ -64,7 +64,7 @@ test("hangar to wings and back, with the badge on the card", async ({ page }) =>
 
 test("preflight offers a resume once there is progress", async ({ page }) => {
   await page.goto("/en/plane/dart/fold/");
-  await page.getByRole("button", { name: "Go to step 05" }).click();
+  await page.getByRole("combobox", { name: "Choose a fold" }).selectOption("4");
   await expect(page.getByText(/step 05 \/ 12/i).first()).toBeVisible();
 
   await page.goto("/en/plane/dart/");
@@ -80,7 +80,7 @@ test("no console errors across the journey", async ({ page }) => {
   await page.locator("[data-plane='dart']").getByRole("link", { name: /the dart/i }).click();
   await page.waitForURL(PREFLIGHT, { waitUntil: "commit" });
   await page.goto("/en/plane/dart/wings/");
-  await expect(page.getByTestId("certified-stamp")).toBeVisible();
+  await expect(page.getByTestId("wings-stamp")).toBeVisible();
 
   expect(errors).toEqual([]);
 });
@@ -98,8 +98,8 @@ test("choosing a smaller sheet adds the steps that cut it square", async ({ page
    * behaviour and testing which render happened to land first.
    */
   const totalSteps = async (): Promise<number> => {
-    const label = await page.getByText(/^\d+ \/ \d+$/).first().textContent();
-    return Number(label?.split("/")[1]?.trim());
+    const max = await page.getByRole("progressbar").getAttribute("aria-valuemax");
+    return Number(max);
   };
 
   const startFolding = async (): Promise<void> => {
@@ -108,14 +108,14 @@ test("choosing a smaller sheet adds the steps that cut it square", async ({ page
   };
 
   await page.goto("/en/plane/square-cruiser/");
-  await page.getByRole("radio", { name: /^square$/i }).click();
+  await page.getByRole("radio", { name: /^square\b/i }).click();
   await startFolding();
   await expect.poll(totalSteps).toBeGreaterThan(0);
   const nativeCount = await totalSteps();
 
   await page.goto("/en/plane/square-cruiser/");
   await page.getByRole("radio", { name: /4x6 card/i }).click();
-  await expect(page.getByText(/extra steps first/i)).toBeVisible();
+  await expect(page.getByText(/extra steps first/i).first()).toBeVisible();
 
   await startFolding();
   await expect.poll(totalSteps).toBeGreaterThan(nativeCount);
@@ -139,17 +139,17 @@ for (const plane of ["bulldog", "harrier", "sea-glider", "hammer", "square-cruis
     await page.getByRole("link", { name: /start folding|resume/i }).click();
     await page.waitForURL(new RegExp(`/plane/${plane}/fold/?$`), { waitUntil: "commit" });
 
-    // Jump to the end through the step strip rather than walking every fold:
-    // the per-step walk is covered once, on the Dart.
-    const jumps = page.getByRole("button", { name: /go to step/i });
-    const total = await jumps.count();
-    expect(total, "the step strip should offer a jump per fold").toBeGreaterThan(1);
-    await jumps.nth(total - 1).click();
+    // Jump to the end through the native fold selector rather than walking
+    // every fold. The per-step walk is covered once, on the Dart.
+    const selector = page.getByRole("combobox", { name: "Choose a fold" });
+    const total = await selector.locator("option").count();
+    expect(total, "the selector should offer every fold").toBeGreaterThan(1);
+    await selector.selectOption(String(total - 1));
 
     // Assert we actually landed on the last fold before hunting for Finish, so
     // a strip that did not register reads as a strip failure, not a missing
     // button.
-    await expect(page.getByText(new RegExp(`^${String(total).padStart(2, "0")} / `))).toBeVisible();
+    await expect(page.getByRole("progressbar")).toHaveAttribute("aria-valuenow", String(total));
 
     await page.getByRole("button", { name: /^finish$/i }).click();
     await page.waitForURL(new RegExp(`/plane/${plane}/wings/?$`), { waitUntil: "commit" });

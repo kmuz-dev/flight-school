@@ -135,6 +135,34 @@ export function useProgressSnapshot(): Stored {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
 
+/**
+ * Whether this render is looking at real stored data yet.
+ *
+ * An empty snapshot is ambiguous and two screens now have to resolve it. The
+ * static export prerenders against `getServerSnapshot`, which is empty by
+ * definition, so "no wings, no progress, nothing started" is what the first
+ * render says on every machine - including one where the cadet finished all six
+ * planes a moment ago. Reading that literally is how the Hangar would open on
+ * the Dart for someone who has already folded it, and how the completion route
+ * would flash "you have not earned this" at someone who just did.
+ *
+ * A separate signal rather than a sentinel inside `Stored`, because it is a
+ * fact about the render pass and not about the cadet: it must be false in the
+ * prerendered HTML and true immediately after hydration, which is exactly what
+ * the server/client snapshot pair of `useSyncExternalStore` expresses. The
+ * constants are frozen so the store never reports a changed value and loops.
+ */
+const HYDRATED = true;
+const NOT_HYDRATED = false;
+
+export function useProgressHydrated(): boolean {
+  return useSyncExternalStore(
+    subscribe,
+    () => HYDRATED,
+    () => NOT_HYDRATED,
+  );
+}
+
 export function usePlaneProgress(planeId: PlaneId): PlaneProgress {
   return planeProgress(useProgressSnapshot(), planeId);
 }
