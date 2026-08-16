@@ -104,10 +104,16 @@ test("choosing a smaller sheet adds the steps that cut it square", async ({ page
    * sequence first and swaps to the composed one on the render after hydration.
    * Polling rather than reading once is the difference between testing the
    * behaviour and testing which render happened to land first.
+   *
+   * Read from the step readout rather than the progress bar. The bar is
+   * `hidden sm:block` - a 120px rule is noise on a phone and the header has no
+   * room for it - so on the mobile project it is not in the accessibility tree
+   * at all. The readout says the same thing at every width, and is what the
+   * cadet actually reads.
    */
   const totalSteps = async (): Promise<number> => {
-    const max = await page.getByRole("progressbar").getAttribute("aria-valuemax");
-    return Number(max);
+    const text = await page.getByText(/step \d+ \/ \d+/i).first().innerText();
+    return Number(/\/\s*(\d+)/.exec(text)?.[1] ?? 0);
   };
 
   const startFolding = async (): Promise<void> => {
@@ -155,9 +161,12 @@ for (const plane of ["bulldog", "harrier", "sea-glider", "hammer", "square-cruis
     await selector.selectOption(String(total - 1));
 
     // Assert we actually landed on the last fold before hunting for Finish, so
-    // a strip that did not register reads as a strip failure, not a missing
-    // button.
-    await expect(page.getByRole("progressbar")).toHaveAttribute("aria-valuenow", String(total));
+    // a selector that did not register reads as a selector failure rather than
+    // a missing button. The step readout rather than the progress bar: the bar
+    // is hidden below 640px, so it does not exist on the mobile project.
+    await expect(
+      page.getByText(new RegExp(`step ${String(total).padStart(2, "0")} / ${total}`, "i")).first(),
+    ).toBeVisible();
 
     await page.getByRole("button", { name: /^finish$/i }).click();
     await page.waitForURL(new RegExp(`/plane/${plane}/wings/?$`), { waitUntil: "commit" });

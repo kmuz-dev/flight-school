@@ -62,9 +62,31 @@ test.describe("the Dart tutorial", () => {
     expect(stored).toContain('"step":3');
   });
 
-  test("camera presets are operable", async ({ page }) => {
+  /*
+   * Two different answers by width, on purpose.
+   *
+   * Above 640px the stage carries a named preset group, which is the only way
+   * to change the camera without a pointer. Below it the group is hidden: three
+   * more controls do not fit a phone header beside the transport, and a phone
+   * has direct manipulation instead - the canvas itself is the camera control,
+   * and there is no keyboard to strand.
+   */
+  test("camera presets are operable where they are offered", async ({ page }, info) => {
+    const presets = page.getByRole("group", { name: "Camera angle" });
+
+    if (info.project.name === "mobile") {
+      await expect(presets).toHaveCount(0);
+      // The stage is still there and still orbitable by touch.
+      await expect(page.getByTestId("engine-mount").locator("canvas")).toBeVisible();
+      return;
+    }
+
+    await expect(presets).toBeVisible();
     await page.getByRole("button", { name: "Top" }).click();
-    await expect(page.getByRole("button", { name: "Top" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Top" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
   });
 
   test("the whole tutorial is keyboard operable", async ({ page }) => {

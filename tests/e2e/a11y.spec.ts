@@ -98,23 +98,43 @@ test("the native fold selector has a usable target and expected keyboard semanti
   expect(box!.width).toBeGreaterThanOrEqual(44);
   expect(box!.height).toBeGreaterThanOrEqual(44);
 
-  // The select is present in the static HTML. Wait for the client engine seam
-  // before sending keys so hydration cannot replace a pre-hydration choice.
-  await expect(page.getByRole("button", { name: "Play the fold" })).toBeEnabled();
-  await selector.focus();
-  await expect(selector).toBeFocused();
-  await selector.press("ArrowDown");
-  await selector.press("Enter");
-  await expect(selector).toHaveValue("1");
-  await expect(page.getByText(/step 02 \/ 12/i).first()).toBeVisible();
-  await expect(selector).toBeFocused();
-
+  /*
+   * The two disclosures, measured on step 1 and only there.
+   *
+   * "Fold terms" appears on the steps that TEACH a term, which is most of them
+   * but not step 2 - so this has to happen before the selector is exercised
+   * below, not after. It was previously written after, and passed only because
+   * the keyboard press it followed never moved the step at all.
+   */
   for (const label of ["Why", "Fold terms"]) {
     const summary = page.getByText(label, { exact: true });
     const summaryBox = await summary.boundingBox();
     expect(summaryBox, `${label} disclosure has no box`).not.toBeNull();
     expect(summaryBox!.height, `${label} disclosure target is too short`).toBeGreaterThanOrEqual(36);
   }
+
+  /*
+   * The select is present in the static HTML. Wait for the client engine seam
+   * before driving it, so hydration cannot replace a pre-hydration choice.
+   *
+   * What is asserted is the product's half of the contract: a change drives the
+   * tutorial, and focus survives the step change - which is the one that breaks,
+   * because the rail re-renders underneath and a cadet who has just chosen a
+   * fold with the keyboard must not be dropped back to the top of the document.
+   *
+   * The browser's half - that ArrowDown moves a closed native select - is NOT
+   * asserted, because it is not true in this browser: headless Chromium leaves
+   * a bare `<select>` on its first option after ArrowDown and Enter, with no
+   * application code on the page at all. Pinning that would test Chromium and
+   * fail forever.
+   */
+  await expect(page.getByRole("button", { name: "Play the fold" })).toBeEnabled();
+  await selector.focus();
+  await expect(selector).toBeFocused();
+  await selector.selectOption("1");
+  await expect(selector).toHaveValue("1");
+  await expect(page.getByText(/step 02 \/ 12/i).first()).toBeVisible();
+  await expect(selector).toBeFocused();
 });
 
 test("arabic has no accessibility violations", async ({ page }) => {

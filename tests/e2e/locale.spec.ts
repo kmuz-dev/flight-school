@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { getPlanes, getUi } from "../../app/i18n/dictionary";
+import type { Locale } from "../../app/i18n/config";
 
 /**
  * What a translated build has to prove, beyond "the route exists".
@@ -18,14 +19,26 @@ import { getPlanes, getUi } from "../../app/i18n/dictionary";
  */
 
 const AR_UI = getUi("ar");
-const JA_UI = getUi("ja");
+
+/**
+ * The Hangar's h1 is the SELECTED AIRCRAFT's name, not a page title, so this
+ * reads from the plane dictionary rather than the UI one - which is the better
+ * assertion in any case: chrome copy and plane prose come from different files
+ * and only one of them was ever at risk of silently rendering English.
+ *
+ * The Dart is the first aircraft on the ladder, so it is what a fresh browser
+ * with no stored progress opens on.
+ */
+const dartName = (locale: Locale): string => getPlanes(locale).planes.dart!.name;
 
 test("arabic renders arabic, right to left", async ({ page }) => {
   await page.goto("/ar/");
 
   const heading = page.getByRole("heading", { level: 1 });
-  await expect(heading).toHaveText(AR_UI["hangar.title"]!);
+  await expect(heading).toHaveText(dartName("ar"));
   await expect(heading).toHaveCSS("direction", "rtl");
+  // The chrome is translated too, and from a different dictionary.
+  await expect(page.getByTestId("hangar-primary")).toHaveText(AR_UI["preflight.startFolding"]!);
 });
 
 test("arabic does not spill sideways", async ({ page }) => {
@@ -66,7 +79,7 @@ test("arabic does not spill sideways", async ({ page }) => {
 
 test("a CJK locale renders its own prose", async ({ page }) => {
   await page.goto("/ja/");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(JA_UI["hangar.title"]!);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(dartName("ja"));
 });
 
 test("the tutorial teaches the fold in the chosen language", async ({ page }) => {
@@ -94,5 +107,5 @@ test("the language choice survives a fresh visit to the root", async ({ page }) 
 
   await page.goto("/");
   await page.waitForURL(/\/de\/$/);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(getUi("de")["hangar.title"]!);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(dartName("de"));
 });

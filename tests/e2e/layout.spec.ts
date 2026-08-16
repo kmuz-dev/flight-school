@@ -217,8 +217,31 @@ const SHELL_VIEWPORTS = [
   { name: "phone", width: 390, height: 844 },
 ] as const;
 
+/*
+ * Chromium only, because this test supplies its own three viewports.
+ *
+ * Under the phone project the same three run again inside Pixel 7 emulation,
+ * where a forced 1440px viewport is a device that does not exist and the
+ * tutorial never finishes laying out - fourteen folds of SwiftShader spent
+ * measuring a combination nobody will ever hold. The widths are the subject
+ * here; the device is not.
+ */
 for (const { name, width, height } of SHELL_VIEWPORTS) {
-  test(`the tutorial holds one shape on every fold, on ${name}`, async ({ page }) => {
+  test(`the tutorial holds one shape on every fold, on ${name}`, async ({ page }, info) => {
+    test.skip(info.project.name !== "chromium", "this test supplies its own viewports");
+    /*
+     * The heaviest test in the suite, and the default 90s is not a real budget
+     * for it. Fourteen folds of the Hammer are fourteen real WebGL animations
+     * rasterised by SwiftShader - there is no GPU in this loop on CI or on a
+     * laptop - and the bill scales with the viewport: measured alone on a free
+     * machine, 60s at 1440x900, 56s at 1280x800, 32s at 390x844. Sharing three
+     * workers with the rest of the suite roughly doubles that, which is how a
+     * test that passes in isolation fails only in a full run.
+     *
+     * 180s is a ceiling a genuine hang still hits, not a budget anything is
+     * expected to approach.
+     */
+    test.setTimeout(180_000);
     await page.setViewportSize({ width, height });
     // The Hammer: the longest sequence in the fleet and the one whose tips are
     // spread across it, so it varies more than any other plane.
