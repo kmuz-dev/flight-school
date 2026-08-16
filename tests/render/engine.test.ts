@@ -175,6 +175,45 @@ describe("FoldEngine construction", () => {
     engine.dispose();
   });
 
+  it("disposes paper maps that finish loading after their renderer has gone", async () => {
+    const { container } = createFakeDom();
+    let resolvePaper!: (value: {
+      albedo: import("three").Texture;
+      normal: import("three").Texture;
+      roughness: import("three").Texture;
+    }) => void;
+    const paperTextures = new Promise<{
+      albedo: import("three").Texture;
+      normal: import("three").Texture;
+      roughness: import("three").Texture;
+    }>((resolve) => {
+      resolvePaper = resolve;
+    });
+    const textures = {
+      albedo: new (await import("three")).Texture(),
+      normal: new (await import("three")).Texture(),
+      roughness: new (await import("three")).Texture(),
+    };
+    const disposals = Object.values(textures).map((texture) => vi.spyOn(texture, "dispose"));
+    const engine = new FoldEngine(
+      container as unknown as HTMLElement,
+      makeStructure(2),
+      {},
+      {
+        core: createCoreStub(),
+        paperTextures,
+        rendererFactory: (c) => createFakeRenderer(c as unknown as FakeNode),
+        controlsFactory: () => createFakeControls(),
+      },
+    );
+
+    engine.dispose();
+    resolvePaper(textures);
+    await paperTextures;
+    await Promise.resolve();
+    disposals.forEach((dispose) => expect(dispose).toHaveBeenCalledTimes(1));
+  });
+
   /**
    * The hangar's frame budget, gated where it is deterministic.
    *

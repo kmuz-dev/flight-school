@@ -1,4 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
+import { stat } from "node:fs/promises";
+import path from "node:path";
+import sharp from "sharp";
 import {
   MirroredRepeatWrapping,
   NoColorSpace,
@@ -30,6 +33,26 @@ function loadedTextures(): { loader: PaperTextureLoader; textures: Texture[]; ur
 }
 
 describe("photographic paper maps", () => {
+  it("keeps the approved production set within its exact byte and dimension budget", async () => {
+    const assetDir = path.join(process.cwd(), "app/assets/materials");
+    const expected = [
+      ["paper-craft-albedo.webp", 1024, 80_640],
+      ["paper-craft-normal.webp", 512, 176_736],
+      ["paper-craft-roughness.webp", 512, 530],
+    ] as const;
+    let total = 0;
+    for (const [name, dimension, bytes] of expected) {
+      const file = path.join(assetDir, name);
+      const metadata = await sharp(file).metadata();
+      const size = (await stat(file)).size;
+      expect(metadata.width, name).toBe(dimension);
+      expect(metadata.height, name).toBe(dimension);
+      expect(size, name).toBe(bytes);
+      total += size;
+    }
+    expect(total).toBe(257_906);
+  });
+
   it("loads the three production maps with their physical texture settings", async () => {
     const { loader, textures, urls } = loadedTextures();
     const result = await loadPaperTextures(32, loader);
