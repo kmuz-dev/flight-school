@@ -1,68 +1,138 @@
-# Flight School - Screen Synthesis Spec (V1)
+# Flight School - Screen Contract
 
-This document merges two approved mockup explorations into the single screen-level design for the build.
-It extends [DESIGN.md](../DESIGN.md) (tokens, type, color, motion) with per-screen composition decisions.
+Status: approved release direction, 2026-08-10.
 
-## Reference mockups (exported, in this repo)
+This document defines the release composition and behavior of the four cadet-facing screens.
+It extends [DESIGN.md](../DESIGN.md) and [UI-RELEASE-SPEC.md](UI-RELEASE-SPEC.md).
+Where an older mockup, export, brief, or decision log conflicts with this document, this document wins.
 
-- **Stitch export:** `docs/stitch_paper_academy_flight_school/` - four screens, each with `screen.png` and `code.html` (the_hangar_catalog, preflight_the_glider, tutorial_cockpit_step_04, wings_earned).
-- **Claude Design export:** `docs/flight-school-design-system/project/Flight School.dc.html` - a single self-contained page showing all five screens: 1a Hangar, 1b Tutorial, 1c Preflight, 1d Completion, 1e/1f Night Flight dark variants of Hangar and Tutorial. Open it in a browser to view.
+## Reference boundary
 
-This spec was resolved decision-by-decision with the owner on 2026-08-09 and then verified against these exports.
-Where prose and export conflict, this document wins; it records which parts of each export are adopted.
+The Stitch and Claude Design exports referenced in this repository's history are historical explorations, not implementation specifications, and were deleted at release.
+The approved paper finish - material, lighting, edge treatment, dimensionality - is defined by the shipped Dart at `app/assets/aircraft/dart-hero.webp`, which is the artwork every other aircraft was matched to.
+Canonical silhouettes come from the fold engine, not from any mockup: `docs/aircraft-art/references/<id>-canonical.svg` is rendered from each plane's own final `FoldState` and is regenerable at any time.
 
-**Content caveat:** both mockups invented placeholder plane names (Stitch: Stuntman/Voyager/Ace/Stealth; Claude: Arrowhead/Hammerhead/Albatross/Comet) and step counts.
-The canonical catalog is PRD.md section 5; mockup names and counts are visual filler.
+Generated beauty artwork is permitted only in the Hangar, Preflight, and Wings earned screens.
+The procedural fold engine is authoritative for tutorial instructions, explicit 3D inspection, and static SVG fallback.
+Every beauty render must match the corresponding engine final state before it is approved.
 
-## Synthesis rules (resolved decisions)
+Display fallback order is fixed.
+Beauty artwork is the default and remains visible while an explicitly requested inspection loads.
+A successful inspection replaces it with WebGL.
+If WebGL is unavailable or fails, the inspection region shows the canonical SVG and identifies it as a static fallback.
+If beauty artwork itself fails before inspection, the surface replaces it with the canonical SVG.
 
-1. **Tutorial screen: follows the Claude Design mockup entirely**, plus one import (the tip bar, rule 5).
-2. **Preflight screen: Stitch visual presentation + Claude Design information hierarchy.**
-3. **Hangar: Stitch layout**, with live-3D floating planes on hover and selection.
-4. **Wings certificate: keep as mocked, including the red/blue airmail striping** (the owner reconsidered and kept it).
-5. **The Stitch bottom tip bar joins the tutorial screen** as its single Stitch import.
-6. **Headline font is Archivo Narrow** (owner-identified from the Stitch theme).
+## Shared frame
 
-## Screen 1: The Hangar (home / catalog)
+- Keep the Flight School wordmark, locale selector, and wings count where the screen needs them.
+- Provide a visible skip link on every screen with a substantial main region.
+- Use one red primary action per screen.
+- Keep navigation native, named, keyboard accessible, locale preserving, and correct in RTL.
+- Announce loading and fallback states in plain language.
+- Do not use My Logbook, licence numbers, manifest fiction, social proof, fabricated statistics, or externally suggestive certification.
 
-- Grid of six plane cards in the Stitch mockup's arrangement (`the_hangar_catalog`): FLIGHT SCHOOL wordmark, THE HANGAR / MY LOGBOOK nav with dark-mode toggle, oversized THE HANGAR headline over a full-width rule, two rows of three cards.
-- Each card (Stitch treatment): plane name in Archivo Narrow caps, tier chip top-right (BEGINNER navy-filled, PILOT outlined, ACE red-filled), plane render area, STEPS count in mono, SPEED and DISTANCE gauge bars. Completed planes get the diagonal "WINGS EARNED" stamp across the render, as mocked.
-- Worth adopting from Claude Design's hangar (1a) at build time: the ALL / BEGINNER / PILOT / ACE filter chips and the wings counter in the nav; its denser card data (descriptions, dot-matrix ratings) stays out - Stitch's calmer card won.
-- Footer: mono academy fiction line ("© CADET FLIGHT MANIFEST - LICENSE #0815-FA" style).
-- **Card liveness:** default state shows a pre-rendered image of the finished plane. On hover (desktop) or selection (all devices), the card wakes a live 3D scene: the plane floats with a slow bob. At most two live scenes at once; the least-recently-used scene sleeps back to its static render. Touch devices are selection-only.
-- **Built deviation (2026-08-10, in DESIGN.md's Decisions Log):** a woken card is a *display stage* - no graph-paper floor, a graded backdrop and a soft contact shadow instead, the aircraft standing up and lifted clear of the ground. And "gentle rotation" is gone: a constant spin parks all six cards at the same non-hero angle in lockstep. The float is the motion.
-- Non-live cards keep the 2-4px paper hover-lift from DESIGN.md.
+## Screen 1: The Hangar
 
-## Screen 2: Preflight (plane detail)
+The Hangar is one aircraft in a photographed room, not a grid and not a dashboard.
 
-Stitch visual presentation carrying Claude Design's information set. Verified inventory:
+Composition:
 
-- **Frame and visual (from Stitch `preflight_the_glider`):** split screen with a dominant left orbit viewer (DRAG TO ORBIT hint, "FIG 1.1 - PROTOTYPE" specimen tag), right rail with license chip, plane name, and the big red START FOLDING button with offset-shadow 3D card treatment; the mono-italic tip strip sits directly beneath it.
-- **Information set (from Claude Design 1c):** the fuller data - "PREFLIGHT: GET YOUR PAPER" spec table (Paper / Weight / Folds / Time), all four ratings (Speed, Distance, Airtime, Ease - Stitch showed only two), the THROW TIP callout card, and the social-proof mono line ("FOLDED 4,318 TIMES THIS MONTH" style). The "Watch flight" secondary action is deferred unless V1 builds a flight preview.
-- Primary action: Start folding (or Resume at Step N when localStorage has progress).
-- **Built deviation (2026-08-10, in DESIGN.md's Decisions Log):** the orbit viewer is a display stage, same as a woken hangar card - floorless, over a graded backdrop, the aircraft standing up and floating over a soft contact shadow. It opens on the catalogue's hero angle, which rides on the display flag rather than on a camera preset, because presets are authored into fold steps and no step gets to decide how a finished aircraft is photographed.
+- Fill the viewport with the generated hangar interior and float one aircraft in it.
+- Offset the composition: the aircraft toward the top-right, the placard in the lower-left, which also runs with the aircraft because the artwork's nose points low-left.
+- Mirror that composition under Arabic RTL, including the scrim; do not mirror the aircraft artwork, which is shared with instructional screens.
+- Stack on a phone with the aircraft above and the placard below, arrows on the bay edges and the marker strip over the floor.
+- Show plane name, difficulty tier, fold count, and a Wings earned mark when applicable, on a placard lifted off the photograph by a scrim rather than by a panel.
+- Keep the total wings count in the nav.
 
-## Screen 3: Tutorial (the core screen)
+Selection:
 
-Follows the Claude Design mockup's composition exactly (screen 1b of the export). Verified inventory:
+- Give the fleet one marker per aircraft, filled when its wings are earned, marked `aria-current` when selected, and named so assistive technology hears both facts.
+- Change aircraft from the arrows, the markers, the Left and Right keys, and a horizontal swipe over 90px, with Left and Right following the reading direction.
+- Announce every selection change through a polite live region carrying name, tier, and fold count.
+- Select the first unfinished aircraft once stored progress has hydrated; a new cadet and a cadet who has folded all six both open on the first aircraft.
+- Hold the Wings earned mark until hydration rather than flashing an unearned state.
 
-- **Top bar:** back link (← THE HANGAR), plane name, license chip; right side holds the linear 04/12 progress bar and EXIT.
-- **Stage:** graph-paper grid backdrop; the 3D paper mid-fold with a red mono annotation naming the fold ("VALLEY FOLD - TO THE CENTER LINE") and a dashed target crease line; corner metadata (VIEW: 3/4 - DRAG TO ORBIT top-left, camera presets FRONT / 3/4 / TOP top-right, PLAYING FOLD 04 chip bottom-left, paper spec "A4 - 210 x 297 MM" bottom-right).
-- **Transport bar (separate bar below the stage):** prev / play-pause / next, STEP 04 / 12 in mono, a segmented per-step progress strip (green done, red current, gray remaining), elapsed/total time with playback speed, and REPLAY.
-- **Right rail (current-step info, not a step list):** red mono STEP 04 / 12 label, step title in Archivo Narrow caps, kid-clear instruction paragraph, a WHY callout box, a FOLD TERMS glossary with crease-pattern icons, a "My paper looks like this" self-check checkbox, Back and red "Next fold" buttons, and a mono "8 FOLDS TO YOUR WINGS" footer. On mobile the rail stacks beneath the transport bar.
-- **Explicitly not adopted:** Stitch's left-hand TUTORIAL STEPS list (its tutorial screen `tutorial_cockpit_step_04` shows the alternative); the all-Claude decision drops it. The 04/12 progress bar in the top bar covers orientation.
-- **Tip bar (Stitch import):** a small anchored tip strip at the bottom of the screen in mono italic, matching the treatment under Stitch's START FOLDING button ("Keep your creases sharp for maximum airtime."); per-step when a step declares one, per-plane otherwise.
+3D:
 
-## Screen 4: Wings earned (completion)
+- Do not fetch or mount WebGL on arrival, on hover, or on focus.
+- Request it only from a named Inspect in 3D button or a short drag, which is deliberate where a passing pointer is not.
+- Keep at most one live scene; changing aircraft disposes it and returns the bay to beauty artwork.
+- Keep beauty artwork visible until the stage is actually drawing, and let the stage draw through to the photograph rather than painting its own ground.
+- On WebGL failure, show the labelled canonical SVG rather than an empty stage.
+- The static build must fail content validation rather than shipping an empty fleet caused by missing plane data.
 
-- The certificate moment as mocked in Stitch (`wings_earned`): a certificate card with **red/navy airmail striping borders top and bottom** (kept by explicit decision), left panel showing the dashed flight-arc with the green CERTIFIED stamp, right panel with red MISSION COMPLETE eyebrow, "YOU HAVE EARNED YOUR WINGS." in Archivo Narrow, cadet-voiced congratulation copy, and a REWARD ISSUED / BEGINNER WINGS badge card.
-- Actions: LOG YOUR FLIGHT (navy, primary) and RETURN TO HANGAR (outlined) as mocked. Claude Design's completion (1d) adds fold-time / replays / wings stats and a "fold the next plane" pointer to the next tier - adopt those as secondary content below the certificate.
-- The rubber-stamp CERTIFIED slam from DESIGN.md is the entrance animation for the stamp; the wings badge then appears on the plane's hangar card.
+The primary action is opening the selected aircraft's Preflight screen.
+3D inspection is secondary and optional.
 
-## Night Flight (dark mode)
+## Screen 2: Preflight
 
-- Claude Design screens 1e/1f are the working reference for Night Flight: deep navy surfaces, cream text, cards keeping their structure while the stage backdrop darkens. Follow DESIGN.md's dark-mode rules where the export doesn't show a surface.
+Preflight answers two questions in order: which aircraft am I making, and is my paper ready?
 
-## Open items
+- Lead with approved hero artwork of the finished aircraft.
+- Provide an explicit Inspect in 3D control that crossfades to the orbit viewer only after activation.
+- Keep beauty artwork visible while the renderer loads.
+- Replace the inspection region with the labeled canonical SVG fallback if WebGL is unavailable or fails.
+- Make paper selection the dominant information block using native radio inputs styled as cards.
+- Explain inline when a paper choice adds preparation folds or resets saved step progress.
+- Show Start folding or Resume as the single red primary action.
+- Keep the primary action sticky at the bottom on mobile without obscuring content.
+- Show Speed, Distance, Airtime, and Ease only here under the heading Estimated flight profile.
+- Treat the flight description and throw tip as secondary reading.
+- Remove prototype labels, fake measurements, social proof, and licence styling.
 
-- None. All screens are verified against in-repo exports.
+## Screen 3: Tutorial
+
+The tutorial is a learning workspace with one dominant procedural stage and no duplicate navigation.
+
+- The header contains one Hangar escape, the plane name, and one authoritative progress display.
+- The stage keeps orbit, zoom, Front, Three-quarter, and Top camera controls.
+- The transport contains only Play or Pause, scrub, Replay, and elapsed or total time.
+- The instruction rail contains the title, kid-clear instruction, optional Why disclosure, first-use fold-term disclosures, and optional useful tip.
+- Remove duplicate Exit, licence placard, transport Back or Next controls, segmented full-step strip, consequence-free self-check, and repeated progress labels.
+- Keep Back and Next or Finish as the only primary step-navigation controls.
+- Add a labeled native step selector for compact direct access.
+- Fold 1 opens paused.
+- A directly selected, resumed, or revisited step opens paused.
+- Deliberately advancing with Next auto-plays each later fold once.
+- Step changes are announced through a polite live region without moving focus.
+- On mobile, place the rail below the stage and keep Back and Next visible without covering instructions.
+- The screen is exactly one viewport tall and never scrolls. Only the rail's prose scrolls, inside itself, so the stage, the transport and Back/Next hold their positions on every fold. Built as `h-[100dvh]` on the tutorial `main`; the tip is part of the rail, not a page footer, because a footer that only some folds carry moves everything above it.
+- Reduced motion removes decorative movement but never removes instructional controls.
+- If WebGL is unavailable, label the static SVG fallback rather than implying that it is interactive 3D.
+
+Completion is recorded only when Finish is activated from the final tutorial step.
+
+## Screen 4: Wings earned
+
+Wings earned is an honest celebration, not a credential or certificate.
+
+### Earned state
+
+- Lead with approved hero artwork and the heading Wings earned.
+- Describe the result as a Flight School achievement.
+- Show the earned difficulty-tier wing without a licence number or Certified stamp.
+- Offer the next uncompleted aircraft as the primary action when one exists and keep Return to Hangar secondary.
+- When all six aircraft are complete, make Return to Hangar the primary action.
+- Offer Fold it again as an explicit restart action that clears resume position and returns to Step 1 while preserving the earned wing.
+- Do not show fold time, replay totals, or other unrecorded statistics.
+
+### Unearned state
+
+- Wait for browser progress state to hydrate before rendering an earned or unearned decision.
+- A direct unearned visit says, "This wing has not been earned yet."
+- Resume or Start tutorial is the primary action.
+- Return to Hangar is secondary.
+- Visiting this route never writes completion state.
+
+## Required states
+
+Every applicable screen must define and verify:
+
+- Default, hover, focus-visible, active, disabled, and loading states.
+- Narrow mobile, large mobile, tablet, and desktop layouts.
+- Left-to-right and Arabic right-to-left layout.
+- Reduced motion and increased text zoom.
+- Beauty-image loading or failure.
+- WebGL loading, active, inactive, and unavailable fallback.
+- Hangar selection: first aircraft, first unfinished aircraft, and an all-complete fleet.
+- No progress, resumed progress, completed, and unearned completion states.

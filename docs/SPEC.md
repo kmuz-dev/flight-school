@@ -27,7 +27,10 @@ The anatomy repo's shape, carried over:
 app/
   [locale]/
     page.tsx                 ← catalog (home)
-    plane/[planeId]/page.tsx ← tutorial
+    plane/[planeId]/
+      page.tsx               ← Preflight
+      fold/page.tsx          ← Tutorial
+      wings/page.tsx         ← Wings earned
   components/                ← React shell + UI
   engine/                    ← the fold engine (pure TS + Three.js, no React)
   content/                   ← content-as-code: plane structures + fold sequences
@@ -45,7 +48,8 @@ Two hard boundaries:
 
 ## 4. The fold engine
 
-The single renderer for every visual in the product: step animations, the finished-plane viewer, and catalog thumbnails.
+The fold engine is the authoritative renderer for tutorial steps, explicit finished-plane inspection, and canonical SVG fallback.
+Generated beauty artwork is a separate presentation layer used only in the Hangar, Preflight, and Wings earned screens.
 
 ### 4.1 Model
 
@@ -80,17 +84,40 @@ type PlaneStructure = {
   steps: FoldStep[];
   accent: string;                   // per-plane accent color, anatomy-style
 };
+
+type DisplayView = {
+  azimuthDeg: number;
+  elevationDeg: number;
+};
+
+type AircraftPresentation = {
+  artwork: StaticImageData;   // one beauty render, shared by every surface
+  objectPosition: string;
+  hangarScale: number;        // optical correction in the photographed bay
+  heroScale: number;          // optical correction in the Preflight art well
+  displayView: DisplayView;
+};
 ```
 
 All instruction text, why-lines, flight descriptions, and throw tips live in `i18n/planes/<locale>.ts` keyed by step and plane ids.
+The `AircraftPresentation` manifest is keyed by `PlaneId` and must contain all six planes.
+It does not alter `PlaneStructure`, fold state, or geometry-derived rest orientation.
 
 ### 4.3 Animation and interaction
 
-- Each step's fold animates via a GSAP timeline driving the rotation about the crease axis; auto-plays once on step entry.
-- Controls per step: replay, scrub (timeline slider bound to the GSAP timeline), orbit/zoom (OrbitControls), next/back.
+- Each step's fold animates via a GSAP timeline driving the rotation about the crease axis.
+- Fold 1, resumed steps, revisited steps, and directly selected steps open paused.
+- Deliberately advancing with Next auto-plays each later fold once.
+- Playback controls are Play or Pause, scrub, Replay, and time.
+- Step navigation is Back and Next or Finish, with a native step selector for direct access.
+- The stage retains orbit, zoom, Front, Three-quarter, and Top camera controls.
 - Stepping backward restores the previous fold state exactly; fold state at any step index must be deterministically computable from the sequence (pure function of steps 0..n), which is also what makes resume trivial.
-- Catalog thumbnails: render each plane's final fold state to an offscreen canvas at build or first load and reuse; do not run 6 live WebGL contexts on the catalog page.
-- WebGL unavailable: render a static image of the final state and per-step instruction text; the tutorial must remain completable.
+- Hangar, Preflight, and Wings earned use approved beauty artwork by default and do not download the WebGL renderer until inspection is explicitly requested.
+- Beauty artwork remains visible while an explicit inspection loads and successful WebGL replaces it.
+- WebGL failure or unavailability replaces the inspection region with a labeled canonical SVG fallback.
+- Beauty-image failure outside inspection also replaces the image with the canonical SVG.
+- The tutorial uses a canonical per-step SVG when WebGL is unavailable and remains completable.
+- No more than two explicitly opened Hangar WebGL scenes may exist at once; least-recently-used disposal enforces the limit.
 
 ### 4.4 Authoring tooling (internal, ships hidden)
 
@@ -125,13 +152,13 @@ All reads guarded for SSR/export (no `window` at module scope).
 - **Content validation test**: every plane's sequence type-checks, every step id has instruction text in English, every `hasWhy` step has a why-line, every prep table covers all three source papers or declares pass-through.
 - **i18n audit** in CI (anatomy repo has this exact script shape).
 - **Build test**: static export succeeds and key routes exist for every locale (anatomy's rendered-html test pattern).
-- **Playwright against the exported build**, which supersedes this section's original "no browser-automation suite required for V1". The owner asked for end-to-end checks to gate every phase, so the suite is in from Phase 0: every plane folded start to finish, resume and badges, the paper-prep cut flow, RTL and CJK locales, a no-WebGL run, keyboard completion, axe-core over four screens in both themes, layout stability, and a console-error sweep. The same specs run against the deployed URL by setting `E2E_BASE_URL`.
+- **Playwright against the exported build**, which supersedes this section's original "no browser-automation suite required for V1". The owner asked for end-to-end checks to gate every phase, so the suite is in from Phase 0: every plane folded start to finish, resume and badges, the paper-prep cut flow, RTL and CJK locales, a no-WebGL run, keyboard completion, axe-core over four screens, layout stability, and a console-error sweep. The same specs run against the deployed URL by setting `E2E_BASE_URL`.
 - The PRD's physical acceptance bar (fold every plane from the site with real paper) remains a manual gate that no suite replaces.
 
 ## 8. Build order (milestones)
 
 1. **M1 - Vertical slice**: engine core + step UI + The Dart end-to-end in English. Proves ADR 0001 before anything fans out. Exit: a person folds a flying Dart from the site.
 2. **M2 - Catalog fan-out**: remaining 5 planes authored via the fold editor; catalog page, flight profiles, Paper Prep including the Square Cruiser cutting flow, localStorage resume/completion.
-3. **M3 - Locales and hardening**: 11 translated dictionaries, RTL pass, WebGL fallback, thumbnail pipeline, CI, Cloudflare deploy.
+3. **M3 - Locales and hardening**: 11 translated dictionaries, RTL pass, WebGL fallback, aircraft presentation pipeline, CI, Cloudflare deploy.
 
 M1 is the risk gate: if the engine proves unworkable at full quality, fall back to static SVG step diagrams behind the same step UI and data model (the `FoldStep` schema still drives diagram generation), without renegotiating the rest of the product.

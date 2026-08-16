@@ -17,21 +17,54 @@ This sets the complexity ceiling (no design ships if a 10-year-old cannot comple
 | Fold Sequence | The ordered list of Steps that takes a sheet of paper to the finished Plane. |
 | Step | One atomic folding action a user performs. Has an instruction, a visual, and (later iterations) a "why" explanation. |
 | Paper Prep | The pre-folding stage: what paper size/type is needed and how to cut common paper (e.g. Letter, A4, 4x6) down to it. |
+| Hangar | The catalog and the home page: one aircraft at a time, floating in a photographed hangar interior, chosen from a strip of six markers. |
+| Bay | The photographic surface the Hangar aircraft occupies. A room, not a theme - the only dark surface in the product. |
 
-## Decisions
+## Current V1 Decisions
 
-- **V1 catalog**: 5-6 Planes in a difficulty ladder - two easy, two medium, one or two advanced.
-- **Step visuals**: a procedural Three.js fold engine renders every Step as an animated, scrubbable, orbitable 3D fold ([ADR 0001](docs/adr/0001-procedural-3d-fold-engine.md)).
-- **Finished-plane viewer**: the same engine mesh in its final folded state; no separate asset.
-- **No image generation**: ChatGPT image gen was wanted only for 3D/motion/folding, which the engine now covers. All visuals (steps, 360 viewer, catalog thumbnails) are engine renders. No external art pipeline.
+- **Catalog:** Six planes form a fixed difficulty ladder with two easy, two medium, and two advanced designs.
+- **Step visuals:** A procedural fold engine renders every instructional step as an animated, scrubbable, orbitable WebGL fold with a canonical static SVG fallback ([ADR 0001](docs/adr/0001-procedural-3d-fold-engine.md)).
+- **Aircraft presentation:** Generated beauty artwork is allowed only in the Hangar, Preflight, and Wings earned screens.
+  One render per aircraft serves all three; only its scale in the frame differs.
+  The engine's canonical final state is authoritative for silhouette and powers explicit 3D inspection and SVG fallback.
+- **Hangar:** One aircraft in a photographed room rather than a grid of six cards.
+  Arrows, a marker strip, the arrow keys, and a horizontal swipe change aircraft; the strip carries which aircraft have earned wings.
+  The bay opens on the first unfinished aircraft once stored progress has hydrated.
+  WebGL is never mounted by arriving, hovering or focusing - only by a named button or a short drag - and at most one scene is ever live.
+- **One scene, one palette:** Night Flight was retired.
+  The instructional screens keep the cream Paper system, the Hangar bay is dark because it is a photograph, and the stage draws through to it rather than matching it.
+  The storage key stayed at `flightschool.v1`: a retired `theme` field is simply not read forward, so no cadet loses progress to the change.
+- **Display fallback:** Beauty artwork remains visible while explicitly requested WebGL loads.
+  Successful WebGL replaces it.
+  WebGL failure or unavailability shows a labeled canonical SVG in the inspection region.
+  Beauty-image failure outside inspection also falls back to the canonical SVG.
+- **Paper Prep:** The fold engine renders Paper Prep as Step 0 of each sequence.
+  Each plane declares its required paper and the user chooses Letter, A4, or 4x6 paper.
+- **Why layer:** Each step may have one short Why explanation and each plane has an Estimated flight profile on Preflight.
+  Deep aerodynamics remains a later iteration.
+- **User state:** Browser localStorage holds resume position and earned wings per plane.
+  No accounts or backend state exist.
+- **Completion truth:** Only Finish on the final tutorial step records completion.
+  A direct Wings earned visit never awards a wing.
+- **Localization:** Twelve content-as-code locales launch together.
+  English is the source of truth and the remaining dictionaries are audited against it.
+- **Stack:** Next.js 16 App Router, TypeScript, Tailwind 4, Three.js, and GSAP run in `output: 'export'` mode.
+- **Backend:** There is no database, API route, or authentication layer.
+  TypeScript content compiles into the static build.
+- **Deployment:** Cloudflare Workers static assets is primary.
+  `wrangler.jsonc` serves `out/` directly without a Worker script at `https://flight-school.kudakw-mutasa.workers.dev/`.
+  GitHub Pages remains the base-path-safe fallback.
+- **Design system:** The current Blueprint-led release system lives in [DESIGN.md](DESIGN.md), [SCREENS.md](docs/SCREENS.md), and [UI-RELEASE-SPEC.md](docs/UI-RELEASE-SPEC.md).
+  Older Stitch, Claude Design, and mockup-brief artifacts are retained only as exploration history.
 
-- **Paper Prep**: rendered by the same fold engine as 'Step 0' of each sequence. Each Plane declares required paper; the user picks what they have (Letter / A4 / 4x6) and the engine animates the convert-and-cut sequence.
-- **Why-layer (V1)**: optional one-line "why" per Step plus a per-Plane Flight Profile (speed/distance/stunt ratings, flight description, throwing guidance). Deep aerodynamics is a later iteration.
-- **User state**: localStorage only - resume position per Plane, completed badges. No accounts, no backend state.
-- **i18n**: multi-locale at launch (anatomy-style content-as-code dictionaries). English is the source of truth; other locales are translated dictionaries audited against it.
+## Superseded Decisions Retained for History
 
-- **Stack**: Next.js 16 App Router + TypeScript + Tailwind 4 + Three.js + GSAP, in full static-export mode (`output: 'export'`). The anatomy repo's library set without its vinext/Cloudflare-Workers harness.
-- **Backend**: none. No database, no API routes, no auth. All content is TypeScript data compiled into the static build.
-- **Deployment**: Cloudflare free tier, as Workers static assets rather than Pages - `wrangler.jsonc` points a Worker's asset directory at `out/` with no Worker script, so files come straight off the CDN. Live at `https://flight-school.kudakw-mutasa.workers.dev/`. GitHub Pages is the documented fallback (same static output, needs `BASE_PATH` set). This is a free-hosting demo project by design.
-- **Design system**: "flight academy for paper" fiction; full system in DESIGN.md, paste-ready mockup brief in docs/DESIGN-BRIEF.md.
-- **Screen synthesis**: Stitch + Claude Design mockups merged per docs/SCREENS.md (all-Claude tutorial, Stitch-visual preflight, live-3D hangar cards on hover/selection, chevron striping kept, Archivo Narrow headlines).
+The first V1 concept used five or six planes before the catalog was fixed at six.
+It required the engine final-state mesh as the only finished-plane asset and prohibited image generation.
+It proposed engine-rendered catalog thumbnails and live 3D Hangar cards on hover or selection.
+It merged Stitch and Claude Design mockups, including chevron striping and academy licence treatments.
+The 2026-08-10 release refinement superseded those presentation choices while preserving the procedural engine as the instructional source of truth.
+
+A six-card Hangar grid with tier filters shipped in that refinement and was replaced on 2026-08-16 by the photographic bay.
+Night Flight was a first-class dark theme across every screen until the same date.
+Wings earned was styled as a flight certificate, with a Certified stamp and licence-tier naming, until completion was made truthful.

@@ -1,6 +1,10 @@
 # Flight School - Product Requirements Document (V2)
 
-Status: **proposed, not approved for build.** V1 ships first, unchanged.
+> **Archived proposal.** This document is not approved for build and predates the 2026-08-10 V1 release refinement.
+> Its assumptions about generated imagery, completion presentation, visual design, and deployment are superseded by [PRD.md](PRD.md), [SCREENS.md](SCREENS.md), and [UI-RELEASE-SPEC.md](UI-RELEASE-SPEC.md).
+> Retain it only as future-feature history and do not use it as a V1 implementation source.
+
+Status: **proposed and superseded, not approved for build.**
 Companion documents: [PRD.md](PRD.md) (V1, the product this extends), [ADR 0002](adr/0002-flight-simulation-walled-exception.md) (flight simulation as a walled exception), [ADR 0003](adr/0003-camera-hand-input.md) (camera hand tracking as an optional additive input).
 A SPEC-V2 follows before build; this document defines product behavior, and the two ADRs define the architecture that keeps it away from V1.
 
@@ -22,7 +26,8 @@ The two non-goals are handled differently, on purpose:
 - **Flight simulation** is granted a scoped exception, walled into a module the fold engine cannot see and consumed by exactly one route ([ADR 0002](adr/0002-flight-simulation-walled-exception.md)). The non-goal still holds everywhere else.
 - **Camera input** is admitted only as an addition that can be removed without consequence ([ADR 0003](adr/0003-camera-hand-input.md)). No surface may require it.
 
-Everything in V1's §4 that is not named above stays a non-goal: still no backend, still no accounts, still no AI-generated imagery, still no user-generated content.
+Everything in V1's current §4 that is not named above stays a non-goal.
+Current V1 permits tightly scoped generated beauty artwork, as defined by the release documents linked above.
 
 ## 3. What V2 is
 

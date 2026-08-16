@@ -1,5 +1,8 @@
 # Flight School - Mockup Brief (paste into Google Stitch / Claude Design)
 
+> **Historical mockup artifact.** This brief is superseded by [SCREENS.md](SCREENS.md), [UI-RELEASE-SPEC.md](UI-RELEASE-SPEC.md), and [DESIGN.md](../DESIGN.md).
+> Retain it only to reproduce the 2026-08-09 explorations and do not implement its Stitch-led cards, licence fiction, chevrons, ratings, or certificate treatment.
+
 This is the condensed, paste-ready version of [DESIGN.md](../DESIGN.md) for external mockup tools.
 Paste everything below the line into the tool, then ask for the screen you want.
 

@@ -5,7 +5,7 @@ Six paper airplanes, each taught as an animated 3D fold: the sheet on screen is 
 
 Live at **https://flight-school.kudakw-mutasa.workers.dev/**
 
-Twelve languages, a dark scene called Night Flight, progress that survives a reload, and a certificate at the end.
+Twelve languages, progress that survives a reload, and a pair of wings at the end that you can only get by folding the plane.
 No backend, no accounts, no tracking: the whole product is a static export and a little localStorage.
 
 ## Getting started
