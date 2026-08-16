@@ -20,7 +20,8 @@
   The Hangar bay is the one photographic surface, and it is a generated empty hangar interior serving as the room an aircraft is presented in - never a photograph of a real aeroplane, and never a decorative hero image.
 - **Truth guard:** Do not use manifest fiction, licence numbers, social proof, fabricated metrics, or externally suggestive certification.
 - **Aircraft guard:** Generated beauty artwork may appear only in the Hangar, Preflight, and Wings earned screens.
-  The procedural engine remains authoritative for instruction, explicit 3D inspection, and fallback.
+  The procedural engine remains authoritative for instruction and explicit 3D inspection.
+  Inspection failure retains beauty artwork, and the canonical SVG is the secondary fallback when that artwork also fails.
   Generated silhouettes must match the canonical final fold geometry.
 
 ## Typography
@@ -129,15 +130,18 @@ The original accent palette failed several text contrast pairings.
 The palette now uses `--color-red-ink` `#C0362F`, `--color-sky-ink` `#456F93`, `--color-success-ink` `#356044`, and a 70% navy muted-text token.
 Surface accent colors remain available for marks that do not carry text.
 
-### 2026-08-10: Procedural paper material
+### 2026-08-16: Shared photographic paper material
 
 The live engine represents each facet as a 0.17mm slab with a chamfered edge.
-A sheet-space procedural fibre map varies specular response without adding a texture-asset dependency.
+A shared albedo, normal, and roughness set gives Tutorial folds and explicit 3D inspection the same warm-white paper surface as the approved artwork.
+The maps stay behind the lazy renderer boundary and use mirrored four-by-four repeats, 0.88 roughness, 0.18 normal scale, and anisotropy capped at eight.
+A sheet-space procedural fibre map remains only as the asset-load fallback.
 A wrap-lighting term softens the terminator to suggest thin paper translucency.
 
 ### 2026-08-10: Separate display and tutorial lighting
 
 The tutorial rig keeps generous ambient light so a flat starting sheet remains distinct from its floor.
+Its warm key is 2.8, cool fill is 0.55, hemisphere is 0.65, and shadow opacity is 0.22.
 The finished-aircraft display rig uses lower ambient and fill values to reveal folded form.
 Both renderers read the shared `DISPLAY_RIG` in `app/engine/view.ts`.
 
