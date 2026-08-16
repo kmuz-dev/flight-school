@@ -69,6 +69,7 @@ export function FoldStage({
   const onEngineChangeRef = useRef(onEngineChange);
   const [engineAnchor, setEngineAnchor] = useState<AnnotationAnchor | null>(null);
   const [renderMode, setRenderMode] = useState<FoldEngineHandle["renderMode"] | null>(null);
+  const [materialReady, setMaterialReady] = useState(false);
 
   const syncRenderActivity = useCallback(() => {
     engineRef.current?.setRenderActive(intersectsRef.current && documentVisibleRef.current);
@@ -124,9 +125,20 @@ export function FoldStage({
       // `rest` but never `display`: the tutorial is a table, and the model
       // stands up only once it has a bend - which is exactly when it stops
       // being a sheet and starts being a plane.
-      handle = create(mount, structure, { rest: true });
+      setMaterialReady(false);
+      handle = create(mount, structure, {
+        rest: true,
+        onReady: () => {
+          // Both engines may report readiness during construction. Read the
+          // returned handle on the next microtask so renderMode stays truthful.
+          queueMicrotask(() => {
+            if (stopped || !handle) return;
+            setRenderMode(handle.renderMode);
+            setMaterialReady(true);
+          });
+        },
+      });
       engineRef.current = handle;
-      setRenderMode(handle.renderMode);
       syncRenderActivity();
       offAnnotation = handle.on("annotation", (payload) => {
         setEngineAnchor(toAnchor(payload));
@@ -145,6 +157,7 @@ export function FoldStage({
       onEngineChangeRef.current(null);
       setEngineAnchor(null);
       setRenderMode(null);
+      setMaterialReady(false);
       handle?.dispose();
       handle = null;
       engineRef.current = null;
@@ -173,7 +186,13 @@ export function FoldStage({
         }}
       />
 
-      <div ref={mountRef} aria-hidden="true" className="absolute inset-0" data-testid="engine-mount" />
+      <div
+        ref={mountRef}
+        aria-hidden="true"
+        data-material-ready={materialReady ? "true" : "false"}
+        className={`absolute inset-0 transition-opacity duration-300 ${materialReady ? "opacity-100" : "opacity-0"}`}
+        data-testid="engine-mount"
+      />
 
       {showAnnotation ? (
         <div

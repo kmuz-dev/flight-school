@@ -62,6 +62,12 @@ import {
   type ModelBounds,
   type StageTheme,
 } from "./sceneModel";
+import {
+  disposePaperTextures,
+  loadPaperTextures,
+  type PaperTextureSet,
+} from "./paperMaterial";
+import { reportPaperMaterialUnavailable } from "@/engine/report";
 import { createStepTimeline, type StepTimeline } from "./timeline";
 
 // Keep the established renderer import surface while the values themselves
@@ -158,6 +164,7 @@ export type RendererLike = {
   render(scene: Scene, camera: Camera): void;
   dispose(): void;
   forceContextLoss?: () => void;
+  capabilities?: { getMaxAnisotropy(): number };
 };
 
 /** The slice of `OrbitControls` the stage actually drives. */
@@ -181,6 +188,8 @@ export type FoldEngineDeps = {
     transparent: boolean,
   ) => RendererLike;
   readonly controlsFactory?: (camera: PerspectiveCamera, dom: HTMLElement) => ControlsLike;
+  /** Test seam. Production omits it and loads the renderer-owned asset maps. */
+  readonly paperTextures?: Promise<PaperTextureSet | null>;
 };
 
 const FOV_DEG = 34;
@@ -531,7 +540,24 @@ export class FoldEngine implements FoldEngineHandle {
     this.setStep(0, "start");
     this.snapCamera(this.orbit);
     this.startLoop();
-    opts.onReady?.();
+
+    const anisotropy = this.renderer.capabilities?.getMaxAnisotropy() ?? 1;
+    const paperTextures = deps.paperTextures ?? loadPaperTextures(anisotropy);
+    void paperTextures.then(
+      (textures) => {
+        if (this.disposed) {
+          if (textures) disposePaperTextures(textures);
+          return;
+        }
+        if (textures) this.model.applyPaperTextures(textures);
+        if (!this.renderActive) this.renderFrame();
+        opts.onReady?.();
+      },
+      (cause: unknown) => {
+        reportPaperMaterialUnavailable(cause);
+        if (!this.disposed) opts.onReady?.();
+      },
+    );
   }
 
   // --- FoldEngineHandle -----------------------------------------------------

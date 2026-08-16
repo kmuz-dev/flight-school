@@ -67,6 +67,7 @@ function mount(
     options.engine ?? {},
     {
       core,
+      paperTextures: Promise.resolve(null),
       rendererFactory: (c, quality) => {
         canvas = c as unknown as FakeNode;
         qualities.push(quality);
@@ -124,20 +125,53 @@ describe("FoldEngine construction", () => {
     expect(renderer.setPixelRatio).toHaveBeenCalledWith(2);
   });
 
-  it("calls onReady once the stage is live", () => {
+  it("calls onReady once the paper material is ready", async () => {
     const { container } = createFakeDom();
     const onReady = vi.fn();
+    let resolvePaper!: (value: null) => void;
+    const paperTextures = new Promise<null>((resolve) => {
+      resolvePaper = resolve;
+    });
     const engine = new FoldEngine(
       container as unknown as HTMLElement,
       makeStructure(2),
       { onReady },
       {
         core: createCoreStub(),
+        paperTextures,
         rendererFactory: (c) => createFakeRenderer(c as unknown as FakeNode),
         controlsFactory: () => createFakeControls(),
       },
     );
-    expect(onReady).toHaveBeenCalledTimes(1);
+    expect(onReady).not.toHaveBeenCalled();
+    resolvePaper(null);
+    await vi.waitFor(() => expect(onReady).toHaveBeenCalledTimes(1));
+    engine.dispose();
+  });
+
+  it("reports failed material assets, keeps WebGL truthful, and readies the fallback", async () => {
+    const { container } = createFakeDom();
+    const onReady = vi.fn();
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const engine = new FoldEngine(
+      container as unknown as HTMLElement,
+      makeStructure(2),
+      { onReady },
+      {
+        core: createCoreStub(),
+        paperTextures: Promise.reject(new Error("paper CDN unavailable")),
+        rendererFactory: (c) => createFakeRenderer(c as unknown as FakeNode),
+        controlsFactory: () => createFakeControls(),
+      },
+    );
+
+    await vi.waitFor(() => expect(onReady).toHaveBeenCalledTimes(1));
+    expect(engine.renderMode).toBe("webgl");
+    expect(warn).toHaveBeenCalledWith(
+      "[fold-engine] paper material unavailable, using procedural paper:",
+      "paper CDN unavailable",
+    );
+    warn.mockRestore();
     engine.dispose();
   });
 
@@ -322,6 +356,7 @@ describe("FoldEngine display staging", () => {
         { display: true, transparent },
         {
           core: createCoreStub(),
+          paperTextures: Promise.resolve(null),
           rendererFactory: (c, _quality, isTransparent) => {
             asked.push(isTransparent);
             return createFakeRenderer(c as unknown as FakeNode);

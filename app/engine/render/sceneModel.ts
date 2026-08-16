@@ -31,10 +31,16 @@ import {
   ShaderChunk,
   ShaderMaterial,
   Vector3,
+  Vector2,
 } from "three";
 import type { Facet, FoldState, Vec2 } from "@/engine/core/types";
 import { DISPLAY_RIG } from "@/engine/view";
 import type { PoseMap } from "./coreApi";
+import {
+  PAPER_NORMAL_SCALE,
+  PAPER_ROUGHNESS,
+  type PaperTextureSet,
+} from "./paperMaterial";
 
 
 /**
@@ -57,6 +63,7 @@ export type StageTheme = {
   readonly gridSize: number;
   readonly paperFront: number;
   readonly paperBack: number;
+  readonly paperEdge: number;
   readonly edge: number;
   readonly edgeOpacity: number;
   readonly hemiSky: number;
@@ -116,6 +123,7 @@ export const STAGE_THEME: StageTheme = {
   gridSize: 20,
   paperFront: 0xfdfbf4,
   paperBack: 0xeae2d0,
+  paperEdge: 0xd8cfbd,
   edge: 0x1a2b4a,
   edgeOpacity: 0.22,
   hemiSky: 0xf7f3e9,
@@ -149,8 +157,8 @@ export const STAGE_THEME: StageTheme = {
  * a broad specular from the key light that varies across a panel, so a large
  * flat area stops being one printed value.
  *
- * Procedural, so it costs no asset budget and cannot become an AI-generated
- * image, which the project's ground rules exclude outright.
+ * This remains the deterministic fallback when the photographic maps cannot
+ * be fetched or decoded.
  */
 export function createFibreTexture(): DataTexture {
   const size = 128;
@@ -193,17 +201,25 @@ export function createFibreTexture(): DataTexture {
 export function createPaperMaterial(theme: StageTheme): MeshStandardMaterial {
   const material = new MeshStandardMaterial({
     color: new Color(theme.paperFront),
-    roughness: 0.9,
+    roughness: PAPER_ROUGHNESS,
     metalness: 0,
     side: DoubleSide,
     roughnessMap: createFibreTexture(),
+    normalScale: new Vector2(PAPER_NORMAL_SCALE, PAPER_NORMAL_SCALE),
   });
   // Thin sheets look wrong with single-sided shadow casting.
   material.shadowSide = DoubleSide;
 
-  const back = new Color(theme.paperBack);
+  const front = new Color(theme.paperFront);
+  const relativeTint = (hex: number): Color => {
+    const tint = new Color(hex);
+    return tint.setRGB(tint.r / front.r, tint.g / front.g, tint.b / front.b);
+  };
+  const backTint = relativeTint(theme.paperBack);
+  const edgeTint = relativeTint(theme.paperEdge);
   material.onBeforeCompile = (shader) => {
-    shader.uniforms.backColor = { value: back };
+    shader.uniforms.backTint = { value: backTint };
+    shader.uniforms.edgeTint = { value: edgeTint };
     /**
      * `String.replace` on a shader that no longer contains the anchor returns
      * the shader unchanged and compiles perfectly, so a Three upgrade that
@@ -239,13 +255,12 @@ export function createPaperMaterial(theme: StageTheme): MeshStandardMaterial {
         patch(
           shader.fragmentShader,
           "void main() {",
-          "uniform vec3 backColor;\nvarying vec3 vPaperNormal;\nvoid main() {",
+          "uniform vec3 backTint;\nuniform vec3 edgeTint;\nvarying vec3 vPaperNormal;\nvoid main() {",
         ),
         "#include <color_fragment>",
-        // The chamfer bands sit near z=0 in paper space and belong to neither
-        // side, so they keep the front colour rather than flickering between
-        // the two as a facet turns.
-        "#include <color_fragment>\n\tif ( vPaperNormal.z < -0.3 ) { diffuseColor.rgb = backColor; }",
+        // Multiply rather than replace, so both reverse faces and compressed
+        // edge bands keep the fibre and tonal variation from the albedo map.
+        "#include <color_fragment>\n\tif ( vPaperNormal.z < -0.3 ) { diffuseColor.rgb *= backTint; } else if ( abs( vPaperNormal.z ) <= 0.3 ) { diffuseColor.rgb *= edgeTint; }",
       ),
       /**
        * Wrap lighting, which is what paper's translucency looks like.
@@ -276,7 +291,7 @@ export function createPaperMaterial(theme: StageTheme): MeshStandardMaterial {
       ),
     );
   };
-  material.customProgramCacheKey = () => `flightschool-paper-2side-wrap-${DISPLAY_RIG.wrap}`;
+  material.customProgramCacheKey = () => `flightschool-paper-textured-2side-wrap-${DISPLAY_RIG.wrap}`;
   return material;
 }
 
@@ -554,6 +569,16 @@ export class SceneModel {
     });
   }
 
+  /** Replace the procedural fallback as one atomic material handoff. */
+  applyPaperTextures(textures: PaperTextureSet): void {
+    const fallback = this.paperMaterial.roughnessMap;
+    this.paperMaterial.map = textures.albedo;
+    this.paperMaterial.normalMap = textures.normal;
+    this.paperMaterial.roughnessMap = textures.roughness;
+    this.paperMaterial.needsUpdate = true;
+    if (fallback && fallback !== textures.roughness) fallback.dispose();
+  }
+
   /**
    * Make the mesh set match `state`. Returns true when geometry was rebuilt.
    * Cheap and idempotent: call it on every step change, never per frame.
@@ -658,7 +683,12 @@ export class SceneModel {
 
   dispose(): void {
     this.clearMeshes();
-    this.paperMaterial.roughnessMap?.dispose();
+    const textures = new Set([
+      this.paperMaterial.map,
+      this.paperMaterial.normalMap,
+      this.paperMaterial.roughnessMap,
+    ]);
+    textures.forEach((texture) => texture?.dispose());
     this.paperMaterial.dispose();
     this.edgeMaterial.dispose();
     this.root.removeFromParent();

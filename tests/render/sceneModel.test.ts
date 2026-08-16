@@ -8,6 +8,7 @@ import {
   Matrix4,
   Mesh,
   RepeatWrapping,
+  Texture,
   ShaderChunk,
   ShaderLib,
   SRGBColorSpace,
@@ -156,7 +157,8 @@ describe("createPaperMaterial", () => {
     // drops the wrap term.
     const shader = compile(ShaderLib.physical.fragmentShader);
     expect(shader.vertexShader).toContain("vPaperNormal = objectNormal;");
-    expect(shader.fragmentShader).toContain("diffuseColor.rgb = backColor;");
+    expect(shader.fragmentShader).toContain("diffuseColor.rgb *= backTint;");
+    expect(shader.fragmentShader).toContain("diffuseColor.rgb *= edgeTint;");
     // The wrap term, which is the one that would have gone silently.
     expect(shader.fragmentShader).toContain(`+ ${DISPLAY_RIG.wrap.toFixed(2)} )`);
     expect(shader.fragmentShader).not.toContain("#include <lights_physical_pars_fragment>");
@@ -625,5 +627,24 @@ describe("SceneModel", () => {
     for (const spy of materialSpies) expect(spy).toHaveBeenCalledTimes(1);
     expect(model.facetIds()).toEqual([]);
     expect(model.root.children.length).toBe(0);
+  });
+
+  it("hands all three photographic maps over atomically and owns their disposal", () => {
+    const model = new SceneModel(theme);
+    const fallback = model["paperMaterial"].roughnessMap!;
+    const fallbackDispose = vi.spyOn(fallback, "dispose");
+    const albedo = new Texture();
+    const normal = new Texture();
+    const roughness = new Texture();
+    const disposals = [albedo, normal, roughness].map((texture) => vi.spyOn(texture, "dispose"));
+
+    model.applyPaperTextures({ albedo, normal, roughness });
+    expect(model["paperMaterial"].map).toBe(albedo);
+    expect(model["paperMaterial"].normalMap).toBe(normal);
+    expect(model["paperMaterial"].roughnessMap).toBe(roughness);
+    expect(fallbackDispose).toHaveBeenCalledTimes(1);
+
+    model.dispose();
+    disposals.forEach((dispose) => expect(dispose).toHaveBeenCalledTimes(1));
   });
 });

@@ -52,3 +52,12 @@ export function reportRendererUnavailable(cause: unknown): void {
 export function reportRendererFault(cause: unknown): void {
   console.error(`${ENGINE_FAULT_PREFIX} 3D stage failed to start, using the static stage:`, describe(cause));
 }
+
+/**
+ * The renderer is healthy but its photographic paper maps did not arrive.
+ * The deterministic fibre material remains usable, so this is observable as a
+ * warning without changing the handle's truthful WebGL render mode.
+ */
+export function reportPaperMaterialUnavailable(cause: unknown): void {
+  console.warn(`${ENGINE_FAULT_PREFIX} paper material unavailable, using procedural paper:`, describe(cause));
+}
