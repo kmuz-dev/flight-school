@@ -77,7 +77,7 @@ export function PreflightScreen({
           aria-label={ui.backToHangar}
           className={`flex shrink-0 items-center gap-sm whitespace-nowrap font-mono text-micro tracking-[0.08em] uppercase ${FOCUS_RING}`}
         >
-          <BrandMark className="h-7 w-8" sizes="32px" />
+          <BrandMark className="h-5 w-6 sm:h-6 sm:w-7" sizes="(min-width: 640px) 28px, 24px" />
           <span className="sm:hidden">{ui.backToHangarShort}</span>
           <span className="hidden sm:inline">{ui.backToHangar}</span>
         </a>

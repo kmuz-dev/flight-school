@@ -241,7 +241,7 @@ export function TutorialScreen({
           href={hangarHref}
           className={`col-start-1 row-start-1 flex items-center gap-sm font-mono text-micro tracking-[0.08em] ${FOCUS_RING}`}
         >
-          <BrandMark className="h-7 w-8" sizes="32px" />
+          <BrandMark className="h-5 w-[22px]" sizes="22px" />
           {ui.backToHangar}
         </a>
         <h1 className="col-span-2 row-start-2 min-w-0 font-display text-h3 font-bold leading-none tracking-tight sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:truncate">
