@@ -20,6 +20,7 @@ import {
   RepeatWrapping,
   Group,
   LinearFilter,
+  LinearMipmapLinearFilter,
   LineBasicMaterial,
   LineSegments,
   Matrix4,
@@ -37,6 +38,7 @@ import type { Facet, FoldState, Vec2 } from "@/engine/core/types";
 import { DISPLAY_RIG } from "@/engine/view";
 import type { PoseMap } from "./coreApi";
 import {
+  PAPER_ANISOTROPY_CAP,
   PAPER_NORMAL_SCALE,
   PAPER_ROUGHNESS,
   type PaperTextureSet,
@@ -190,6 +192,28 @@ export function createFibreTexture(): DataTexture {
   texture.wrapT = RepeatWrapping;
   // UVs are the sheet in units of A4, so this is 14 tiles across 210mm.
   texture.repeat.set(14, 14);
+  /**
+   * Filtering, which `DataTexture` does NOT default the way `TextureLoader`
+   * does: it constructs with `NearestFilter` on both magnification and
+   * minification, and a nearest MIN filter means the mipmap chain is never
+   * consulted no matter what `generateMipmaps` says.
+   *
+   * A 128px noise map tiled fourteen times across a sheet, point-sampled and
+   * unmipmapped, is a moire generator. Every texel the rasteriser skips at a
+   * grazing angle beats against the sampling grid, and the beat is a regular
+   * diagonal hatch - worst exactly where the paper is most foreshortened. The
+   * three photographic maps this stands in for come through `TextureLoader`
+   * and are trilinear and mipmapped already, which is the whole reason the
+   * fallback looked worse than the material it replaces.
+   *
+   * Anisotropy is asked for rather than measured: Three clamps it to the
+   * device's own maximum at upload, so a constant is safe here and keeps the
+   * fallback from having to be handed the renderer's capabilities.
+   */
+  texture.magFilter = LinearFilter;
+  texture.minFilter = LinearMipmapLinearFilter;
+  texture.generateMipmaps = true;
+  texture.anisotropy = PAPER_ANISOTROPY_CAP;
   texture.needsUpdate = true;
   return texture;
 }

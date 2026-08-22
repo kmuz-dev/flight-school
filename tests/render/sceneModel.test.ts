@@ -3,6 +3,8 @@ import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import {
   BufferGeometry,
+  LinearFilter,
+  LinearMipmapLinearFilter,
   LineSegments,
   Material,
   Matrix4,
@@ -18,6 +20,7 @@ import {
   ContactShadow,
   SceneModel,
   createBackdropTexture,
+  createFibreTexture,
   createPaperMaterial,
   displayBounds,
   facetGeometry,
@@ -28,6 +31,7 @@ import {
 import { createCoreStub, LAYER_Z_MM, makeStructure } from "@/engine/render/__contracts__/coreStub";
 import type { Vec2 } from "@/engine/core/types";
 import { DISPLAY_RIG } from "@/engine/view";
+import { PAPER_ANISOTROPY_CAP } from "@/engine/render/paperMaterial";
 
 const SQUARE_CCW: readonly Vec2[] = [
   [-10, -10],
@@ -179,6 +183,27 @@ describe("createPaperMaterial", () => {
     expect(material.roughnessMap!.wrapS).toBe(RepeatWrapping);
     expect(material.roughnessMap!.wrapT).toBe(RepeatWrapping);
     material.dispose();
+  });
+
+  /**
+   * `DataTexture` is the one texture class in Three that constructs with
+   * `NearestFilter` on BOTH filters, and a nearest MIN filter switches the
+   * mipmap chain off whatever `generateMipmaps` says. Left at the default, a
+   * 128px noise map tiled fourteen times across a sheet beats against the
+   * sampling grid at any grazing angle and draws a regular diagonal hatch.
+   *
+   * Asserted against the constants rather than "not Nearest", because a
+   * bilinear-but-unmipmapped minification aliases almost as badly and would
+   * pass the looser check.
+   */
+  it("mipmaps and filters the fallback fibre map, which DataTexture does not do by default", () => {
+    const texture = createFibreTexture();
+    expect(texture.magFilter).toBe(LinearFilter);
+    expect(texture.minFilter).toBe(LinearMipmapLinearFilter);
+    expect(texture.generateMipmaps).toBe(true);
+    // Three clamps this to the device maximum at upload, so asking high is safe.
+    expect(texture.anisotropy).toBe(PAPER_ANISOTROPY_CAP);
+    texture.dispose();
   });
 });
 

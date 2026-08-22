@@ -8,7 +8,18 @@ import { defineConfig, devices } from "@playwright/test";
 // a pass on the deployed URL means the thing CI proved is the thing that
 // shipped, rather than a separate hand-written smoke test that could drift.
 const LIVE_URL = process.env.E2E_BASE_URL;
-const LOCAL_URL = "http://127.0.0.1:4173";
+/**
+ * Not 4173, which is Vite's default preview port and therefore the busiest
+ * number on a machine that builds more than one thing.
+ *
+ * This is not hypothetical tidiness. With the port at 4173 and
+ * `reuseExistingServer` on, a preview server belonging to an unrelated project
+ * answered Playwright's health check, and the suite ran against a stranger's
+ * app: thirteen specs failed reporting colour-contrast and missing-h1
+ * violations on markup this repository has never contained, which reads
+ * exactly like a regression and is not one.
+ */
+const LOCAL_URL = "http://127.0.0.1:4287";
 
 export default defineConfig({
   // Specs live beside the code they cover (tests/e2e, tests/dev), so the dir is
@@ -50,6 +61,10 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? "github" : "list",
+  // Visual baselines describe the authored composition, not the host OS. The
+  // generous per-test pixel tolerance absorbs rasterizer differences while a
+  // shared name lets Linux CI compare against the reviewed desktop baseline.
+  snapshotPathTemplate: "{testDir}/{testFilePath}-snapshots/{arg}-{projectName}{ext}",
   use: {
     baseURL: LIVE_URL ?? LOCAL_URL,
     trace: "on-first-retry",
@@ -60,9 +75,19 @@ export default defineConfig({
     ? {}
     : {
         webServer: {
-          command: "npx serve out -l 4173",
+          command: `npx serve out -l ${new URL(LOCAL_URL).port}`,
           url: LOCAL_URL,
-          reuseExistingServer: !process.env.CI,
+          /**
+           * Never reuse, anywhere.
+           *
+           * Playwright's health check is "does something answer 200 at this
+           * URL", which a static server for a different project answers just as
+           * well as ours - and reuse then hands the whole suite to it silently.
+           * Refusing to reuse turns that collision into the one line it should
+           * always have been ("port is already used"), before a single spec
+           * runs, at the cost of one server start per run. CI already paid it.
+           */
+          reuseExistingServer: false,
         },
       }),
   projects: [
