@@ -267,25 +267,13 @@ const SHELL_VIEWPORTS = [
  * here; the device is not.
  */
 /*
- * These three run one at a time, in one worker, rather than racing each other.
+ * These three run in order, in one worker.
  *
- * The stage's render loop has no dirty check: it re-rasterises every frame for
- * as long as it is on screen, whether or not anything has moved, so a test that
- * sits on the tutorial for two minutes holds a WebGL surface at 60fps for two
- * minutes. On a GPU that is free. Under SwiftShader - and there is no GPU in
- * this loop on CI or on a laptop - it is a core, continuously.
- *
- * `fullyParallel` then put the two most expensive widths on a two-core runner
- * at the same time, and the desktop one lost: not to a hang, but to a pegged
- * main thread, failing its retries at three different lines including a bare
- * `page.evaluate`. Serialising costs wall-clock in the file and takes the
- * contention out, which is the difference between a slow test and an
- * unreliable one.
- *
- * The loop is worth fixing at the source - a still aeroplane should not cost a
- * core on anyone's laptop either - and that is recorded in docs/KNOWN-ISSUES.md
- * rather than done here, because it is a renderer change and this is a layout
- * test.
+ * They are the file's expensive tests and the ones that used to time out on a
+ * two-core runner, so keeping them off each other's backs is cheap insurance -
+ * a few seconds of wall clock now that each walk is seconds rather than
+ * minutes. The thing that made them affordable is inside the test: the stage's
+ * idle loop is suspended for the walk, for the reasons written there.
  */
 test.describe("the tutorial shell", () => {
   test.describe.configure({ mode: "default" });
@@ -311,6 +299,39 @@ test.describe("the tutorial shell", () => {
        */
       test.setTimeout(180_000);
       await page.emulateMedia({ reducedMotion: "reduce" });
+
+      /*
+       * Suspend the stage's idle loop for the walk, through the product's own
+       * path rather than a stub.
+       *
+       * `useRenderActivity` pauses a stage while the document is hidden - PRD
+       * acceptance criterion 8 - and a hidden document changes no layout
+       * whatsoever, which is the entire subject here. What it removes is the
+       * loop this test cannot afford: `FoldRenderer.startLoop` has no dirty
+       * check, so an on-screen stage re-rasterises every frame for as long as
+       * the test sits on it, and a page held for three minutes holds a WebGL
+       * surface at 60fps for three minutes.
+       *
+       * Rendering is still exercised per step: `gotoStep` draws a frame
+       * explicitly when the loop is inactive, so every fold still reaches the
+       * canvas, once each, which is all fourteen static layouts need.
+       *
+       * The evidence that this is the cost, rather than slowness in the walk:
+       * on CI the desktop width timed out with Playwright reporting it could
+       * not resolve the Next fold button, while the failure snapshot captured
+       * at that moment shows `button "Next fold" [active]` sitting right there
+       * on step 11 of 14. The element was never missing - the main thread was
+       * too busy to answer the query. The same walk finishes in 13s here at 6x
+       * CPU throttling, because this laptop has a GPU and the runner has none.
+       */
+      await page.addInitScript(() => {
+        Object.defineProperty(document, "hidden", { get: () => true, configurable: true });
+        Object.defineProperty(document, "visibilityState", {
+          get: () => "hidden",
+          configurable: true,
+        });
+      });
+
       await page.setViewportSize({ width, height });
       // The Hammer: the longest sequence in the fleet and the one whose tips are
       // spread across it, so it varies more than any other plane.
