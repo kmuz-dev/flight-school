@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { chooseFold } from "./foldRail";
 
 /**
  * `paths.ts` builds directory hrefs with a trailing slash, but the export runs
@@ -50,7 +51,7 @@ test("hangar to wings and back, and the bay moves on", async ({ page }) => {
   // Jump the sequence rather than walking it: tutorial.spec.ts already clicks
   // every fold, and repeating that walk here only doubles the suite's heaviest
   // WebGL test without adding coverage of the hangar-to-wings loop.
-  await page.getByRole("combobox", { name: "Choose a fold" }).selectOption("11");
+  await chooseFold(page, 11);
   await page.getByRole("button", { name: "Finish" }).click();
 
   await page.waitForURL(WINGS, { waitUntil: "commit" });
@@ -71,7 +72,7 @@ test("hangar to wings and back, and the bay moves on", async ({ page }) => {
 
 test("preflight offers a resume once there is progress", async ({ page }) => {
   await page.goto("/en/plane/dart/fold/");
-  await page.getByRole("combobox", { name: "Choose a fold" }).selectOption("4");
+  await chooseFold(page, 4);
   await expect(page.getByText(/step 05 \/ 12/i).first()).toBeVisible();
 
   await page.goto("/en/plane/dart/");
@@ -158,7 +159,7 @@ for (const plane of ["bulldog", "harrier", "sea-glider", "hammer", "square-cruis
     const selector = page.getByRole("combobox", { name: "Choose a fold" });
     const total = await selector.locator("option").count();
     expect(total, "the selector should offer every fold").toBeGreaterThan(1);
-    await selector.selectOption(String(total - 1));
+    await chooseFold(page, total - 1);
 
     // Assert we actually landed on the last fold before hunting for Finish, so
     // a selector that did not register reads as a selector failure rather than

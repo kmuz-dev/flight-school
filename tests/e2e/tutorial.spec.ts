@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { chooseFold } from "./foldRail";
 
 /** The core product loop: open a tutorial and fold a plane start to finish. */
 test.describe("the Dart tutorial", () => {
@@ -51,12 +52,12 @@ test.describe("the Dart tutorial", () => {
   });
 
   test("the native fold selector jumps to a step", async ({ page }) => {
-    await page.getByRole("combobox", { name: "Choose a fold" }).selectOption("4");
+    await chooseFold(page, 4);
     await expect(page.getByText(/step 05 \/ 12/i).first()).toBeVisible();
   });
 
   test("remembers progress and resumes after a reload", async ({ page }) => {
-    await page.getByRole("combobox", { name: "Choose a fold" }).selectOption("3");
+    await chooseFold(page, 3);
     await expect(page.getByText(/step 04 \/ 12/i).first()).toBeVisible();
     const stored = await page.evaluate(() => localStorage.getItem("flightschool.v1"));
     expect(stored).toContain('"step":3');
