@@ -14,22 +14,31 @@
  * and is really one race with one cause. CI saw the same thing from the other
  * direction, on a runner slow enough to lose it locally.
  *
- * `data-material-ready` is the product's own answer to "is this stage live",
- * set from an effect on both the WebGL path and the static fallback, so it
- * cannot be true before React is running.
+ * The gate is the step readout, because that is the cheapest thing on the page
+ * that only React can produce: the rail re-renders on the step change without
+ * waiting for the stage. Gating on the stage instead (`data-material-ready`)
+ * also works and costs four minutes of suite time, because it waits out a
+ * SwiftShader engine boot that the assertion does not need.
  */
 import { expect, type Page } from "@playwright/test";
 
-/** Resolve once the tutorial stage has mounted and React is driving it. */
-export async function tutorialIsLive(page: Page): Promise<void> {
-  await expect(page.getByTestId("engine-mount")).toHaveAttribute(
-    "data-material-ready",
-    "true",
-  );
+/** The rail's "Step 04 / 12" readout, which is 1-based and zero-padded. */
+export function stepReadout(index: number, total: number): RegExp {
+  return new RegExp(`step ${String(index + 1).padStart(2, "0")} / ${total}`, "i");
 }
 
-/** Jump to a fold by its 0-based index, once the rail can actually hear it. */
-export async function chooseFold(page: Page, index: number | string): Promise<void> {
-  await tutorialIsLive(page);
-  await page.getByRole("combobox", { name: "Choose a fold" }).selectOption(String(index));
+/**
+ * Jump to a fold by its 0-based index, and do not return until the rail has
+ * actually taken it. Re-issued rather than waited out: there is no signal for
+ * "hydrated" short of the app answering, so the answer is the signal.
+ */
+export async function chooseFold(page: Page, index: number): Promise<void> {
+  const selector = page.getByRole("combobox", { name: "Choose a fold" });
+  const total = await selector.locator("option").count();
+  await expect(async () => {
+    await selector.selectOption(String(index));
+    await expect(page.getByText(stepReadout(index, total)).first()).toBeVisible({
+      timeout: 1_000,
+    });
+  }).toPass({ timeout: 30_000 });
 }

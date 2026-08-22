@@ -94,8 +94,27 @@ test.describe("hangar under load", () => {
     // act on when it starts drifting.
     testInfo.annotations.push({ type: "cadence", description: detail });
 
+    // The bay animates from mount, and an animating page sits at the vsync
+    // floor on every machine that is not in trouble, so this one is a real
+    // threshold everywhere: 2000ms of frames is ~120, and 20 is trouble.
     expect(floating.frames, `the bay should keep breathing; ${detail}`).toBeGreaterThan(20);
-    expect(live.frames, `the page should keep animating; ${detail}`).toBeGreaterThan(20);
+
+    /*
+     * The live sample is a different question and needs a different number.
+     *
+     * The header above says this test deliberately asserts no millisecond
+     * budget, because the figure it produces is a report on whichever CPU ran
+     * it. `> 20 frames in 3000ms` is a 150ms-per-frame budget wearing another
+     * hat, and it duly went red: 10 frames on a 2-core CI runner under 4x
+     * throttling with SwiftShader, and again on a laptop with the rest of the
+     * suite competing for the same cores. Neither run had a defect in it.
+     *
+     * What a defect looks like here is a stall - a scene that takes the page
+     * with it produces one frame, or none, for the whole window. So the floor
+     * is set where a stall lives rather than where a fast machine lives, and
+     * the cadence stays in the annotation for a human comparing runs.
+     */
+    expect(live.frames, `the page should keep animating; ${detail}`).toBeGreaterThan(5);
 
     // The ceiling still holds after three seconds of load, and still holds
     // after arrowing on: a scene left behind by a swap shows up here and
