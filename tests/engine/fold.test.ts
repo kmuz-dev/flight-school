@@ -15,8 +15,8 @@ import { dart } from "@/content/planes/dart";
 const V_CENTER: Line2 = { a: [0, -200], b: [0, 200] };
 const H_CENTER: Line2 = { a: [-200, 0], b: [200, 0] };
 
-function step(id: string, action: FoldStep["action"], hasWhy = false): FoldStep {
-  return { id, action, hasWhy };
+function step(id: string, action: FoldStep["action"]): FoldStep {
+  return { id, action };
 }
 
 function plan(steps: FoldStep[]): PlaneStructure {

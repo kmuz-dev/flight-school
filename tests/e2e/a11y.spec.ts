@@ -99,19 +99,18 @@ test("the native fold selector has a usable target and expected keyboard semanti
   expect(box!.height).toBeGreaterThanOrEqual(44);
 
   /*
-   * The two disclosures, measured on step 1 and only there.
+   * The Fold terms disclosure, measured on step 1 and only there.
    *
    * "Fold terms" appears on the steps that TEACH a term, which is most of them
    * but not step 2 - so this has to happen before the selector is exercised
    * below, not after. It was previously written after, and passed only because
    * the keyboard press it followed never moved the step at all.
    */
-  for (const label of ["Why", "Fold terms"]) {
-    const summary = page.getByText(label, { exact: true });
-    const summaryBox = await summary.boundingBox();
-    expect(summaryBox, `${label} disclosure has no box`).not.toBeNull();
-    expect(summaryBox!.height, `${label} disclosure target is too short`).toBeGreaterThanOrEqual(36);
-  }
+  const summary = page.getByText("Fold terms", { exact: true });
+  const summaryBox = await summary.boundingBox();
+  expect(summaryBox, "Fold terms disclosure has no box").not.toBeNull();
+  expect(summaryBox!.height, "Fold terms disclosure target is too short").toBeGreaterThanOrEqual(36);
+  await expect(page.getByText("Why", { exact: true })).toHaveCount(0);
 
   /*
    * The select is present in the static HTML. Wait for the client engine seam

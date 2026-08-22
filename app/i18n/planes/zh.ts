@@ -54,7 +54,7 @@ const planes: PlanesDictionary = {
         "dart.step-12":
           "翻过来，另一只机翼也照做。现在两只机翼应该都平平地伸着，构成一个很浅的 V 字。这就是飞镖。",
       },
-      why: {
+      explanations: {
         "dart.step-01": "中线是飞机的脊梁。后面每一道折都要靠它来量。",
         "dart.step-02": "你要的只是那道印子，不是折起来。折一下再摊开，就是给自己留一条准绳。",
         "dart.step-03":
@@ -125,7 +125,7 @@ const planes: PlanesDictionary = {
         "bulldog.step-13":
           "翻过来，另一只机翼也照做。两只机翼都平平伸出，只稍稍向上翘一点点。这就是斗牛犬。",
       },
-      why: {
+      explanations: {
         "bulldog.step-01": "中线是飞机的脊梁。后面每一道折都要靠它来量。",
         "bulldog.step-02": "你要的只是那道印子，不是折起来。折一下再摊开，就是给自己留一条准绳。",
         "bulldog.step-03":
@@ -197,7 +197,7 @@ const planes: PlanesDictionary = {
         "harrier.step-13":
           "翻过来，另一只机翼也照样抬起。从正面看，应该是两只又宽又平的机翼，加上两个往上翘的翼尖。",
       },
-      why: {
+      explanations: {
         "harrier.step-01": "中线是飞机的脊梁。后面每一道折都要靠它来量。",
         "harrier.step-02": "你要的只是那道印子，不是折起来。折一下再摊开，就是给自己留一条准绳。",
         "harrier.step-03": "这两个角折把纸堆到了前面，正是这点重量让机头一直朝前。",
@@ -267,7 +267,7 @@ const planes: PlanesDictionary = {
         "sea-glider.step-12":
           "翻过来，另一只机翼也照样抬起。两只又长又平的机翼，只稍稍往上翘一点点，就完成了。",
       },
-      why: {
+      explanations: {
         "sea-glider.step-01": "中线是飞机的脊梁。后面每一道折都要靠它来量。",
         "sea-glider.step-02": "你要的只是那道印子，不是折起来。折一下再摊开，就是给自己留一条准绳。",
         "sea-glider.step-03":
@@ -340,7 +340,7 @@ const planes: PlanesDictionary = {
         "hammer.step-14":
           "翻过来，另一只机翼也照样抬起。这两只机翼要比滑翔机的更平。这就是铁锤。",
       },
-      why: {
+      explanations: {
         "hammer.step-01": "中线是飞机的脊梁。后面每一道折都要靠它来量。",
         "hammer.step-02": "你要的只是那道印子，不是折起来。折一下再摊开，就是给自己留一条准绳。",
         "hammer.step-03": "这两个角折是第一批往机头送的纸。后面每一步都会在上面再堆一层。",
@@ -437,7 +437,7 @@ const planes: PlanesDictionary = {
         "square-cruiser.step-13":
           "翻过来，另一只机翼也照样抬起。又短又宽又平的机翼，巡航者就完成了。",
       },
-      why: {
+      explanations: {
         "square-cruiser.prep.letter-01":
           "把一条边折到旁边那条边上，就是不用尺子找出正方形的办法。折痕替你量好了。",
         "square-cruiser.prep.letter-03":

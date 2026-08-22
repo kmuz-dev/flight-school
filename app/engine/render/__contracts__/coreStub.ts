@@ -145,7 +145,6 @@ export function makeStructure(stepCount = 4, id: PlaneId = "dart"): PlaneStructu
       direction: "valley" as const,
     },
     camera: i === 0 ? undefined : { preset: "threeQuarter" as const },
-    hasWhy: true,
   }));
 
   return {

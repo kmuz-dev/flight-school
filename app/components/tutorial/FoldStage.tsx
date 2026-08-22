@@ -8,12 +8,13 @@
  * `createEngine` defaults to the contract-conforming stub; integration swaps in
  * the real engine behind the identical `FoldEngineHandle` seam.
  */
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { AnnotationAnchor, FoldEngineHandle, PaperFormat } from "@/engine/core/types";
 import type { PlaneStructure } from "@/content/types";
-import { loadFoldEngine, type FoldEngineFactory } from "@/engine";
+import { createStaticFoldEngine, loadFoldEngine, type FoldEngineFactory } from "@/engine";
 import { Chip } from "@/components/ui/Chip";
 import { FOCUS_RING } from "@/components/ui/focus";
+import { useRenderActivity } from "@/components/ui/renderActivity";
 import {
   CAMERA_PRESETS,
   type CameraPreset,
@@ -30,6 +31,7 @@ function toAnchor(payload: unknown): AnnotationAnchor | null {
 export type FoldStageProps = {
   structure: PlaneStructure;
   ui: TutorialUiStrings;
+  stepIndex: number;
   isPlaying: boolean;
   paperFormat: PaperFormat;
   annotationLabel?: string | undefined;
@@ -51,6 +53,7 @@ export type FoldStageProps = {
 export function FoldStage({
   structure,
   ui,
+  stepIndex,
   isPlaying,
   paperFormat,
   annotationLabel,
@@ -64,49 +67,21 @@ export function FoldStage({
   const sectionRef = useRef<HTMLElement>(null);
   const mountRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<FoldEngineHandle | null>(null);
-  const intersectsRef = useRef(true);
-  const documentVisibleRef = useRef(true);
+  const stepIndexRef = useRef(stepIndex);
   const onEngineChangeRef = useRef(onEngineChange);
   const [engineAnchor, setEngineAnchor] = useState<AnnotationAnchor | null>(null);
   const [renderMode, setRenderMode] = useState<FoldEngineHandle["renderMode"] | null>(null);
+  const [materialReady, setMaterialReady] = useState(false);
 
-  const syncRenderActivity = useCallback(() => {
-    engineRef.current?.setRenderActive(intersectsRef.current && documentVisibleRef.current);
-  }, []);
+  const syncRenderActivity = useRenderActivity(sectionRef, engineRef);
 
   useEffect(() => {
     onEngineChangeRef.current = onEngineChange;
   }, [onEngineChange]);
 
   useEffect(() => {
-    const stage = sectionRef.current;
-    const doc = stage?.ownerDocument;
-    if (!stage || !doc) return;
-
-    documentVisibleRef.current = !doc.hidden;
-    const onVisibilityChange = (): void => {
-      documentVisibleRef.current = !doc.hidden;
-      syncRenderActivity();
-    };
-    doc.addEventListener("visibilitychange", onVisibilityChange);
-
-    const Observer = doc.defaultView?.IntersectionObserver;
-    const observer =
-      typeof Observer === "function"
-        ? new Observer((entries) => {
-            const entry = entries[0];
-            if (!entry) return;
-            intersectsRef.current = entry.isIntersecting;
-            syncRenderActivity();
-          })
-        : null;
-    observer?.observe(stage);
-
-    return () => {
-      observer?.disconnect();
-      doc.removeEventListener("visibilitychange", onVisibilityChange);
-    };
-  }, [syncRenderActivity]);
+    stepIndexRef.current = stepIndex;
+  }, [stepIndex]);
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -114,6 +89,8 @@ export function FoldStage({
 
     let handle: FoldEngineHandle | null = null;
     let offAnnotation: (() => void) | null = null;
+    let offWebglLost: (() => void) | null = null;
+    let offRendererFailed: (() => void) | null = null;
     let stopped = false;
     const onResize = () => handle?.resize();
 
@@ -124,15 +101,46 @@ export function FoldStage({
       // `rest` but never `display`: the tutorial is a table, and the model
       // stands up only once it has a bend - which is exactly when it stops
       // being a sheet and starts being a plane.
-      handle = create(mount, structure, { rest: true });
+      setMaterialReady(false);
+      handle = create(mount, structure, {
+        rest: true,
+        onReady: () => {
+          // Both engines may report readiness during construction. Read the
+          // returned handle on the next microtask so renderMode stays truthful.
+          queueMicrotask(() => {
+            if (stopped || !handle) return;
+            setRenderMode(handle.renderMode);
+            setMaterialReady(true);
+            onEngineChangeRef.current(handle);
+          });
+        },
+      });
       engineRef.current = handle;
-      setRenderMode(handle.renderMode);
       syncRenderActivity();
       offAnnotation = handle.on("annotation", (payload) => {
         setEngineAnchor(toAnchor(payload));
       });
+      const replaceWithStatic = (): void => {
+        if (stopped || !handle || handle.renderMode !== "webgl") return;
+        const failed = handle;
+        offAnnotation?.();
+        offWebglLost?.();
+        offRendererFailed?.();
+        failed.dispose();
+        mount.replaceChildren();
+        handle = createStaticFoldEngine(mount, structure, { rest: true });
+        handle.gotoStep(stepIndexRef.current, { animate: false });
+        engineRef.current = handle;
+        offAnnotation = handle.on("annotation", (payload) => {
+          setEngineAnchor(toAnchor(payload));
+        });
+        setRenderMode("svg");
+        setMaterialReady(true);
+        onEngineChangeRef.current(handle);
+      };
+      offWebglLost = handle.on("webglLost", replaceWithStatic);
+      offRendererFailed = handle.on("rendererFailed", replaceWithStatic);
       window.addEventListener("resize", onResize);
-      onEngineChangeRef.current(handle);
     };
 
     if (createEngine) start(createEngine);
@@ -142,9 +150,12 @@ export function FoldStage({
       stopped = true;
       window.removeEventListener("resize", onResize);
       offAnnotation?.();
+      offWebglLost?.();
+      offRendererFailed?.();
       onEngineChangeRef.current(null);
       setEngineAnchor(null);
       setRenderMode(null);
+      setMaterialReady(false);
       handle?.dispose();
       handle = null;
       engineRef.current = null;
@@ -173,7 +184,13 @@ export function FoldStage({
         }}
       />
 
-      <div ref={mountRef} aria-hidden="true" className="absolute inset-0" data-testid="engine-mount" />
+      <div
+        ref={mountRef}
+        aria-hidden="true"
+        data-material-ready={materialReady ? "true" : "false"}
+        className={`absolute inset-0 transition-opacity duration-300 ${materialReady ? "opacity-100" : "opacity-0"}`}
+        data-testid="engine-mount"
+      />
 
       {showAnnotation ? (
         <div

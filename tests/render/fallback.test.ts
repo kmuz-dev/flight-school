@@ -45,6 +45,12 @@ describe("createFallbackEngine", () => {
     engine.dispose();
   });
 
+  it("accepts Reset view as a safe no-op", () => {
+    const { engine } = mount();
+    expect(() => engine.resetView()).not.toThrow();
+    engine.dispose();
+  });
+
   it("passes finished-aircraft presentation options to the static renderer", () => {
     const { container } = createFakeDom();
     const core = createCoreStub();

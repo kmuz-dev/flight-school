@@ -158,7 +158,6 @@ describe("stepDuration", () => {
       angle,
       direction: "valley",
     },
-    hasWhy: false,
   });
 
   it("honours an explicit duration", () => {

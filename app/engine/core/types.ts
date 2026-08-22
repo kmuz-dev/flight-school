@@ -124,8 +124,6 @@ export type FoldStep = {
   readonly id: string;
   readonly action: FoldAction;
   readonly camera?: CameraHint;
-  /** Whether a why-line exists in dictionaries (content validation checks it). */
-  readonly hasWhy: boolean;
   /** Fold-term glossary keys taught at this step (first-use inline glosses). */
   readonly teaches?: readonly string[];
   /** Seconds the fold animation should take (default derived from fold size). */
@@ -181,7 +179,12 @@ export type ValidationIssue = {
   readonly message: string;
 };
 
-export type EngineEvent = "stepComplete" | "progress" | "annotation" | "webglLost";
+export type EngineEvent =
+  | "stepComplete"
+  | "progress"
+  | "annotation"
+  | "webglLost"
+  | "rendererFailed";
 
 export type AnnotationAnchor = {
   /** Projected screen position of the fold-name label anchor. */
@@ -213,6 +216,8 @@ export interface FoldEngineHandle {
     readonly paused: boolean;
   };
   setCameraPreset(p: NonNullable<CameraHint["preset"]>): void;
+  /** Restore the authored display camera, fitted distance, and model target. */
+  resetView(): void;
   on(event: EngineEvent, cb: (payload: unknown) => void): () => void;
   resize(): void;
   dispose(): void;

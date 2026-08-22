@@ -28,7 +28,7 @@ A static tutorial website with:
 1. A **catalog** of 6 planes in a difficulty ladder.
 2. A **step-by-step tutorial** per plane, where every step is rendered by a shared procedural fold engine with interactive WebGL and a static SVG fallback.
 3. **Paper Prep** as the start of every tutorial: the user says what paper they have, the site shows how to convert it.
-4. A **light why-layer**: one-line explanations of what key folds accomplish, plus a flight profile per plane.
+4. A **light explanation layer**: one-line rationales beneath key folds, plus a flight profile per plane.
 5. **Resume and completion** memory in the browser (localStorage).
 6. **Multi-locale** launch using content-as-code dictionaries.
 
@@ -77,8 +77,9 @@ Every plane carries an estimated flight profile shown on its Preflight screen:
 3. The bay opens on the first aircraft the user has not finished, once stored progress has hydrated.
 4. Arrows, a marker strip, the Left and Right keys, and a horizontal swipe all change aircraft; the primary action opens the selected plane's Preflight screen.
 5. An explicit secondary Inspect in 3D control, or a short drag, may mount the live final-state viewer; arriving, hovering and focusing never mount WebGL.
-6. Preflight leads with larger approved beauty artwork, paper readiness, and a single primary action: Start folding or Resume.
-7. Preflight offers explicit 3D inspection, an estimated flight profile, the flight description, and the throw tip as secondary information.
+6. Inspection supports constrained orbit and zoom, a Reset view control, and a retryable beauty-art fallback when 3D is unavailable.
+7. Preflight leads with larger approved beauty artwork, paper readiness, and a single primary action: Start folding or Resume.
+8. Preflight offers explicit 3D inspection, an estimated flight profile, the flight description, and the throw tip as secondary information.
 
 ### 6.2 Paper Prep (Step 0)
 
@@ -89,7 +90,7 @@ Every plane carries an estimated flight profile shown on its Preflight screen:
 
 ### 6.3 Fold steps
 
-1. Each Step shows: the procedural fold, the instruction text, one authoritative step counter (e.g. Step 4 of 12), and the optional one-line why.
+1. Each Step shows: the procedural fold, the folding action, an optional explanatory paragraph, and one authoritative step counter (e.g. Step 4 of 12).
 2. The user can: replay the fold animation, scrub it with a timeline control, orbit and zoom the paper freely, and step forward or back.
 3. First-use folding terms carry an inline explanation.
 4. Fold 1 and directly selected or revisited steps open paused so the learner can orient; advancing deliberately to a later fold auto-plays it once.
@@ -122,7 +123,7 @@ V1 is done when:
 6. The site deploys as a purely static build through Cloudflare Workers static assets on the free tier with no Worker script or server component.
 7. Initial Hangar and Preflight visits do not download the 3D renderer until the user explicitly requests inspection.
 8. The renderer pauses while its stage is offscreen or the document is hidden and resumes without creating duplicate animation loops.
-9. Lighthouse performance is respectable on a mid-range phone; the 3D engine degrades gracefully to a clearly identified static render when WebGL is unavailable.
+9. Lighthouse performance is respectable on a mid-range phone; Tutorial degrades to a clearly identified static render, while Hangar and Preflight inspection retain beauty artwork and offer Retry 3D when WebGL is unavailable.
 
 ## 9. Later iterations (explicitly deferred)
 

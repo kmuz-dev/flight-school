@@ -45,6 +45,25 @@ test("the tutorial falls back to flat drawings, and still teaches", async ({ pag
   await expect(page.getByRole("heading", { level: 2 }).first()).toHaveText(/fold it in half/i);
 });
 
+test("the tutorial replaces a lost live context with the same static lesson", async ({ page }) => {
+  await page.goto("/en/plane/dart/fold/");
+  const stage = page.getByTestId("engine-mount");
+  await expect(stage).toHaveAttribute("data-material-ready", "true");
+  const selector = page.getByRole("combobox", { name: "Choose a fold" });
+  await selector.selectOption("5");
+  await expect(selector).toHaveValue("5");
+  await stage.locator("canvas").evaluate((canvas) => {
+    canvas.dispatchEvent(new Event("webglcontextlost", { cancelable: true }));
+  });
+
+  await expect(stage.locator("[data-fold-engine='fallback']")).toBeVisible();
+  await expect(stage.locator("svg")).toBeVisible();
+  await expect(page.getByRole("status")).toContainText(/Static fold view/i);
+  await expect(selector).toHaveValue("5");
+  await expect(page.getByRole("button", { name: "Play the fold" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Next fold", exact: true })).toBeEnabled();
+});
+
 test("a cadet with no WebGL still earns their wings", async ({ page }) => {
   await withoutWebGL(page);
   await page.goto("/en/plane/dart/fold/");
@@ -140,12 +159,24 @@ test("the hangar shows its fleet without WebGL", async ({ page }) => {
   await expect(page.locator(".hangar-aircraft img").first()).toBeVisible();
   await expect(page.getByTestId("hangar-stage")).toHaveCount(0);
 
-  // Explicit inspection then swaps to the canonical static engine and says so
-  // instead of claiming that a flat SVG is interactive 3D.
+  // Explicit inspection keeps the approved artwork, announces the failure,
+  // and offers another attempt instead of claiming that a flat SVG is 3D.
   await page.getByTestId("hangar-inspect").click();
-  await expect(page.getByTestId("hangar-static-engine").locator("svg")).toBeVisible();
-  await expect(page.getByText(/3D unavailable - showing the static preview/i)).toBeVisible();
+  await expect(page.getByText(/3D is unavailable\. Showing artwork\./i)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Retry 3D" })).toBeVisible();
+  await expect(page.locator(".hangar-aircraft img").first()).toBeVisible();
+  await expect(page.getByTestId("hangar-stage")).toHaveCSS("opacity", "0");
   expect(errors).toEqual([]);
+});
+
+test("the hangar keeps artwork when its renderer chunk cannot download", async ({ page, request }) => {
+  await withoutRendererChunk(page, request);
+  await page.goto("/en/");
+  await page.getByTestId("hangar-inspect").click();
+
+  await expect(page.getByText(/3D is unavailable\. Showing artwork\./i)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Retry 3D" })).toBeVisible();
+  await expect(page.locator(".hangar-aircraft img").first()).toBeVisible();
 });
 
 test("preflight keeps beauty artwork when 3D is unavailable", async ({ page }) => {
@@ -157,10 +188,22 @@ test("preflight keeps beauty artwork when 3D is unavailable", async ({ page }) =
   await expect(image).toBeVisible();
 
   await page.getByRole("button", { name: /inspect the dart in 3d/i }).click();
-  await expect(page.getByText(/3D unavailable - showing the static preview/i)).toBeVisible();
+  await expect(page.getByText(/3D is unavailable\. Showing artwork\./i)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Retry 3D" })).toBeVisible();
   await expect(artwork).toHaveCSS("opacity", "1");
   await expect(page.getByTestId("preflight-stage")).toHaveCSS("opacity", "0");
   await expect(image).toBeVisible();
+});
+
+test("preflight keeps artwork when its renderer chunk cannot download", async ({ page, request }) => {
+  await withoutRendererChunk(page, request);
+  await page.goto("/en/plane/dart/");
+  const artwork = page.getByTestId("preflight-artwork");
+
+  await page.getByRole("button", { name: /inspect the dart in 3d/i }).click();
+  await expect(page.getByText(/3D is unavailable\. Showing artwork\./i)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Retry 3D" })).toBeVisible();
+  await expect(artwork).toHaveCSS("opacity", "1");
 });
 
 /**

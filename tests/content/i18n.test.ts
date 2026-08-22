@@ -63,9 +63,9 @@ describe.each(LOCALES)("%s dictionary", (locale) => {
       for (const step of structure.steps) {
         expect(strings.titles[step.id], `${locale} ${step.id} title`).toBeTruthy();
         expect(strings.steps[step.id], `${locale} ${step.id} instruction`).toBeTruthy();
-        if (step.hasWhy) {
-          expect(strings.why[step.id], `${locale} ${step.id} why-line`).toBeTruthy();
-        }
+      }
+      for (const stepId of Object.keys(enPlanes.planes[id as PlaneId]!.explanations ?? {})) {
+        expect(strings.explanations?.[stepId], `${locale} ${stepId} explanation`).toBeTruthy();
       }
     }
   });

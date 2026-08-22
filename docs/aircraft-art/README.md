@@ -68,3 +68,7 @@ npx tsx scripts/audit-aircraft-art.ts --write-references  # re-render the canoni
 
 Regenerating an aircraft's artwork means the built-in image generation tool with the prompt in `PROMPTS.md`, generated on a flat `#00ff00` background and then chroma-keyed to transparency.
 Whatever it produces has to clear the audits above before it can ship.
+
+The 2026-08-16 shared-material audit retained every canonical fold and authored display view.
+The search output found strong alternative silhouette-only angles, but the accepted views remained more legible as aircraft and preserved the existing Dart and Harrier presentation decisions documented above.
+No display-only geometry was introduced.

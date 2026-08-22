@@ -130,6 +130,7 @@ export function createFallbackEngine(
       },
     },
     setCameraPreset(): void {},
+    resetView(): void {},
     on(event: EngineEvent, cb: (payload: unknown) => void): () => void {
       let set = listeners.get(event);
       if (!set) {

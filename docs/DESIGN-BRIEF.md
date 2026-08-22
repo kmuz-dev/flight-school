@@ -38,7 +38,7 @@ Motifs: airmail chevron borders (red/blue diagonal stripes), dotted flight-path 
 **Layout:**
 
 - The Hangar (home/catalog): disciplined grid of plane cards styled as spec-sheet boarding passes - perforated edge detail, plane render, name placard, license tier, step count, flight ratings (Speed / Distance / Airtime / Ease shown as mono-type gauge marks), wings badge if completed
-- Tutorial screen ("cockpit stage"): large 3D fold viewer dominating 60%+ of the viewport, an instrument strip below it (replay button, scrub timeline, step counter), and an instruction rail beside it with the step instruction, an optional one-line "why", and first-use fold-term explanations. Mobile stacks the stage above the instruction card.
+- Tutorial screen ("cockpit stage"): large 3D fold viewer dominating 60%+ of the viewport, an instrument strip below it (replay button, scrub timeline, step counter), and an instruction rail beside it with the folding action, an optional explanatory paragraph, and first-use fold-term explanations. Mobile stacks the stage above the instruction card.
 - 8px spacing base, comfortable density, generous space around the 3D viewer
 - Border radius: 4px inputs, 8px cards; stamps and placards square-cornered; no pill buttons
 

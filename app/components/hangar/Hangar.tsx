@@ -49,7 +49,10 @@ export function Hangar({ ui, planes, locale, createEngine }: HangarProps) {
    * the moment the cadet chooses anything their choice outranks both. "Pick
    * once" then needs no flag to enforce, because there is no picking.
    */
-  const [chosen, setChosen] = useState<number | null>(null);
+  const [chosen, setChosen] = useState<{
+    readonly index: number;
+    readonly revision: number;
+  } | null>(null);
   const stored = useProgressSnapshot();
   const hydrated = useProgressHydrated();
   const reducedMotion = usePrefersReducedMotion();
@@ -57,7 +60,7 @@ export function Hangar({ ui, planes, locale, createEngine }: HangarProps) {
 
   const wings = wingsEarned(stored);
   const index =
-    chosen ??
+    chosen?.index ??
     (hydrated
       ? firstUnfinishedIndex(planes, (id) => stored.completed[id as PlaneId] !== undefined)
       : 0);
@@ -65,7 +68,14 @@ export function Hangar({ ui, planes, locale, createEngine }: HangarProps) {
   const progress = stored.progress[selected.id as PlaneId];
   const earned = stored.completed[selected.id as PlaneId] !== undefined;
 
-  const select = useCallback((next: number) => setChosen(next), []);
+  const select = useCallback(
+    (next: number) =>
+      setChosen((previous) => ({
+        index: next,
+        revision: (previous?.revision ?? 0) + 1,
+      })),
+    [],
+  );
 
   /*
    * Arrow keys anywhere that is not a text control, so the bay behaves the way
@@ -81,14 +91,14 @@ export function Hangar({ ui, planes, locale, createEngine }: HangarProps) {
       }
       event.preventDefault();
       const forward = rtl ? event.key === "ArrowLeft" : event.key === "ArrowRight";
-      setChosen((index + (forward ? 1 : -1) + planes.length) % planes.length);
+      select((index + (forward ? 1 : -1) + planes.length) % planes.length);
     };
     // Re-bound whenever the selection changes, which is what lets it step from
     // the aircraft actually showing rather than from a captured stale one. One
     // window listener swapped per arrow press is not a cost worth a ref.
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [index, planes.length, rtl]);
+  }, [index, planes.length, rtl, select]);
 
   const primaryLabel =
     progress && progress.step > 0
@@ -136,6 +146,7 @@ export function Hangar({ ui, planes, locale, createEngine }: HangarProps) {
           ui={ui}
           planes={planes}
           index={index}
+          selectionKey={chosen?.revision ?? (hydrated ? "hydrated" : "initial")}
           reducedMotion={reducedMotion}
           rtl={rtl}
           onSelect={select}

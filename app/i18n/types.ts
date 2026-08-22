@@ -17,8 +17,8 @@ export type PlaneStrings = {
   readonly titles: Readonly<Record<string, string>>;
   /** Step id -> instruction text. Every step id must be present (validated). */
   readonly steps: Readonly<Record<string, string>>;
-  /** Step id -> optional one-line why. Required iff step.hasWhy (validated). */
-  readonly why: Readonly<Record<string, string>>;
+  /** Optional step id -> explanation record rendered beneath the folding action. */
+  readonly explanations?: Readonly<Record<string, string>>;
   /** Per-step or per-plane folding tips for the tip bar. */
   readonly tips: Readonly<Record<string, string>>;
 };

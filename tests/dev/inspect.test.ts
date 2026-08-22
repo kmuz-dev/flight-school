@@ -157,7 +157,6 @@ describe("stepDiagnostics", () => {
             line: { a: [0, -1] as const, b: [0, 1] as const },
             keep: "left" as const,
           },
-          hasWhy: false,
         },
       ],
     };
@@ -177,7 +176,6 @@ describe("stepDiagnostics", () => {
             line: { a: [0, -1] as const, b: [0, 1] as const },
             keep: "left" as const,
           },
-          hasWhy: false,
         },
       ],
     };

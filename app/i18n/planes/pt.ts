@@ -55,7 +55,7 @@ const planes: PlanesDictionary = {
         "dart.step-12":
           "Vira-o ao contrário e faz o mesmo à outra asa. As duas asas devem agora ficar esticadas e ao nível, formando um V muito aberto. Isto é um Dardo.",
       },
-      why: {
+      explanations: {
         "dart.step-01":
           "A linha do meio é a espinha do avião. Todas as dobras seguintes medem-se por ela.",
         "dart.step-02":
@@ -133,7 +133,7 @@ const planes: PlanesDictionary = {
         "bulldog.step-13":
           "Vira-o ao contrário e faz o mesmo à outra asa. As duas asas devem ficar esticadas e ao nível, inclinadas só um bocadinho para cima. Isto é um Bulldog.",
       },
-      why: {
+      explanations: {
         "bulldog.step-01":
           "A linha do meio é a espinha do avião. Todas as dobras seguintes medem-se por ela.",
         "bulldog.step-02":
@@ -214,7 +214,7 @@ const planes: PlanesDictionary = {
         "harrier.step-13":
           "Vira-o ao contrário e levanta a outra asa da mesma maneira. Visto de frente deves ter duas asas largas e planas com duas pontas viradas para cima.",
       },
-      why: {
+      explanations: {
         "harrier.step-01":
           "A linha do meio é a espinha do avião. Todas as dobras seguintes medem-se por ela.",
         "harrier.step-02":
@@ -291,7 +291,7 @@ const planes: PlanesDictionary = {
         "sea-glider.step-12":
           "Vira-o ao contrário e levanta a outra asa da mesma maneira. Duas asas compridas e planas, viradas só um bocadinho para cima, e está pronto.",
       },
-      why: {
+      explanations: {
         "sea-glider.step-01":
           "A linha do meio é a espinha do avião. Todas as dobras seguintes medem-se por ela.",
         "sea-glider.step-02":
@@ -376,7 +376,7 @@ const planes: PlanesDictionary = {
         "hammer.step-14":
           "Vira-o ao contrário e levanta a outra asa da mesma maneira. Deixa estas asas mais planas do que nos planadores. Isto é um Martelo.",
       },
-      why: {
+      explanations: {
         "hammer.step-01":
           "A linha do meio é a espinha do avião. Todas as dobras seguintes medem-se por ela.",
         "hammer.step-02":
@@ -486,7 +486,7 @@ const planes: PlanesDictionary = {
         "square-cruiser.step-13":
           "Vira-o ao contrário e levanta a outra asa da mesma maneira. Asas curtas, largas e ao nível, e o Cruzeiro está pronto.",
       },
-      why: {
+      explanations: {
         "square-cruiser.prep.letter-01":
           "Dobrar um bordo por cima do bordo do lado é a maneira de encontrar um quadrado sem régua. A dobra mede por ti.",
         "square-cruiser.prep.letter-03":

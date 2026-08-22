@@ -13,6 +13,7 @@ import type { PlaneStructure } from "@/content/types";
 import { EngineSvg } from "@/components/ui/EngineSvg";
 import type { DisplayView } from "@/engine/core/types";
 import { FOCUS_RING } from "@/components/ui/focus";
+import { useRenderActivity } from "@/components/ui/renderActivity";
 import { format } from "@/components/ui/format";
 
 export type OrbitViewerProps = {
@@ -32,7 +33,9 @@ export type OrbitViewerProps = {
   inspect3d: string;
   showArtwork: string;
   loading3d: string;
-  staticFallback: string;
+  resetView: string;
+  unavailable3d: string;
+  retry3d: string;
   createEngine?: FoldEngineFactory;
 };
 
@@ -51,14 +54,24 @@ export function OrbitViewer({
   inspect3d,
   showArtwork,
   loading3d,
-  staticFallback,
+  resetView,
+  unavailable3d,
+  retry3d,
   createEngine,
 }: OrbitViewerProps) {
+  const sectionRef = useRef<HTMLElement>(null);
   const mountRef = useRef<HTMLDivElement>(null);
+  const engineRef = useRef<FoldEngineHandle | null>(null);
   const [requested, setRequested] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [ready, setReady] = useState(false);
   const [renderMode, setRenderMode] = useState<FoldEngineHandle["renderMode"] | null>(null);
+  const [runtimeUnavailable, setRuntimeUnavailable] = useState(false);
   const [artFailed, setArtFailed] = useState(false);
+
+  // The panel is a screen tall on a phone, and the flight profile the cadet
+  // scrolls down to read is directly beneath it.
+  const syncRenderActivity = useRenderActivity(sectionRef, engineRef);
 
   useEffect(() => {
     if (!requested) return;
@@ -69,6 +82,8 @@ export function OrbitViewer({
     setRenderMode(null);
     let handle: FoldEngineHandle | null = null;
     let stopped = false;
+    let stopWebglLost = (): void => {};
+    let stopRendererFailed = (): void => {};
     const onResize = (): void => handle?.resize();
 
     const start = (create: FoldEngineFactory): void => {
@@ -98,6 +113,18 @@ export function OrbitViewer({
           });
         },
       });
+      engineRef.current = handle;
+      syncRenderActivity();
+      const markUnavailable = (): void => {
+        if (stopped || !handle) return;
+        const failed = handle;
+        setRuntimeUnavailable(true);
+        setReady(true);
+        failed.dispose();
+        if (engineRef.current === failed) engineRef.current = null;
+      };
+      stopWebglLost = handle.on("webglLost", markUnavailable);
+      stopRendererFailed = handle.on("rendererFailed", markUnavailable);
       handle.gotoStep(stepCount - 1, { animate: false });
       window.addEventListener("resize", onResize);
     };
@@ -108,17 +135,20 @@ export function OrbitViewer({
     return () => {
       stopped = true;
       window.removeEventListener("resize", onResize);
+      stopWebglLost();
+      stopRendererFailed();
       handle?.dispose();
+      if (engineRef.current === handle) engineRef.current = null;
       handle = null;
     };
-  }, [requested, createEngine, structure, stepCount, displayView]);
+  }, [requested, attempt, createEngine, structure, stepCount, displayView, syncRenderActivity]);
 
-  const showRenderedStage =
-    requested && ready && (renderMode === "webgl" || (renderMode === "svg" && artFailed));
-  const staticPreview = requested && ready && renderMode === "svg";
+  const showRenderedStage = requested && ready && renderMode === "webgl" && !runtimeUnavailable;
+  const unavailable = requested && ready && (renderMode === "svg" || runtimeUnavailable);
 
   return (
     <section
+      ref={sectionRef}
       aria-label={label}
       className="relative isolate min-h-[380px] flex-1 overflow-hidden rounded-card bg-raised shadow-[0_18px_55px_rgb(26_43_74_/_0.13)] lg:min-h-[560px]"
       style={{ background: "linear-gradient(170deg, var(--color-stage-sky), var(--color-stage-ground))" }}
@@ -169,20 +199,46 @@ export function OrbitViewer({
       ) : null}
 
       <div className="absolute end-md bottom-md start-md z-10 flex flex-wrap items-center justify-between gap-sm">
-        {requested && (!ready || staticPreview) ? (
+        {requested && (!ready || unavailable) ? (
           <p aria-live="polite" className="rounded-full bg-raised/90 px-sm py-xs text-small text-ink-muted backdrop-blur-sm">
-            {!ready ? loading3d : staticFallback}
+            {!ready ? loading3d : unavailable3d}
           </p>
         ) : (
           <span />
         )}
+        {showRenderedStage ? (
+          <button
+            type="button"
+            onClick={() => engineRef.current?.resetView()}
+            className={`min-h-11 rounded-input border border-ink bg-raised/95 px-md py-sm text-small font-semibold shadow-sm backdrop-blur-sm hover:bg-paper ${FOCUS_RING}`}
+          >
+            {resetView}
+          </button>
+        ) : null}
         <button
           type="button"
           aria-pressed={requested}
-          onClick={() => setRequested((value) => !value)}
+          onClick={() => {
+            if (unavailable) {
+              setReady(false);
+              setRenderMode(null);
+              setRuntimeUnavailable(false);
+              setAttempt((value) => value + 1);
+              return;
+            }
+            if (requested) {
+              setRequested(false);
+              setReady(false);
+              setRenderMode(null);
+              setRuntimeUnavailable(false);
+              return;
+            }
+            setRuntimeUnavailable(false);
+            setRequested(true);
+          }}
           className={`ms-auto min-h-11 rounded-input border border-ink bg-raised/95 px-md py-sm text-small font-semibold shadow-sm backdrop-blur-sm hover:bg-paper ${FOCUS_RING}`}
         >
-          {requested ? showArtwork : format(inspect3d, { name: planeName })}
+          {unavailable ? retry3d : requested ? showArtwork : format(inspect3d, { name: planeName })}
         </button>
       </div>
     </section>

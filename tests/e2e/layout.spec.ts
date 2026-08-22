@@ -18,6 +18,46 @@ const ROUTES = [
   "/en/plane/square-cruiser/fold/",
 ];
 
+const TEXT_ZOOM_ROUTES = [
+  "/en/",
+  "/en/plane/dart/",
+  "/en/plane/dart/fold/",
+] as const;
+
+for (const route of TEXT_ZOOM_ROUTES) {
+  test(`${route} keeps its controls reachable at 200% text size`, async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "chromium", "one deterministic text-resize viewport");
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto(route);
+    await page.addStyleTag({ content: ":root { font-size: 200% !important; }" });
+    await expect(page.locator("main")).toBeVisible();
+
+    const metrics = await page.evaluate(() => ({
+      clientWidth: document.documentElement.clientWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+    }));
+    expect(metrics.scrollWidth, `${route} scrolls horizontally at 200% text size`).toBeLessThanOrEqual(
+      metrics.clientWidth,
+    );
+
+    const primary =
+      route === "/en/"
+        ? page.getByTestId("hangar-primary")
+        : route.endsWith("/fold/")
+          ? page.getByRole("button", { name: "Next fold", exact: true })
+          : page.getByRole("link", { name: "Start folding" });
+    await primary.evaluate((element) => element.scrollIntoView({ block: "center" }));
+    await expect(primary).toBeVisible();
+    const box = await primary.boundingBox();
+    expect(box, `${route} primary action has no layout box`).not.toBeNull();
+    expect(box!.x, `${route} primary action escapes the near edge`).toBeGreaterThanOrEqual(0);
+    expect(
+      box!.x + box!.width,
+      `${route} primary action escapes the far edge`,
+    ).toBeLessThanOrEqual(metrics.clientWidth);
+  });
+}
+
 for (const route of ROUTES) {
   test(`${route} fits its viewport`, async ({ page }) => {
     await page.goto(route);

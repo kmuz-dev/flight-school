@@ -55,7 +55,7 @@ const planes: PlanesDictionary = {
         "dart.step-12":
           "Dale la vuelta y haz lo mismo con la otra ala. Las dos alas deben quedar estiradas y niveladas, formando una V muy abierta. Eso es una Flecha.",
       },
-      why: {
+      explanations: {
         "dart.step-01":
           "La línea del medio es la columna del avión. Todos los pliegues de después se miden con ella.",
         "dart.step-02":
@@ -135,7 +135,7 @@ const planes: PlanesDictionary = {
         "bulldog.step-13":
           "Dale la vuelta y haz lo mismo con la otra ala. Las dos alas deben quedar estiradas y niveladas, apenas un poco levantadas. Eso es un Bulldog.",
       },
-      why: {
+      explanations: {
         "bulldog.step-01":
           "La línea del medio es la columna del avión. Todos los pliegues de después se miden con ella.",
         "bulldog.step-02":
@@ -217,7 +217,7 @@ const planes: PlanesDictionary = {
         "harrier.step-13":
           "Dale la vuelta y levanta la otra ala igual. Visto de frente deberías tener dos alas anchas y planas con las puntas levantadas.",
       },
-      why: {
+      explanations: {
         "harrier.step-01":
           "La línea del medio es la columna del avión. Todos los pliegues de después se miden con ella.",
         "harrier.step-02":
@@ -295,7 +295,7 @@ const planes: PlanesDictionary = {
         "sea-glider.step-12":
           "Dale la vuelta y levanta la otra ala igual. Dos alas largas y planas, apenas levantadas, y ya está.",
       },
-      why: {
+      explanations: {
         "sea-glider.step-01":
           "La línea del medio es la columna del avión. Todos los pliegues de después se miden con ella.",
         "sea-glider.step-02":
@@ -380,7 +380,7 @@ const planes: PlanesDictionary = {
         "hammer.step-14":
           "Dale la vuelta y levanta la otra ala igual. Deja estas alas más planas que en los planeadores. Eso es un Martillo.",
       },
-      why: {
+      explanations: {
         "hammer.step-01":
           "La línea del medio es la columna del avión. Todos los pliegues de después se miden con ella.",
         "hammer.step-02":
@@ -491,7 +491,7 @@ const planes: PlanesDictionary = {
         "square-cruiser.step-13":
           "Dale la vuelta y levanta la otra ala igual. Alas cortas, anchas y niveladas, y el Crucero está terminado.",
       },
-      why: {
+      explanations: {
         "square-cruiser.prep.letter-01":
           "Doblar un borde sobre el borde de al lado es la forma de encontrar un cuadrado sin regla. El doblez mide por ti.",
         "square-cruiser.prep.letter-03":

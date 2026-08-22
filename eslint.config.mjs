@@ -2,7 +2,7 @@ import next from "eslint-config-next";
 
 // eslint-config-next 16 ships a flat config array; its TS rules already cover
 // unused vars, so no local rule overrides are needed.
-export default [
+const config = [
   {
     ignores: [
       "node_modules/**",
@@ -16,3 +16,5 @@ export default [
   },
   ...next,
 ];
+
+export default config;

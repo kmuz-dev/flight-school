@@ -55,7 +55,7 @@ const planes: PlanesDictionary = {
         "dart.step-12":
           "Dreh es um und mach dasselbe mit dem anderen Flügel. Beide Flügel sollten jetzt waagerecht abstehen und ein flaches V bilden. Das ist ein Pfeil.",
       },
-      why: {
+      explanations: {
         "dart.step-01":
           "Die Mittellinie ist das Rückgrat des Flugzeugs. Jede spätere Faltung misst sich an ihr.",
         "dart.step-02":
@@ -135,7 +135,7 @@ const planes: PlanesDictionary = {
         "bulldog.step-13":
           "Dreh es um und mach dasselbe mit dem anderen Flügel. Beide Flügel sollten waagerecht abstehen und nur ganz leicht nach oben zeigen. Das ist ein Bulldogge.",
       },
-      why: {
+      explanations: {
         "bulldog.step-01":
           "Die Mittellinie ist das Rückgrat des Flugzeugs. Jede spätere Faltung misst sich an ihr.",
         "bulldog.step-02":
@@ -217,7 +217,7 @@ const planes: PlanesDictionary = {
         "harrier.step-13":
           "Dreh es um und hebe den anderen Flügel genauso an. Von vorne gesehen solltest du zwei breite flache Flügel mit zwei hochgebogenen Spitzen haben.",
       },
-      why: {
+      explanations: {
         "harrier.step-01":
           "Die Mittellinie ist das Rückgrat des Flugzeugs. Jede spätere Faltung misst sich an ihr.",
         "harrier.step-02":
@@ -296,7 +296,7 @@ const planes: PlanesDictionary = {
         "sea-glider.step-12":
           "Dreh es um und hebe den anderen Flügel genauso an. Zwei lange flache Flügel, nur ganz leicht nach oben gestellt, und du bist fertig.",
       },
-      why: {
+      explanations: {
         "sea-glider.step-01":
           "Die Mittellinie ist das Rückgrat des Flugzeugs. Jede spätere Faltung misst sich an ihr.",
         "sea-glider.step-02":
@@ -381,7 +381,7 @@ const planes: PlanesDictionary = {
         "hammer.step-14":
           "Dreh es um und hebe den anderen Flügel genauso an. Halte diese Flügel flacher als bei den Gleitern. Das ist ein Hammer.",
       },
-      why: {
+      explanations: {
         "hammer.step-01":
           "Die Mittellinie ist das Rückgrat des Flugzeugs. Jede spätere Faltung misst sich an ihr.",
         "hammer.step-02":
@@ -493,7 +493,7 @@ const planes: PlanesDictionary = {
         "square-cruiser.step-13":
           "Dreh es um und hebe den anderen Flügel genauso an. Kurze, breite, waagerechte Flügel, und der Kreuzer ist fertig.",
       },
-      why: {
+      explanations: {
         "square-cruiser.prep.letter-01":
           "Eine Kante auf die Kante daneben zu falten ist die Art, ein Quadrat ohne Lineal zu finden. Die Faltung misst für dich.",
         "square-cruiser.prep.letter-03":

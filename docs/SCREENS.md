@@ -19,8 +19,8 @@ Every beauty render must match the corresponding engine final state before it is
 Display fallback order is fixed.
 Beauty artwork is the default and remains visible while an explicitly requested inspection loads.
 A successful inspection replaces it with WebGL.
-If WebGL is unavailable or fails, the inspection region shows the canonical SVG and identifies it as a static fallback.
-If beauty artwork itself fails before inspection, the surface replaces it with the canonical SVG.
+If WebGL is unavailable or fails, the surface keeps or restores the beauty artwork, announces that 3D is unavailable, and offers a retry.
+The canonical SVG replaces beauty artwork only when the beauty image itself also fails.
 
 ## Shared frame
 
@@ -58,7 +58,9 @@ Selection:
 - Request it only from a named Inspect in 3D button or a short drag, which is deliberate where a passing pointer is not.
 - Keep at most one live scene; changing aircraft disposes it and returns the bay to beauty artwork.
 - Keep beauty artwork visible until the stage is actually drawing, and let the stage draw through to the photograph rather than painting its own ground.
-- On WebGL failure, show the labelled canonical SVG rather than an empty stage.
+- Let the learner orbit and zoom within safe limits, disable pan, and provide a localized Reset view control that restores the authored aircraft camera.
+- On WebGL failure, retain the beauty artwork, announce that 3D is unavailable, and offer a retry.
+- Use the canonical SVG only if the beauty artwork also fails.
 - The static build must fail content validation rather than shipping an empty fleet caused by missing plane data.
 
 The primary action is opening the selected aircraft's Preflight screen.
@@ -71,7 +73,9 @@ Preflight answers two questions in order: which aircraft am I making, and is my 
 - Lead with approved hero artwork of the finished aircraft.
 - Provide an explicit Inspect in 3D control that crossfades to the orbit viewer only after activation.
 - Keep beauty artwork visible while the renderer loads.
-- Replace the inspection region with the labeled canonical SVG fallback if WebGL is unavailable or fails.
+- Let the learner orbit and zoom within safe limits, disable pan, and provide a localized Reset view control that restores the authored aircraft camera.
+- Keep or restore beauty artwork, announce that 3D is unavailable, and offer a retry if WebGL is unavailable or fails.
+- Use the canonical SVG only if the beauty artwork also fails.
 - Make paper selection the dominant information block using native radio inputs styled as cards.
 - Explain inline when a paper choice adds preparation folds or resets saved step progress.
 - Show Start folding or Resume as the single red primary action.
@@ -86,8 +90,9 @@ The tutorial is a learning workspace with one dominant procedural stage and no d
 
 - The header contains one Hangar escape, the plane name, and one authoritative progress display.
 - The stage keeps orbit, zoom, Front, Three-quarter, and Top camera controls.
+- Every fold uses the same photographic warm-white paper maps as explicit 3D inspection, while canonical fold geometry remains authoritative.
 - The transport contains only Play or Pause, scrub, Replay, and elapsed or total time.
-- The instruction rail contains the title, kid-clear instruction, optional Why disclosure, first-use fold-term disclosures, and optional useful tip.
+- The instruction rail contains the title, kid-clear action, optional explanatory paragraph, first-use fold-term disclosures, and optional useful tip.
 - Remove duplicate Exit, licence placard, transport Back or Next controls, segmented full-step strip, consequence-free self-check, and repeated progress labels.
 - Keep Back and Next or Finish as the only primary step-navigation controls.
 - Add a labeled native step selector for compact direct access.

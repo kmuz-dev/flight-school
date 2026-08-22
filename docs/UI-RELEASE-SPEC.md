@@ -30,7 +30,9 @@ The product requirements live in [PRD.md](PRD.md), screen composition lives in [
 - Replace beauty artwork with the canonical SVG if the beauty image itself fails.
 - When Inspect in 3D is activated, keep beauty artwork visible while the renderer loads.
 - Replace the inspection region with WebGL after successful initialization.
-- Replace the inspection region with the canonical SVG and a static-fallback message if WebGL is unavailable or initialization fails.
+- Constrain orbit and wheel or pinch zoom, disable pan, and provide a localized Reset view control.
+- Keep or restore beauty artwork, announce that 3D is unavailable, and offer Retry 3D if WebGL is unavailable or initialization fails.
+- Use the canonical SVG only if the beauty image itself also fails.
 - Never describe an SVG fallback as interactive 3D.
 
 ## Responsive layout
@@ -75,7 +77,7 @@ Arabic mirrors directional layouts and icons while preserving numbers, timelines
 | Direction | Left-to-right, Arabic right-to-left |
 | Motion | Standard, reduced motion |
 | Beauty artwork | Loading, loaded, failed with canonical SVG |
-| Renderer | Not requested, loading, WebGL active, suspended, static SVG fallback, failed |
+| Renderer | Not requested, loading, WebGL active, suspended, retryable failure, beauty fallback, secondary SVG fallback |
 | Hangar selection | First aircraft, first unfinished aircraft, all six complete |
 | Progress | New, resumable, final step, completed, restarting |
 | Completion route | Hydrating, earned, unearned |

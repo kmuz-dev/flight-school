@@ -14,7 +14,6 @@
 import type { PlaneStructure } from "@/content/types";
 import type { GlossaryEntry, PlaneStrings, UiDictionary } from "@/i18n/types";
 import type { FoldStep } from "@/engine/core/types";
-import type { PlaneStringsWithTitles } from "../viewModel";
 
 // A4 in millimetres, origin at sheet centre: x in [-105, 105], y in [-148.5, 148.5].
 const HALF_W = 105;
@@ -31,14 +30,12 @@ const steps: readonly FoldStep[] = [
       direction: "valley",
     },
     camera: { preset: "threeQuarter" },
-    hasWhy: true,
     teaches: ["valley-fold", "center-line"],
     duration: 1.2,
   },
   {
     id: "dart.step-02",
     action: { type: "unfold", toStep: "dart.step-01" },
-    hasWhy: true,
     teaches: ["crease"],
     duration: 0.9,
   },
@@ -52,7 +49,6 @@ const steps: readonly FoldStep[] = [
       direction: "valley",
     },
     camera: { preset: "top" },
-    hasWhy: false,
     duration: 1,
   },
   {
@@ -65,7 +61,6 @@ const steps: readonly FoldStep[] = [
       direction: "valley",
     },
     camera: { preset: "threeQuarter" },
-    hasWhy: true,
     teaches: ["valley-fold", "center-line"],
     duration: 1.1,
   },
@@ -78,7 +73,6 @@ const steps: readonly FoldStep[] = [
       angle: 180,
       direction: "valley",
     },
-    hasWhy: true,
     duration: 1,
   },
   {
@@ -90,7 +84,6 @@ const steps: readonly FoldStep[] = [
       angle: 180,
       direction: "valley",
     },
-    hasWhy: false,
     duration: 1.2,
   },
   {
@@ -102,14 +95,12 @@ const steps: readonly FoldStep[] = [
       angle: 180,
       direction: "valley",
     },
-    hasWhy: true,
     duration: 1.2,
   },
   {
     id: "dart.step-08",
     action: { type: "flip" },
     camera: { preset: "front" },
-    hasWhy: true,
     duration: 0.8,
   },
   {
@@ -121,7 +112,6 @@ const steps: readonly FoldStep[] = [
       angle: 180,
       direction: "mountain",
     },
-    hasWhy: true,
     teaches: ["mountain-fold"],
     duration: 1.3,
   },
@@ -129,7 +119,6 @@ const steps: readonly FoldStep[] = [
     id: "dart.step-10",
     action: { type: "rotate", degrees: 90 },
     camera: { preset: "threeQuarter" },
-    hasWhy: false,
     duration: 0.8,
   },
   {
@@ -141,7 +130,6 @@ const steps: readonly FoldStep[] = [
       angle: 70,
       direction: "valley",
     },
-    hasWhy: true,
     teaches: ["wing-fold"],
     duration: 1.4,
   },
@@ -155,7 +143,6 @@ const steps: readonly FoldStep[] = [
       direction: "mountain",
     },
     camera: { preset: "front" },
-    hasWhy: true,
     teaches: ["mountain-fold", "wing-fold"],
     duration: 1,
   },
@@ -173,14 +160,12 @@ export const sampleDartStructure: PlaneStructure = {
         {
           id: "dart.prep.square",
           action: { type: "cut", line: { a: [-HALF_W, 30], b: [HALF_W, 30] }, keep: "left" },
-          hasWhy: false,
         },
       ],
       "index-4x6": [
         {
           id: "dart.prep.index",
           action: { type: "cut", line: { a: [-HALF_W, 20], b: [HALF_W, 20] }, keep: "left" },
-          hasWhy: false,
         },
       ],
     },
@@ -190,7 +175,7 @@ export const sampleDartStructure: PlaneStructure = {
   accent: "#7FA8C9",
 };
 
-export const sampleDartStrings: PlaneStringsWithTitles = {
+export const sampleDartStrings: PlaneStrings = {
   name: "The Dart",
   description:
     "The fastest plane in the hangar. It flies flat and hard, straight down the hallway, and it is the first plane every cadet learns.",
@@ -233,7 +218,7 @@ export const sampleDartStrings: PlaneStringsWithTitles = {
     "dart.step-12":
       "Bend both wing tips up just a little. A small bend is enough - too much and the plane climbs and stalls.",
   },
-  why: {
+  explanations: {
     "dart.step-01":
       "This middle crease is the spine of the plane. Every later fold measures itself against it.",
     "dart.step-02":
@@ -314,8 +299,7 @@ export const sampleUiDictionary: UiDictionary = {
   "tutorial.stripLabel": "Steps",
   "tutorial.goToStep": "Go to step {step}",
   "tutorial.stepRegionLabel": "Current step",
-  "tutorial.why": "Why",
-  "tutorial.foldTerms": "Fold terms",
+    "tutorial.foldTerms": "Fold terms",
   "tutorial.selfCheck": "My paper looks like this",
   "tutorial.back": "Back",
   "tutorial.nextFold": "Next fold",

@@ -20,6 +20,7 @@ import {
   RepeatWrapping,
   Group,
   LinearFilter,
+  LinearMipmapLinearFilter,
   LineBasicMaterial,
   LineSegments,
   Matrix4,
@@ -31,10 +32,17 @@ import {
   ShaderChunk,
   ShaderMaterial,
   Vector3,
+  Vector2,
 } from "three";
 import type { Facet, FoldState, Vec2 } from "@/engine/core/types";
 import { DISPLAY_RIG } from "@/engine/view";
 import type { PoseMap } from "./coreApi";
+import {
+  PAPER_ANISOTROPY_CAP,
+  PAPER_NORMAL_SCALE,
+  PAPER_ROUGHNESS,
+  type PaperTextureSet,
+} from "./paperMaterial";
 
 
 /**
@@ -57,6 +65,7 @@ export type StageTheme = {
   readonly gridSize: number;
   readonly paperFront: number;
   readonly paperBack: number;
+  readonly paperEdge: number;
   readonly edge: number;
   readonly edgeOpacity: number;
   readonly hemiSky: number;
@@ -64,6 +73,7 @@ export type StageTheme = {
   readonly hemiIntensity: number;
   readonly keyColor: number;
   readonly keyIntensity: number;
+  readonly displayKeyIntensity: number;
   readonly fillColor: number;
   readonly fillIntensity: number;
   /**
@@ -116,15 +126,17 @@ export const STAGE_THEME: StageTheme = {
   gridSize: 20,
   paperFront: 0xfdfbf4,
   paperBack: 0xeae2d0,
+  paperEdge: 0xd8cfbd,
   edge: 0x1a2b4a,
   edgeOpacity: 0.22,
   hemiSky: 0xf7f3e9,
   hemiGround: 0xd9d2c2,
-  hemiIntensity: 0.9,
+  hemiIntensity: 0.65,
   keyColor: 0xfff6e2,
-  keyIntensity: 2.4,
+  keyIntensity: 2.8,
+  displayKeyIntensity: 2.4,
   fillColor: 0xcfe0f0,
-  fillIntensity: 0.75,
+  fillIntensity: 0.55,
   // The display rig is shared with the flat SVG - see `DISPLAY_RIG`, which
   // carries the measurements behind these numbers.
   displayHemiIntensity: DISPLAY_RIG.ambient,
@@ -132,7 +144,7 @@ export const STAGE_THEME: StageTheme = {
   rimColor: 0xffffff,
   rimIntensity: 0,
   crease: 0xd64541,
-  shadowOpacity: 0.16,
+  shadowOpacity: 0.22,
   displaySky: 0xf0e7d3,
   displayGround: 0xd8c9a8,
   contactShadow: 0x1a2b4a,
@@ -149,8 +161,8 @@ export const STAGE_THEME: StageTheme = {
  * a broad specular from the key light that varies across a panel, so a large
  * flat area stops being one printed value.
  *
- * Procedural, so it costs no asset budget and cannot become an AI-generated
- * image, which the project's ground rules exclude outright.
+ * This remains the deterministic fallback when the photographic maps cannot
+ * be fetched or decoded.
  */
 export function createFibreTexture(): DataTexture {
   const size = 128;
@@ -180,6 +192,28 @@ export function createFibreTexture(): DataTexture {
   texture.wrapT = RepeatWrapping;
   // UVs are the sheet in units of A4, so this is 14 tiles across 210mm.
   texture.repeat.set(14, 14);
+  /**
+   * Filtering, which `DataTexture` does NOT default the way `TextureLoader`
+   * does: it constructs with `NearestFilter` on both magnification and
+   * minification, and a nearest MIN filter means the mipmap chain is never
+   * consulted no matter what `generateMipmaps` says.
+   *
+   * A 128px noise map tiled fourteen times across a sheet, point-sampled and
+   * unmipmapped, is a moire generator. Every texel the rasteriser skips at a
+   * grazing angle beats against the sampling grid, and the beat is a regular
+   * diagonal hatch - worst exactly where the paper is most foreshortened. The
+   * three photographic maps this stands in for come through `TextureLoader`
+   * and are trilinear and mipmapped already, which is the whole reason the
+   * fallback looked worse than the material it replaces.
+   *
+   * Anisotropy is asked for rather than measured: Three clamps it to the
+   * device's own maximum at upload, so a constant is safe here and keeps the
+   * fallback from having to be handed the renderer's capabilities.
+   */
+  texture.magFilter = LinearFilter;
+  texture.minFilter = LinearMipmapLinearFilter;
+  texture.generateMipmaps = true;
+  texture.anisotropy = PAPER_ANISOTROPY_CAP;
   texture.needsUpdate = true;
   return texture;
 }
@@ -193,17 +227,25 @@ export function createFibreTexture(): DataTexture {
 export function createPaperMaterial(theme: StageTheme): MeshStandardMaterial {
   const material = new MeshStandardMaterial({
     color: new Color(theme.paperFront),
-    roughness: 0.9,
+    roughness: PAPER_ROUGHNESS,
     metalness: 0,
     side: DoubleSide,
     roughnessMap: createFibreTexture(),
+    normalScale: new Vector2(PAPER_NORMAL_SCALE, PAPER_NORMAL_SCALE),
   });
   // Thin sheets look wrong with single-sided shadow casting.
   material.shadowSide = DoubleSide;
 
-  const back = new Color(theme.paperBack);
+  const front = new Color(theme.paperFront);
+  const relativeTint = (hex: number): Color => {
+    const tint = new Color(hex);
+    return tint.setRGB(tint.r / front.r, tint.g / front.g, tint.b / front.b);
+  };
+  const backTint = relativeTint(theme.paperBack);
+  const edgeTint = relativeTint(theme.paperEdge);
   material.onBeforeCompile = (shader) => {
-    shader.uniforms.backColor = { value: back };
+    shader.uniforms.backTint = { value: backTint };
+    shader.uniforms.edgeTint = { value: edgeTint };
     /**
      * `String.replace` on a shader that no longer contains the anchor returns
      * the shader unchanged and compiles perfectly, so a Three upgrade that
@@ -239,13 +281,12 @@ export function createPaperMaterial(theme: StageTheme): MeshStandardMaterial {
         patch(
           shader.fragmentShader,
           "void main() {",
-          "uniform vec3 backColor;\nvarying vec3 vPaperNormal;\nvoid main() {",
+          "uniform vec3 backTint;\nuniform vec3 edgeTint;\nvarying vec3 vPaperNormal;\nvoid main() {",
         ),
         "#include <color_fragment>",
-        // The chamfer bands sit near z=0 in paper space and belong to neither
-        // side, so they keep the front colour rather than flickering between
-        // the two as a facet turns.
-        "#include <color_fragment>\n\tif ( vPaperNormal.z < -0.3 ) { diffuseColor.rgb = backColor; }",
+        // Multiply rather than replace, so both reverse faces and compressed
+        // edge bands keep the fibre and tonal variation from the albedo map.
+        "#include <color_fragment>\n\tif ( vPaperNormal.z < -0.3 ) { diffuseColor.rgb *= backTint; } else if ( abs( vPaperNormal.z ) <= 0.3 ) { diffuseColor.rgb *= edgeTint; }",
       ),
       /**
        * Wrap lighting, which is what paper's translucency looks like.
@@ -276,7 +317,7 @@ export function createPaperMaterial(theme: StageTheme): MeshStandardMaterial {
       ),
     );
   };
-  material.customProgramCacheKey = () => `flightschool-paper-2side-wrap-${DISPLAY_RIG.wrap}`;
+  material.customProgramCacheKey = () => `flightschool-paper-textured-2side-wrap-${DISPLAY_RIG.wrap}`;
   return material;
 }
 
@@ -554,6 +595,16 @@ export class SceneModel {
     });
   }
 
+  /** Replace the procedural fallback as one atomic material handoff. */
+  applyPaperTextures(textures: PaperTextureSet): void {
+    const fallback = this.paperMaterial.roughnessMap;
+    this.paperMaterial.map = textures.albedo;
+    this.paperMaterial.normalMap = textures.normal;
+    this.paperMaterial.roughnessMap = textures.roughness;
+    this.paperMaterial.needsUpdate = true;
+    if (fallback && fallback !== textures.roughness) fallback.dispose();
+  }
+
   /**
    * Make the mesh set match `state`. Returns true when geometry was rebuilt.
    * Cheap and idempotent: call it on every step change, never per frame.
@@ -658,7 +709,12 @@ export class SceneModel {
 
   dispose(): void {
     this.clearMeshes();
-    this.paperMaterial.roughnessMap?.dispose();
+    const textures = new Set([
+      this.paperMaterial.map,
+      this.paperMaterial.normalMap,
+      this.paperMaterial.roughnessMap,
+    ]);
+    textures.forEach((texture) => texture?.dispose());
     this.paperMaterial.dispose();
     this.edgeMaterial.dispose();
     this.root.removeFromParent();

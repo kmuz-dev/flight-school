@@ -17,14 +17,16 @@ import { readStored } from "@/lib/storage";
 import { dart } from "@/content/planes/dart";
 import planesDict from "@/i18n/planes/en";
 import ui from "@/i18n/ui/en";
+import { formatTime } from "@/components/tutorial/types";
 import { createFakeEngineFactory } from "./fakeEngine";
+import { stubIntersectionObserver } from "./intersection";
 
 const strings = planesDict.planes.dart!;
 const tutorialUi = tutorialUiFromDictionary(ui);
 const steps = buildTutorialSteps(dart, strings, planesDict.glossary);
 
-function renderScreen(renderMode: "webgl" | "svg" = "webgl") {
-  const { factory, log } = createFakeEngineFactory(renderMode);
+function renderScreen(renderMode: "webgl" | "svg" = "webgl", durations: readonly number[] = []) {
+  const { factory, log } = createFakeEngineFactory(renderMode, true, durations);
   const utils = render(
     <TutorialScreen
       ui={tutorialUi}
@@ -136,6 +138,40 @@ describe("guided playback", () => {
     expect(screen.getByTestId("stage-status")).toHaveTextContent(tutorialUi.playingFold);
   });
 
+  it("withholds playback from a hidden stage until its paper material is ready", async () => {
+    const { factory, log } = createFakeEngineFactory("webgl", false);
+    render(
+      <TutorialScreen
+        ui={tutorialUi}
+        structure={dart}
+        steps={steps}
+        planeName={strings.name}
+        paperFormat="a4"
+        hangarHref="/en/"
+        createEngine={factory}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: tutorialUi.play })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: tutorialUi.nextFold }));
+    expect(log.steps).toEqual([]);
+
+    act(() => log.ready());
+    await waitFor(() => expect(log.steps.at(-1)).toBe(1));
+    expect(log.stepAnimations.at(-1)).toBe(true);
+  });
+
+  it("replaces a live renderer failure with the canonical static tutorial", async () => {
+    const { log } = renderScreen();
+    await waitFor(() => expect(log.steps.length).toBeGreaterThan(0));
+
+    act(() => log.emit("rendererFailed"));
+
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(tutorialUi.staticFallback));
+    expect(screen.getByTestId("engine-mount").querySelector("svg")).not.toBeNull();
+    expect(screen.getByRole("button", { name: tutorialUi.play })).toBeDisabled();
+  });
+
   it("opens Back and directly selected folds paused", async () => {
     const { log } = renderScreen();
     await waitFor(() => expect(log.steps.length).toBeGreaterThan(0));
@@ -179,14 +215,16 @@ describe("guided playback", () => {
     expect(screen.getByRole("status")).toHaveTextContent(tutorialUi.staticFallback);
   });
 
-  it("has one Hangar escape, native disclosures, and a polite step announcement", async () => {
+  it("shows the explanation inline, keeps Fold terms native, and announces steps", async () => {
     renderScreen();
     await waitFor(() =>
       expect(screen.getByRole("combobox", { name: tutorialUi.stepSelectLabel })).toBeVisible(),
     );
     expect(screen.getAllByRole("link", { name: tutorialUi.backToHangar })).toHaveLength(1);
-    expect(screen.getByText(tutorialUi.why).closest("details")).not.toBeNull();
+    expect(screen.getByText(strings.explanations?.["dart.step-01"] ?? "missing explanation")).toBeVisible();
     expect(screen.getByText(tutorialUi.foldTerms).closest("details")).not.toBeNull();
+    expect(document.querySelectorAll("details")).toHaveLength(1);
+    expect(screen.queryByText("Why", { exact: true })).not.toBeInTheDocument();
     expect(screen.getByText(/Step 1 of 12:/)).toHaveAttribute("aria-live", "polite");
   });
 
@@ -205,43 +243,56 @@ describe("guided playback", () => {
   });
 
   it("suspends and resumes drawing from IntersectionObserver without pausing playback", async () => {
-    let notifyStage: ((isIntersecting: boolean) => void) | null = null;
-    class IntersectionObserverMock {
-      readonly root = null;
-      readonly rootMargin = "0px";
-      readonly thresholds = [0];
-
-      constructor(private readonly callback: IntersectionObserverCallback) {}
-
-      observe(target: Element): void {
-        if (target.getAttribute("aria-label") !== tutorialUi.stageLabel) return;
-        notifyStage = (isIntersecting) =>
-          this.callback(
-            [{ isIntersecting, target } as IntersectionObserverEntry],
-            this as unknown as IntersectionObserver,
-          );
-      }
-      unobserve(): void {}
-      disconnect(): void {}
-      takeRecords(): IntersectionObserverEntry[] {
-        return [];
-      }
-    }
-    vi.stubGlobal("IntersectionObserver", IntersectionObserverMock);
+    const observer = stubIntersectionObserver(
+      (target) => target.getAttribute("aria-label") === tutorialUi.stageLabel,
+    );
 
     const { log } = renderScreen();
     await waitFor(() => expect(log.paused).toBeGreaterThan(0));
     const pausesBeforeIntersection = log.paused;
-    expect(notifyStage).not.toBeNull();
+    expect(observer.observing()).toBe(true);
 
-    act(() => notifyStage?.(false));
+    act(() => observer.notify(false));
     await waitFor(() => expect(log.renderActive.at(-1)).toBe(false));
     expect(log.paused).toBe(pausesBeforeIntersection);
 
-    act(() => notifyStage?.(true));
+    act(() => observer.notify(true));
     await waitFor(() => expect(log.renderActive.at(-1)).toBe(true));
     expect(log.paused).toBe(pausesBeforeIntersection);
-    vi.unstubAllGlobals();
+    observer.restore();
+  });
+});
+
+describe("the transport readout", () => {
+  /**
+   * The engine builds a fresh timeline per step and its length scales with how
+   * far the paper travels, so the readout has to be re-read on every step. It
+   * used to be read once, from the handle, the first time an engine existed:
+   * the whole tutorial then quoted fold one's length, and the elapsed figure
+   * beside it - elapsed = total x progress - was wrong by the same ratio.
+   */
+  it("quotes the current fold's length, not the first one's", async () => {
+    renderScreen("webgl", [1.1, 4.2]);
+    const transport = () => screen.getByRole("region", { name: tutorialUi.transportLabel });
+    await waitFor(() => expect(transport()).toHaveTextContent("0:01.1"));
+
+    fireEvent.click(screen.getByRole("button", { name: tutorialUi.nextFold }));
+    await waitFor(() => expect(transport()).toHaveTextContent("0:04.2"));
+  });
+
+  /**
+   * Every fold in the product runs between 0.8s and 1.5s, so a whole-second
+   * clock has two states and spends most of each fold in the first of them.
+   */
+  it("resolves a sub-second fold to tenths rather than to 0:00", () => {
+    expect(formatTime(0.8)).toBe("0:00.8");
+    expect(formatTime(1.5)).toBe("0:01.5");
+    // Truncated, so a playhead short of the end never reads as the end.
+    expect(formatTime(0.99)).toBe("0:00.9");
+    expect(formatTime(0)).toBe("0:00.0");
+    expect(formatTime(Number.NaN)).toBe("0:00.0");
+    expect(formatTime(-3)).toBe("0:00.0");
+    expect(formatTime(61.4)).toBe("1:01.4");
   });
 });
 

@@ -98,7 +98,26 @@ export function PreflightScreen({
         id="preflight-main"
         className="mx-auto grid w-full max-w-[1360px] flex-1 grid-cols-1 gap-2xl px-lg py-2xl min-[960px]:grid-cols-[minmax(0,1fr)_460px]"
       >
-        <div className="flex flex-col gap-md">
+        {/*
+          The hero is bound to the WINDOW, not to the column beside it.
+
+          Both are grid items in one row, so the row is as tall as the taller
+          of them - and the taller of them is always the paper-and-profile
+          column, at around 1290px. The art well inherited that height, which
+          made the one thing the screen is built to lead with the one thing a
+          cadet could not see: `object-contain` centres the aircraft in its
+          well, so on a 900px window its centre sat 370px below the fold, under
+          a panel that opened on 450px of empty cream. It got worse as the
+          window got wider, because the well grew with it while the fold did
+          not move.
+
+          `self-start` stops the well stretching to the row; the height caps it
+          to the viewport with a ceiling so a tall monitor does not turn it into
+          a tower; `sticky` keeps the aircraft in frame while the flight profile
+          is read past it, which is what "lead with the hero" means once the
+          page is longer than the screen.
+        */}
+        <div className="flex flex-col gap-md min-[960px]:sticky min-[960px]:top-lg min-[960px]:h-[min(76dvh,720px)] min-[960px]:self-start">
           <OrbitViewer
             structure={view.structure}
             stepCount={view.stepCount}
@@ -114,7 +133,9 @@ export function PreflightScreen({
             inspect3d={ui.inspect3d}
             showArtwork={ui.showArtwork}
             loading3d={ui.loading3d}
-            staticFallback={ui.staticFallback}
+            resetView={ui.resetView}
+            unavailable3d={ui.unavailable3d}
+            retry3d={ui.retry3d}
             {...(createEngine ? { createEngine } : {})}
           />
         </div>
