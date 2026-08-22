@@ -463,10 +463,34 @@ body {
   opacity: 1;
 }
 
+/*
+ * The inspection status row sits under the control that opens inspection, not
+ * in the bottom-left corner, because the placard is already there.
+ *
+ * Anchored bottom-left it landed underneath `.hangar-primary` at every desktop
+ * width - measured overlap 63px at 1024x768 through 1440x900 - and the Reset
+ * view button was not merely unclickable but invisible, painted behind the red
+ * Start folding CTA. Clicking where Reset view appeared navigated to the
+ * selected plane's Preflight instead, which is the opposite of resetting a
+ * view.
+ *
+ * The z-index says 18 against the placard's 16 and that comparison never
+ * happens: the placard hangs off `.hangar-main` while this hangs off
+ * `.hangar-bay` inside `.hangar-bay-column`, so the two indices are resolved
+ * in different stacking contexts and never meet. Raising the number is
+ * therefore not the fix, and would not be the fix even if it worked - two
+ * controls competing for one patch of screen is a layout bug, not a paint
+ * order one.
+ *
+ * The narrow breakpoint had already worked this out and moved the row to
+ * `top: 110px`, 8px under its toggle. This is the same relationship at desktop
+ * metrics: `.hangar-inspect` sits at 82px with a 44px minimum, so 134px clears
+ * it by the same 8px.
+ */
 .hangar-bay-status {
   position: absolute;
   z-index: 18;
-  bottom: clamp(26px, 4.5vh, 48px);
+  top: 134px;
   inset-inline-start: clamp(24px, 4vw, 64px);
   display: flex;
   align-items: center;
@@ -803,7 +827,6 @@ body {
 
   .hangar-bay-status {
     inset-inline-start: 16px;
-    bottom: auto;
     top: 110px;
   }
 
