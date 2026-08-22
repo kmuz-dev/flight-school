@@ -28,6 +28,7 @@ import {
 import type { PlaneId } from "@/content/types";
 import { EngineSvg } from "@/components/ui/EngineSvg";
 import { FOCUS_RING } from "@/components/ui/focus";
+import { BrandMark } from "@/components/ui/BrandMark";
 import { format, pad2 } from "@/components/ui/format";
 import type { CompletionUiStrings, CompletionView } from "./types";
 
@@ -192,7 +193,10 @@ export function CompletionScreen({
                 {ui.stamp}
               </p>
               <p className="mt-sm flex items-center justify-between gap-md border-t-2 border-green/70 pt-xs font-mono text-micro font-semibold tracking-[0.16em] text-green uppercase">
-                <span>{ui.brand}</span>
+                <span className="flex items-center gap-xs">
+                  <BrandMark className="h-5 w-6" sizes="24px" />
+                  <span>{ui.brand}</span>
+                </span>
                 <span className="tabular-nums">{issueDate}</span>
               </p>
             </div>
@@ -200,13 +204,7 @@ export function CompletionScreen({
 
           <div className="flex flex-col">
             <p className="flex items-center gap-sm font-mono text-micro font-semibold tracking-[0.18em] text-red-ink uppercase">
-              <span
-                aria-hidden="true"
-                className="block h-[14px] w-[28px] bg-red"
-                style={{
-                  clipPath: "polygon(0 50%, 26% 0, 50% 52%, 74% 0, 100% 50%, 50% 100%)",
-                }}
-              />
+              <BrandMark className="h-8 w-9" sizes="36px" />
               {ui.eyebrow}
             </p>
 

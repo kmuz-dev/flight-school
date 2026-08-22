@@ -36,6 +36,7 @@ afterEach(() => {
 describe("the error screen", () => {
   it("apologises in the cadet's own language", () => {
     renderBoundary();
+    expect(screen.getByRole("img", { name: "Flight School" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(STRINGS.errorTitle);
     expect(screen.getByText(STRINGS.errorBody)).toBeInTheDocument();
   });

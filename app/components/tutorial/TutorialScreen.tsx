@@ -15,6 +15,7 @@ import { FoldStage } from "./FoldStage";
 import { TransportBar } from "./TransportBar";
 import { StepRail } from "./StepRail";
 import { FOCUS_RING } from "@/components/ui/focus";
+import { BrandMark } from "@/components/ui/BrandMark";
 import {
   format,
   pad2,
@@ -238,8 +239,9 @@ export function TutorialScreen({
       <header className="grid shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-md gap-y-xs border-b border-ink-12 px-md py-sm sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:px-lg sm:py-md">
         <a
           href={hangarHref}
-          className={`col-start-1 row-start-1 font-mono text-micro tracking-[0.08em] ${FOCUS_RING}`}
+          className={`col-start-1 row-start-1 flex items-center gap-sm font-mono text-micro tracking-[0.08em] ${FOCUS_RING}`}
         >
+          <BrandMark className="h-7 w-8" sizes="32px" />
           {ui.backToHangar}
         </a>
         <h1 className="col-span-2 row-start-2 min-w-0 font-display text-h3 font-bold leading-none tracking-tight sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:truncate">

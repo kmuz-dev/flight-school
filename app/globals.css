@@ -116,6 +116,29 @@ body {
   background-size: 3px 3px;
 }
 
+/*
+ * One mark, many surfaces.
+ *
+ * The looping glider is raster art by choice, so the wrapper owns its aspect,
+ * sizing and interaction rules while Next owns the responsive image. Keeping
+ * those rules here prevents each header from inventing a slightly different
+ * crop or allowing the image to mirror in RTL.
+ */
+.brand-mark {
+  position: relative;
+  display: inline-block;
+  flex: none;
+  aspect-ratio: 1312 / 1199;
+  isolation: isolate;
+  direction: ltr;
+}
+
+.brand-mark img {
+  pointer-events: none;
+  user-select: none;
+  object-fit: contain;
+}
+
 /* Airmail chevron bar (exact pattern from the approved reference) */
 .chevron-bar {
   height: 8px;
@@ -216,6 +239,10 @@ body {
   letter-spacing: -0.02em;
   text-transform: uppercase;
   text-shadow: 0 1px 12px rgb(2 8 11 / 0.55);
+}
+
+.hangar-wordmark .brand-mark {
+  filter: drop-shadow(0 2px 7px rgb(2 8 11 / 0.38));
 }
 
 .hangar-chip {
@@ -1132,15 +1159,18 @@ body {
   transform: rotate(0.35deg);
 }
 
-.flight-launch-card::after {
-  content: "";
+.flight-card-mark {
   position: absolute;
   inset-inline-end: 18px;
-  top: 16px;
-  width: 12px;
-  height: 12px;
-  border: 2px solid #a52f2f;
-  transform: rotate(45deg);
+  inset-block-start: 14px;
+  width: 70px;
+  height: 64px;
+  filter: drop-shadow(0 4px 7px rgb(23 41 67 / 0.16));
+}
+
+.flight-launch-card > .flight-kicker,
+.flight-card > .flight-kicker {
+  padding-inline-end: 82px;
 }
 
 .flight-launch-card h1,

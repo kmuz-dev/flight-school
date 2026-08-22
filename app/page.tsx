@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { DEFAULT_LOCALE, isLocale } from "@/i18n/config";
 import { readStored } from "@/lib/storage";
+import { BrandMark } from "@/components/ui/BrandMark";
 
 /**
  * Static export has no server redirects; the root page picks a locale
@@ -17,5 +18,12 @@ export default function RootRedirect() {
     const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
     window.location.replace(`${base}/${locale}/`);
   }, []);
-  return null;
+  return (
+    <main className="grid min-h-screen place-items-center bg-paper px-lg text-ink">
+      <div className="flex flex-col items-center gap-md">
+        <BrandMark className="h-40 w-44" sizes="176px" priority />
+        <p className="font-display text-h1 font-bold tracking-tight uppercase">Flight School</p>
+      </div>
+    </main>
+  );
 }

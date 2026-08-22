@@ -11,6 +11,7 @@ import { Chip } from "@/components/ui/Chip";
 import { GaugeBar, type GaugeTone } from "@/components/ui/GaugeBar";
 import { FOCUS_RING } from "@/components/ui/focus";
 import { LocalePicker } from "@/components/ui/LocalePicker";
+import { BrandMark } from "@/components/ui/BrandMark";
 import type { Locale } from "@/i18n/config";
 import { TIER_CHIP } from "@/components/ui/tier";
 import { format } from "@/components/ui/format";
@@ -74,8 +75,9 @@ export function PreflightScreen({
         <a
           href={hangarHref}
           aria-label={ui.backToHangar}
-          className={`shrink-0 whitespace-nowrap font-mono text-micro tracking-[0.08em] uppercase ${FOCUS_RING}`}
+          className={`flex shrink-0 items-center gap-sm whitespace-nowrap font-mono text-micro tracking-[0.08em] uppercase ${FOCUS_RING}`}
         >
+          <BrandMark className="h-7 w-8" sizes="32px" />
           <span className="sm:hidden">{ui.backToHangarShort}</span>
           <span className="hidden sm:inline">{ui.backToHangar}</span>
         </a>

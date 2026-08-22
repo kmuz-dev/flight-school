@@ -17,6 +17,7 @@
 import { useEffect } from "react";
 import { FOCUS_RING } from "@/components/ui/focus";
 import { useChromeStrings } from "@/components/ui/ChromeStrings";
+import { BrandMark } from "@/components/ui/BrandMark";
 
 export default function LocaleError({
   error,
@@ -36,11 +37,7 @@ export default function LocaleError({
 
   return (
     <main className="mx-auto flex min-h-screen max-w-[52ch] flex-col justify-center gap-lg px-lg py-2xl">
-      <span aria-hidden="true" className="flex gap-xs">
-        <span className="size-[10px] rotate-45 bg-red" />
-        <span className="size-[10px] rotate-45 bg-sky" />
-        <span className="size-[10px] rotate-45 bg-ink" />
-      </span>
+      <BrandMark className="h-24 w-28" label="Flight School" sizes="112px" />
 
       <h1 className="font-display text-h1 leading-none font-bold tracking-tight uppercase">
         {strings.errorTitle}

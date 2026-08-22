@@ -25,6 +25,7 @@ import { FOCUS_RING } from "@/components/ui/focus";
 import { format } from "@/components/ui/format";
 import { usePrefersReducedMotion } from "@/components/ui/reducedMotion";
 import { LocalePicker } from "@/components/ui/LocalePicker";
+import { BrandMark } from "@/components/ui/BrandMark";
 import { HangarBay } from "./HangarBay";
 import { firstUnfinishedIndex, type HangarPlaneView, type HangarUiStrings } from "./types";
 import type { FoldEngineFactory } from "@/engine";
@@ -119,7 +120,7 @@ export function Hangar({ ui, planes, locale, createEngine }: HangarProps) {
 
       <nav className="hangar-nav">
         <a href={hangarHref(locale)} className={`hangar-wordmark ${FOCUS_RING}`}>
-          <span aria-hidden="true" className="size-[14px] rotate-45 bg-red" />
+          <BrandMark className="h-9 w-10" priority sizes="40px" />
           <span>{ui.brand}</span>
         </a>
         <span className="flex-1" />

@@ -24,8 +24,23 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://flight-school-chi.vercel.app",
+  ),
   title: "Flight School",
   description: "A flight academy for paper. Learn to fold paper airplanes step by step in 3D.",
+  applicationName: "Flight School",
+  openGraph: {
+    title: "Flight School",
+    description: "A flight academy for paper. Fold a plane, earn its wings, and fly it.",
+    siteName: "Flight School",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Flight School",
+    description: "A flight academy for paper. Fold a plane, earn its wings, and fly it.",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

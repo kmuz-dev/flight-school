@@ -9,6 +9,7 @@ import { recordFlightResult, useFlightRecord, usePlaneProgress, useProgressHydra
 import { FOCUS_RING } from "@/components/ui/focus";
 import { format } from "@/components/ui/format";
 import { usePrefersReducedMotion } from "@/components/ui/reducedMotion";
+import { BrandMark } from "@/components/ui/BrandMark";
 import type { FlightUiStrings } from "./types";
 
 export type FlightScreenProps = {
@@ -266,6 +267,7 @@ export function FlightScreen({ ui, structure, planeName, hangarHref, tutorialHre
     return (
       <main className="flight-gate" data-testid="flight-locked">
         <section className="flight-card">
+          <BrandMark className="flight-card-mark" sizes="76px" />
           <p className="flight-kicker">{ui.label}</p>
           <h1>{ui.lockedTitle}</h1>
           <p>{format(ui.lockedBody, { name: planeName })}</p>
@@ -305,6 +307,7 @@ export function FlightScreen({ ui, structure, planeName, hangarHref, tutorialHre
       <div className="flight-pad" aria-label={ui.touchHint} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp}>
         {phase === "ready" ? (
           <div className="flight-launch-card">
+            <BrandMark className="flight-card-mark" sizes="76px" />
             <p className="flight-kicker">{planeName}</p>
             <h1>{ui.title}</h1>
             <p>{ui.launchHint}</p>
@@ -318,12 +321,13 @@ export function FlightScreen({ ui, structure, planeName, hangarHref, tutorialHre
 
       {loading ? <div className="flight-status" role="status">{ui.loading}</div> : null}
       {fatal ? (
-        <div className="flight-modal"><section className="flight-card"><h1>{ui.unavailableTitle}</h1><p>{ui.unavailableBody}</p><a href={hangarHref} className={`flight-primary ${FOCUS_RING}`}>{ui.returnToHangar}</a></section></div>
+        <div className="flight-modal"><section className="flight-card"><BrandMark className="flight-card-mark" sizes="76px" /><h1>{ui.unavailableTitle}</h1><p>{ui.unavailableBody}</p><a href={hangarHref} className={`flight-primary ${FOCUS_RING}`}>{ui.returnToHangar}</a></section></div>
       ) : null}
 
       {overlay ? (
         <div className="flight-modal" role="dialog" aria-modal="true" aria-labelledby="flight-result-title">
           <section className="flight-card">
+            <BrandMark className="flight-card-mark" sizes="76px" />
             <p className="flight-kicker">{planeName}</p>
             <h1 id="flight-result-title">{phaseTitle(phase, ui)}</h1>
             <p>{phaseBody(phase, ui)}</p>
