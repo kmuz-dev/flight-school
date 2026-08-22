@@ -33,7 +33,7 @@ export type TutorialStepView = {
   readonly instruction: string;
   /** Optional rationale rendered as the instruction's second paragraph. */
   readonly explanation?: string;
-  /** Tip bar copy: per-step when the step declares one, per-plane otherwise. */
+  /** Optional step-specific Tip bar copy. */
   readonly tip?: string;
   /** Red mono label drawn over the stage, e.g. "VALLEY FOLD". */
   readonly annotationLabel?: string;
@@ -81,9 +81,23 @@ export type TutorialUiStrings = {
 // used by every screen.
 export { format, pad2 } from "@/components/ui/format";
 
-/** Seconds -> "m:ss" for the transport readout. */
+/**
+ * Seconds -> "m:ss.d" for the transport readout.
+ *
+ * Tenths rather than whole seconds, because of what is being timed. A fold
+ * runs between 0.8s and 1.5s, so at second resolution this readout has exactly
+ * two values it can ever display: it opens at "0:00 / 0:00" or "0:00 / 0:01"
+ * and the elapsed half sits on 0:00 for most of every fold. Beside a scrubber
+ * the cadet can drag, a clock that does not move is worse than no clock.
+ *
+ * Digits and separators only, never a unit word: this string is read in twelve
+ * locales and a suffixed "s" would be English in all of them.
+ */
 export function formatTime(seconds: number): string {
   const safe = Number.isFinite(seconds) && seconds > 0 ? seconds : 0;
-  const whole = Math.floor(safe);
-  return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`;
+  // Truncated, not rounded: a playhead at 0.97 of a 1.0s fold must not read
+  // "0:01.0" while the paper is still moving.
+  const tenths = Math.floor(safe * 10);
+  const whole = Math.floor(tenths / 10);
+  return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}.${tenths % 10}`;
 }

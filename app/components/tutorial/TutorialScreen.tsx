@@ -7,7 +7,7 @@
  * The engine is a child concern: FoldStage creates it and hands the handle up.
  */
 import type { FoldEngineFactory } from "@/engine";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { FoldEngineHandle, PaperFormat } from "@/engine/core/types";
 import type { PlaneStructure } from "@/content/types";
 import { recordCompletion, recordStep, usePlaneProgress } from "@/lib/progress";
@@ -22,6 +22,13 @@ import {
   type TutorialStepView,
   type TutorialUiStrings,
 } from "./types";
+
+/**
+ * What the transport bar reads before any engine has answered, mid-way through
+ * the engine's own 0.8s-1.5s range. It is only ever on screen for the frame
+ * between mount and the first `gotoStep`, and never replaces a real answer.
+ */
+const DEFAULT_FOLD_SECONDS = 1.2;
 
 export type TutorialScreenProps = {
   ui: TutorialUiStrings;
@@ -56,6 +63,17 @@ export function TutorialScreen({
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [preset, setPreset] = useState<CameraPreset>("threeQuarter");
+  /**
+   * The current step's fold length, in seconds, as the engine reports it.
+   *
+   * Held in state and re-read on every step change rather than derived once
+   * from the handle: `stepDuration` scales with how far the paper travels, so
+   * a step runs anywhere from 0.8s to 1.5s, and the engine builds a fresh
+   * timeline per step. Read once, the transport bar spent the whole tutorial
+   * showing the FIRST fold's length - a 1.5s fold counted up to 0:00.8 and
+   * stopped, and the elapsed figure beside it was wrong by the same ratio.
+   */
+  const [duration, setDuration] = useState(DEFAULT_FOLD_SECONDS);
   const autoPlayNextRef = useRef(false);
 
   const step = steps[stepIndex];
@@ -71,6 +89,10 @@ export function TutorialScreen({
     if (!engine) return;
     const offProgress = engine.on("progress", (p) => {
       if (typeof p === "number") setProgress(p);
+      // Read beside the playhead, from the same event, so the two can never
+      // describe different timelines: the engine builds a fresh one per step
+      // and reports progress 0 on it the moment it exists.
+      setDuration(engine.timeline.duration || DEFAULT_FOLD_SECONDS);
     });
     const offComplete = engine.on("stepComplete", () => {
       setIsPlaying(false);
@@ -179,8 +201,6 @@ export function TutorialScreen({
     [engine],
   );
 
-  const duration = useMemo(() => engine?.timeline.duration ?? 1.2, [engine]);
-
   if (!step) return null;
 
   return (
@@ -268,6 +288,7 @@ export function TutorialScreen({
           <FoldStage
             structure={structure}
             ui={ui}
+            stepIndex={stepIndex}
             isPlaying={isPlaying}
             paperFormat={paperFormat}
             annotationLabel={step.annotationLabel}
