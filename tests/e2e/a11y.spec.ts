@@ -55,7 +55,6 @@ async function scan(page: Page) {
   return new AxeBuilder({ page })
     .withTags(TAGS)
     .exclude("[data-testid='engine-mount']")
-    .exclude("[data-testid='preflight-stage']")
     .analyze();
 }
 

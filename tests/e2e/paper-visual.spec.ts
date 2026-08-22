@@ -1,29 +1,27 @@
 import { expect, test } from "@playwright/test";
 
-const PLANE_IDS = ["dart", "bulldog", "harrier", "sea-glider", "hammer", "square-cruiser"] as const;
-
 test.beforeEach(async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "chromium", "one deterministic desktop visual baseline");
   await page.setViewportSize({ width: 960, height: 720 });
   await page.emulateMedia({ reducedMotion: "reduce" });
 });
 
-for (const id of PLANE_IDS) {
-  test(`${id} matches its approved authored inspection view`, async ({ page }) => {
-    await page.goto(`/en/plane/${id}/`);
-    const name = await page.getByRole("heading", { level: 1 }).textContent();
-    await page.getByRole("button", { name: `Inspect ${name} in 3D` }).click();
-    await expect(page.getByRole("button", { name: "Reset view" })).toBeVisible();
-    await expect(page.getByTestId("preflight-stage")).toHaveScreenshot(
-      `${id}-inspection.png`,
-      {
-        animations: "disabled",
-        maxDiffPixelRatio: 0.06,
-        threshold: 0.25,
-      },
-    );
+/**
+ * The display stage - standing aircraft, graded backdrop, contact shadow -
+ * now lives only in the Hangar bay, so that is where its paper is baselined.
+ * The per-plane Preflight inspection views this used to cover went with the
+ * inspection control itself.
+ */
+test("the Hangar bay matches the approved display-stage paper", async ({ page }) => {
+  await page.goto("/en/");
+  await page.getByTestId("hangar-inspect").click();
+  await expect(page.getByTestId("hangar-reset-view")).toBeVisible();
+  await expect(page.getByTestId("hangar-stage")).toHaveScreenshot("hangar-inspection.png", {
+    animations: "disabled",
+    maxDiffPixelRatio: 0.06,
+    threshold: 0.25,
   });
-}
+});
 
 for (const [name, step] of [
   ["early", "0"],

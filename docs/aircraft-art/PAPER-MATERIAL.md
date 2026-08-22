@@ -1,6 +1,6 @@
 # Shared photographic paper material
 
-The procedural fold engine uses one warm-white craft-paper surface across Tutorial, Preflight inspection, and Hangar inspection.
+The procedural fold engine uses one warm-white craft-paper surface across Tutorial and Hangar inspection.
 The canonical fold geometry remains authoritative; these maps supply only surface response.
 
 ## Production maps
