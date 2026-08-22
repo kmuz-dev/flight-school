@@ -10,15 +10,6 @@ import type { PlaneStructure } from "@/content/types";
 import type { GlossaryEntry, PlaneStrings } from "@/i18n/types";
 import type { CreaseIconVariant, GlossaryItemView, TutorialStepView } from "./types";
 
-/**
- * `PlaneStrings` has no per-step titles yet (see the report to the integrator).
- * Accepting them as an optional extra keeps this additive: the day the content
- * schema grows a `titles` record, this starts reading it with no code change.
- */
-export type PlaneStringsWithTitles = PlaneStrings & {
-  readonly titles?: Readonly<Record<string, string>>;
-};
-
 export function creaseIconVariant(termKey: string): CreaseIconVariant {
   if (termKey.includes("mountain")) return "mountain";
   if (termKey.includes("valley")) return "valley";
@@ -27,10 +18,15 @@ export function creaseIconVariant(termKey: string): CreaseIconVariant {
 
 export function buildTutorialSteps(
   structure: PlaneStructure,
-  strings: PlaneStringsWithTitles,
+  strings: PlaneStrings,
   glossary: Readonly<Record<string, GlossaryEntry>>,
 ): readonly TutorialStepView[] {
   return structure.steps.map((step, index) => {
+    const title = strings.titles[step.id];
+    const instruction = strings.steps[step.id];
+    if (!title || !instruction) {
+      throw new Error(`Missing tutorial prose for ${step.id}`);
+    }
     const glossaryItems: GlossaryItemView[] = (step.teaches ?? []).flatMap((key) => {
       const entry = glossary[key];
       if (!entry) return [];
@@ -51,14 +47,14 @@ export function buildTutorialSteps(
         ? glossary[`${step.action.direction}-fold`]?.term
         : undefined;
 
-    const explanation = strings.explanations[step.id];
+    const explanation = strings.explanations?.[step.id];
     const tip = strings.tips[step.id];
 
     const view: TutorialStepView = {
       id: step.id,
       index,
-      title: strings.titles?.[step.id] ?? "",
-      instruction: strings.steps[step.id] ?? "",
+      title,
+      instruction,
       ...(explanation === undefined ? {} : { explanation }),
       ...(tip === undefined ? {} : { tip }),
       ...(annotationLabel === undefined ? {} : { annotationLabel }),

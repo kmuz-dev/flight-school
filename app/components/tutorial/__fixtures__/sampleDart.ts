@@ -14,7 +14,6 @@
 import type { PlaneStructure } from "@/content/types";
 import type { GlossaryEntry, PlaneStrings, UiDictionary } from "@/i18n/types";
 import type { FoldStep } from "@/engine/core/types";
-import type { PlaneStringsWithTitles } from "../viewModel";
 
 // A4 in millimetres, origin at sheet centre: x in [-105, 105], y in [-148.5, 148.5].
 const HALF_W = 105;
@@ -176,7 +175,7 @@ export const sampleDartStructure: PlaneStructure = {
   accent: "#7FA8C9",
 };
 
-export const sampleDartStrings: PlaneStringsWithTitles = {
+export const sampleDartStrings: PlaneStrings = {
   name: "The Dart",
   description:
     "The fastest plane in the hangar. It flies flat and hard, straight down the hallway, and it is the first plane every cadet learns.",

@@ -57,6 +57,9 @@ let pending: Promise<FoldEngineFactory> | null = null;
 const svgOnlyEngine: FoldEngineFactory = (container, structure, opts = {}) =>
   createFallbackEngine(container, structure, opts, { computeFoldState, renderStateToSvg });
 
+/** Replace a failed live renderer with the canonical SVG implementation. */
+export const createStaticFoldEngine: FoldEngineFactory = svgOnlyEngine;
+
 /**
  * Fetch the renderer and return the factory that mounts a stage.
  *

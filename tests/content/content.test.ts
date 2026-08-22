@@ -36,7 +36,7 @@ describe.each(Object.entries(PLANES))("%s: structure and prose agree", (id, plan
       ...plane.steps,
       ...Object.values(plane.paper.prep).flat(),
     ].map((step) => step.id));
-    for (const [stepId, explanation] of Object.entries(strings.explanations)) {
+    for (const [stepId, explanation] of Object.entries(strings.explanations ?? {})) {
       expect(ids.has(stepId), `explanation refers to unknown step ${stepId}`).toBe(true);
       expect(explanation, `empty explanation for ${stepId}`).toBeTruthy();
     }
@@ -120,7 +120,7 @@ describe("writing rules", () => {
             p.throwTip,
             ...Object.values(p.titles),
             ...Object.values(p.steps),
-            ...Object.values(p.explanations),
+            ...Object.values(p.explanations ?? {}),
             ...Object.values(p.tips),
           ]
         : [],

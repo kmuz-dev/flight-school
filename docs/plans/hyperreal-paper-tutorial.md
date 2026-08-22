@@ -41,8 +41,8 @@ That would allow a closer one-angle imitation of the beauty art but would drift 
 Copy these generated production assets into `app/assets/materials/`:
 
 - `paper-craft-albedo.webp`: 1024px sRGB, 80,640 bytes.
-- `paper-craft-normal.webp`: 512px linear, 176,736 bytes.
-- `paper-craft-roughness.webp`: 512px linear, 530 bytes.
+- `paper-craft-normal.webp`: 512px linear, 166,372 bytes after the final semantic re-encode.
+- `paper-craft-roughness.webp`: 512px linear, 2,214 bytes with retained spatial variation.
 
 The source package is retained outside the repository at:
 
@@ -50,7 +50,7 @@ The source package is retained outside the repository at:
 /Users/kuda/.codex/generated_images/01a00110-bcb5-79b1-97e5-6a3e458e9667/
 ```
 
-The three production files total 257,906 bytes.
+The three production files total 249,226 bytes, below the approved 257,906-byte ceiling.
 They must remain behind the lazy renderer boundary.
 
 Use mirrored repeat wrapping at 4 by 4 repeats, roughness 0.88, normal scale 0.18, and anisotropy capped at 8.

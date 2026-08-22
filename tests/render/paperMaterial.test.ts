@@ -37,8 +37,8 @@ describe("photographic paper maps", () => {
     const assetDir = path.join(process.cwd(), "app/assets/materials");
     const expected = [
       ["paper-craft-albedo.webp", 1024, 80_640],
-      ["paper-craft-normal.webp", 512, 176_736],
-      ["paper-craft-roughness.webp", 512, 530],
+      ["paper-craft-normal.webp", 512, 166_372],
+      ["paper-craft-roughness.webp", 512, 2_214],
     ] as const;
     let total = 0;
     for (const [name, dimension, bytes] of expected) {
@@ -50,7 +50,33 @@ describe("photographic paper maps", () => {
       expect(size, name).toBe(bytes);
       total += size;
     }
-    expect(total).toBe(257_906);
+    expect(total).toBeLessThanOrEqual(257_906);
+  });
+
+  it("preserves roughness variation without pulling the paper below its calibrated range", async () => {
+    const file = path.join(process.cwd(), "app/assets/materials/paper-craft-roughness.webp");
+    const { data, info } = await sharp(file).raw().toBuffer({ resolveWithObject: true });
+    let min = 255;
+    let max = 0;
+    let sum = 0;
+    let squared = 0;
+    let count = 0;
+    for (let offset = 1; offset < data.length; offset += info.channels) {
+      const value = data[offset]!;
+      min = Math.min(min, value);
+      max = Math.max(max, value);
+      sum += value;
+      squared += value * value;
+      count += 1;
+    }
+    const mean = sum / count;
+    const variance = squared / count - mean * mean;
+    const effectiveRoughness = (mean / 255) * 0.88;
+
+    expect(max - min).toBeGreaterThanOrEqual(4);
+    expect(Math.sqrt(variance)).toBeGreaterThan(0.1);
+    expect(effectiveRoughness).toBeGreaterThanOrEqual(0.85);
+    expect(effectiveRoughness).toBeLessThanOrEqual(0.88);
   });
 
   it("loads the three production maps with their physical texture settings", async () => {

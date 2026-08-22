@@ -116,7 +116,7 @@ function mergePlanes(
           throwTip: t.throwTip || strings.throwTip,
           titles: mergeRecords(strings.titles, t.titles),
           steps: mergeRecords(strings.steps, t.steps),
-          explanations: mergeRecords(strings.explanations, t.explanations),
+          explanations: mergeRecords(strings.explanations ?? {}, t.explanations),
           tips: mergeRecords(strings.tips, t.tips),
         }
       : strings;

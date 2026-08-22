@@ -179,7 +179,12 @@ export type ValidationIssue = {
   readonly message: string;
 };
 
-export type EngineEvent = "stepComplete" | "progress" | "annotation" | "webglLost";
+export type EngineEvent =
+  | "stepComplete"
+  | "progress"
+  | "annotation"
+  | "webglLost"
+  | "rendererFailed";
 
 export type AnnotationAnchor = {
   /** Projected screen position of the fold-name label anchor. */
