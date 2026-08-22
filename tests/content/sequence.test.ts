@@ -6,7 +6,7 @@
  * up to the cut, and end in the same plane.
  */
 import { describe, expect, it } from "vitest";
-import { PLANES } from "@/content";
+import { PLANES, PLANE_IDS } from "@/content";
 import {
   PAPER_CHOICES,
   needsPrep,
@@ -37,6 +37,55 @@ describe("sequenceForPaper", () => {
   it("declares the sheet the cadet actually has, not the one the plane assumes", () => {
     expect(sequenceForPaper(cruiser, "letter").paper.format).toBe("letter");
     expect(formatForPlane(sequenceForPaper(cruiser, "letter").paper.format)).toBe("letter");
+  });
+});
+
+describe("paperIsUsable", () => {
+  const dart = PLANES.dart!;
+
+  it("offers Letter beside A4, because one sequence really does fold both", () => {
+    expect(paperIsUsable(dart, "a4")).toBe(true);
+    expect(paperIsUsable(dart, "letter")).toBe(true);
+  });
+
+  /**
+   * A square is 71% of A4's area, so an area-only test passed it, and the
+   * picker offered it for all five rectangular planes as "fold straight from
+   * this one, no cutting". The tutorial then folded A4 regardless - a sheet
+   * 87mm longer than the one the cadet was told to pick up.
+   */
+  it("refuses a sheet of the wrong proportions, however close its area", () => {
+    expect(paperIsUsable(dart, "square")).toBe(false);
+  });
+
+  it("refuses a sheet of the wrong size, however close its proportions", () => {
+    // A 4x6 card is within 6% of A4's proportions and a quarter of its area.
+    expect(paperIsUsable(dart, "index-4x6")).toBe(false);
+  });
+
+  it("offers the Square Cruiser every sheet, because it has prep for each", () => {
+    for (const paper of PAPER_CHOICES) expect(paperIsUsable(cruiser, paper), paper).toBe(true);
+  });
+
+  /**
+   * The property the three cases above are instances of, and the one that
+   * actually matters: an offered sheet must be a sheet the tutorial will go on
+   * to fold. Without a prep run `sequenceForPaper` returns the plane unchanged,
+   * so the engine folds the AUTHORED sheet no matter what the picker said, and
+   * an offer outside that set is a promise the next screen breaks.
+   */
+  it("never offers a sheet the tutorial would then fold something else from", () => {
+    for (const id of PLANE_IDS) {
+      const structure = PLANES[id]!;
+      const authored = structure.paper.format;
+      for (const paper of PAPER_CHOICES) {
+        if (!paperIsUsable(structure, paper)) continue;
+        const covered =
+          needsPrep(structure, paper) ||
+          (authored === "letter-a4" ? paper === "a4" || paper === "letter" : paper === authored);
+        expect(covered, `${id} offers ${paper}`).toBe(true);
+      }
+    }
   });
 });
 

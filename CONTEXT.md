@@ -40,6 +40,8 @@ This sets the complexity ceiling (no design ships if a 10-year-old cannot comple
   Beauty-image failure outside inspection also falls back to the canonical SVG.
 - **Paper Prep:** The fold engine renders Paper Prep as Step 0 of each sequence.
   Each plane declares its required paper and the user chooses Letter, A4, or 4x6 paper.
+  A sheet is offered only when the plane genuinely folds from it: either it carries a prep run for that sheet, or the sheet matches the authored one in both size and proportion.
+  Letter and A4 are one sheet to the catalog, which is why sequences are authored as `letter-a4`; a square is not, and the five rectangular planes do not offer it.
 - **Explanation layer:** Each step may have one short rationale beneath its folding action and each plane has an Estimated flight profile on Preflight.
   Deep aerodynamics remains a later iteration.
 - **User state:** Browser localStorage holds resume position and earned wings per plane.
