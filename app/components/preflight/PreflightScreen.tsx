@@ -14,8 +14,7 @@ import { LocalePicker } from "@/components/ui/LocalePicker";
 import type { Locale } from "@/i18n/config";
 import { TIER_CHIP } from "@/components/ui/tier";
 import { format } from "@/components/ui/format";
-import { OrbitViewer } from "./OrbitViewer";
-import type { FoldEngineFactory } from "@/engine";
+import { AircraftHero } from "./AircraftHero";
 import type { PreflightUiStrings, PreflightView } from "./types";
 import { formatForPlane } from "@/engine/core/paper";
 import { PaperPicker } from "./PaperPicker";
@@ -33,7 +32,6 @@ export type PreflightScreenProps = {
   locale: Locale;
   hangarHref: string;
   tutorialHref: string;
-  createEngine?: FoldEngineFactory;
 };
 
 export function PreflightScreen({
@@ -42,7 +40,6 @@ export function PreflightScreen({
   locale,
   hangarHref,
   tutorialHref,
-  createEngine,
 }: PreflightScreenProps) {
   const { resumeStep } = usePlaneProgress(view.id as PlaneId);
   const selectedPaper =
@@ -118,25 +115,14 @@ export function PreflightScreen({
           page is longer than the screen.
         */}
         <div className="flex flex-col gap-md min-[960px]:sticky min-[960px]:top-lg min-[960px]:h-[min(76dvh,720px)] min-[960px]:self-start">
-          <OrbitViewer
-            structure={view.structure}
-            stepCount={view.stepCount}
+          <AircraftHero
             svg={view.svg}
             artwork={view.presentation.artwork}
             artworkAlt={ui.artworkAlt}
             objectPosition={view.presentation.objectPosition}
             artworkScale={view.presentation.heroScale}
-            displayView={view.presentation.displayView}
             planeName={view.name}
             label={ui.viewerLabel}
-            orbitHint={ui.orbitHint}
-            inspect3d={ui.inspect3d}
-            showArtwork={ui.showArtwork}
-            loading3d={ui.loading3d}
-            resetView={ui.resetView}
-            unavailable3d={ui.unavailable3d}
-            retry3d={ui.retry3d}
-            {...(createEngine ? { createEngine } : {})}
           />
         </div>
 

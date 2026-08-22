@@ -79,7 +79,7 @@ Every plane carries an estimated flight profile shown on its Preflight screen:
 5. An explicit secondary Inspect in 3D control, or a short drag, may mount the live final-state viewer; arriving, hovering and focusing never mount WebGL.
 6. Inspection supports constrained orbit and zoom, a Reset view control, and a retryable beauty-art fallback when 3D is unavailable.
 7. Preflight leads with larger approved beauty artwork, paper readiness, and a single primary action: Start folding or Resume.
-8. Preflight offers explicit 3D inspection, an estimated flight profile, the flight description, and the throw tip as secondary information.
+8. Preflight offers an estimated flight profile, the flight description, and the throw tip as secondary information. It carries no 3D inspection: the screen exists to make one decision, and a viewer on the hero competed with it.
 
 ### 6.2 Paper Prep (Step 0)
 
@@ -121,9 +121,9 @@ V1 is done when:
 4. Resume state and Wings earned marks survive a browser restart.
 5. All 12 locales build, pass the translation audit, and render correctly including RTL Arabic.
 6. The site deploys as a purely static build through Cloudflare Workers static assets on the free tier with no Worker script or server component.
-7. Initial Hangar and Preflight visits do not download the 3D renderer until the user explicitly requests inspection.
+7. An initial Hangar visit does not download the 3D renderer until the user explicitly requests inspection, and Preflight never downloads it at all.
 8. The renderer pauses while its stage is offscreen or the document is hidden and resumes without creating duplicate animation loops.
-9. Lighthouse performance is respectable on a mid-range phone; Tutorial degrades to a clearly identified static render, while Hangar and Preflight inspection retain beauty artwork and offer Retry 3D when WebGL is unavailable.
+9. Lighthouse performance is respectable on a mid-range phone; Tutorial degrades to a clearly identified static render, while Hangar inspection retains beauty artwork and offers Retry 3D when WebGL is unavailable. Preflight is artwork throughout and has nothing to degrade.
 
 ## 9. Later iterations (explicitly deferred)
 

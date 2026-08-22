@@ -44,7 +44,7 @@ test("the initial Hangar fetches neither Three.js nor paper maps", async ({ page
   expect(requests.paper).toEqual([]);
 });
 
-test("the initial Preflight fetches neither Three.js nor paper maps", async ({ page }) => {
+test("Preflight fetches neither Three.js nor paper maps, ever", async ({ page }) => {
   const requests = await initialRendererRequests(page, "/en/plane/dart/");
   expect(requests.renderer).toEqual([]);
   expect(requests.paper).toEqual([]);

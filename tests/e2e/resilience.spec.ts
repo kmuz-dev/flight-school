@@ -179,31 +179,18 @@ test("the hangar keeps artwork when its renderer chunk cannot download", async (
   await expect(page.locator(".hangar-aircraft img").first()).toBeVisible();
 });
 
-test("preflight keeps beauty artwork when 3D is unavailable", async ({ page }) => {
+/**
+ * Preflight has no renderer to lose: the hero is production artwork, and its
+ * own fallback is the engine's build-time SVG. What has to survive is the
+ * image failing to arrive.
+ */
+test("preflight shows the aircraft with no WebGL available at all", async ({ page }) => {
   await withoutWebGL(page);
   await page.goto("/en/plane/dart/");
 
-  const artwork = page.getByTestId("preflight-artwork");
-  const image = page.getByRole("img", { name: /finished paper aircraft: the dart/i });
-  await expect(image).toBeVisible();
-
-  await page.getByRole("button", { name: /inspect the dart in 3d/i }).click();
-  await expect(page.getByText(/3D is unavailable\. Showing artwork\./i)).toBeVisible();
-  await expect(page.getByRole("button", { name: "Retry 3D" })).toBeVisible();
-  await expect(artwork).toHaveCSS("opacity", "1");
-  await expect(page.getByTestId("preflight-stage")).toHaveCSS("opacity", "0");
-  await expect(image).toBeVisible();
-});
-
-test("preflight keeps artwork when its renderer chunk cannot download", async ({ page, request }) => {
-  await withoutRendererChunk(page, request);
-  await page.goto("/en/plane/dart/");
-  const artwork = page.getByTestId("preflight-artwork");
-
-  await page.getByRole("button", { name: /inspect the dart in 3d/i }).click();
-  await expect(page.getByText(/3D is unavailable\. Showing artwork\./i)).toBeVisible();
-  await expect(page.getByRole("button", { name: "Retry 3D" })).toBeVisible();
-  await expect(artwork).toHaveCSS("opacity", "1");
+  await expect(page.getByRole("img", { name: /finished paper aircraft: the dart/i })).toBeVisible();
+  await expect(page.getByTestId("preflight-artwork")).toHaveCSS("opacity", "1");
+  await expect(page.getByRole("button", { name: /in 3d/i })).toHaveCount(0);
 });
 
 /**

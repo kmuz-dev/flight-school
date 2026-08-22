@@ -28,7 +28,7 @@ The product requirements live in [PRD.md](PRD.md), screen composition lives in [
 - The Harrier must retain its broad glider planform, folded-back nose, and nested tip fins.
 - Keep beauty artwork visible while an explicitly requested renderer loads.
 - Replace beauty artwork with the canonical SVG if the beauty image itself fails.
-- When Inspect in 3D is activated, keep beauty artwork visible while the renderer loads.
+- When Inspect in 3D is activated in the Hangar, keep beauty artwork visible while the renderer loads. Preflight has no such control.
 - Replace the inspection region with WebGL after successful initialization.
 - Constrain orbit and wheel or pinch zoom, disable pan, and provide a localized Reset view control.
 - Keep or restore beauty artwork, announce that 3D is unavailable, and offer Retry 3D if WebGL is unavailable or initialization fails.

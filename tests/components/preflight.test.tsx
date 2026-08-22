@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { PLANES, getPlane } from "@/content";
 import planesDict from "@/i18n/planes/en";
 import ui from "@/i18n/ui/en";
@@ -7,8 +7,6 @@ import { PreflightScreen } from "@/components/preflight/PreflightScreen";
 import { buildPreflightView, preflightUiFromDictionary } from "@/components/preflight/types";
 import { finishedPlaneSvg } from "@/components/hangar/viewModel";
 import { __resetProgressCache } from "@/lib/progress";
-import { createFakeEngineFactory } from "./fakeEngine";
-import { stubIntersectionObserver } from "./intersection";
 
 const strings = preflightUiFromDictionary(ui);
 const firstId = Object.keys(PLANES)[0]!;
@@ -26,19 +24,16 @@ function seedProgress(planeId: string, step: number): void {
   __resetProgressCache();
 }
 
-function renderPreflight(renderMode: "webgl" | "svg" = "webgl", autoReady = true) {
-  const { factory, log } = createFakeEngineFactory(renderMode, autoReady);
-  const utils = render(
+function renderPreflight() {
+  return render(
     <PreflightScreen
       ui={strings}
       view={view}
       locale="en"
       hangarHref="/en/"
       tutorialHref={`/en/plane/${view.id}/fold/`}
-      createEngine={factory}
     />,
   );
-  return { ...utils, log };
 }
 
 afterEach(() => {
@@ -73,135 +68,24 @@ describe("Preflight", () => {
     );
   });
 
-  it("shows production artwork without requesting the renderer", () => {
-    const { log } = renderPreflight();
-    expect(screen.getByRole("img", { name: `Finished paper aircraft: ${view.name}` })).toBeInTheDocument();
-    expect(log.created).toHaveLength(0);
-    expect(log.steps).toHaveLength(0);
+  it("shows the finished aircraft as artwork, with nothing to operate", () => {
+    renderPreflight();
+    expect(
+      screen.getByRole("img", { name: `Finished paper aircraft: ${view.name}` }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("preflight-artwork")).toBeInTheDocument();
+    // Preflight is a decision screen. The only control on it is the paper
+    // picker and the primary; an inspection toggle on the hero used to offer a
+    // second thing to do at the moment the screen exists to make one choice.
+    expect(screen.queryByRole("button", { name: /3D/i })).not.toBeInTheDocument();
+    expect(screen.queryByTestId("preflight-stage")).not.toBeInTheDocument();
   });
 
-  /**
-   * The hero is a photograph of an aircraft, not a paused fold. None of this
-   * is visible in the DOM, so nothing else would catch its removal until the
-   * hero was showing a plane on its side, half under the ground.
-   */
-  it("dresses the hero as a display stage rather than a tutorial one", () => {
-    const { log } = renderPreflight();
-    fireEvent.click(screen.getByRole("button", { name: `Inspect ${view.name} in 3D` }));
-    const opts = log.created[0]?.opts;
-    // Floorless, backdropped, shadowed, lifted and breathing.
-    expect(opts?.display).toBe(true);
-    expect(opts?.displayView).toEqual(view.presentation.displayView);
-    // Standing up, rather than lying in the frame its creases were authored in.
-    expect(opts?.rest).toBe(true);
-    // The hero angle rides on `display`. A preset here would be a fold step's
-    // opinion about how a finished aircraft is photographed.
-    expect(opts?.cameraPreset).toBeUndefined();
-    // No constant spin: it holds the hero angle for about a second and then
-    // parks at some other angle. The float in the engine is the motion now.
-    expect(opts?.autoRotate).toBeUndefined();
-    // Full tier, unlike a hangar card: this is the largest render on the site.
-    expect(opts?.quality).toBeUndefined();
-    expect(log.steps).toEqual([view.stepCount - 1]);
-  });
-
-  it("keeps beauty artwork visible when 3D falls back and offers a retry", async () => {
-    const { log } = renderPreflight("svg");
+  it("falls back to the canonical SVG when the artwork will not load", () => {
+    renderPreflight();
     const artwork = screen.getByTestId("preflight-artwork");
-    const image = screen.getByRole("img", { name: `Finished paper aircraft: ${view.name}` });
-
-    fireEvent.click(screen.getByRole("button", { name: `Inspect ${view.name} in 3D` }));
-    await waitFor(() => expect(screen.getByText(strings.unavailable3d)).toBeInTheDocument());
-    expect(artwork).toHaveClass("opacity-100");
-    expect(screen.getByTestId("preflight-stage")).toHaveClass("opacity-0");
-    expect(image).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: strings.retry3d }));
-    await waitFor(() => expect(log.created).toHaveLength(2));
-  });
-
-  it("uses the canonical SVG only after the beauty artwork also fails", async () => {
-    renderPreflight("svg");
-    const artwork = screen.getByTestId("preflight-artwork");
-    const image = screen.getByRole("img", { name: `Finished paper aircraft: ${view.name}` });
-    fireEvent.click(screen.getByRole("button", { name: `Inspect ${view.name} in 3D` }));
-    await waitFor(() => expect(screen.getByText(strings.unavailable3d)).toBeInTheDocument());
-    fireEvent.error(image);
-    expect(artwork).toHaveClass("opacity-100");
+    fireEvent.error(screen.getByRole("img", { name: `Finished paper aircraft: ${view.name}` }));
     expect(artwork.innerHTML).toContain("<svg");
-    expect(screen.getByTestId("preflight-stage")).toHaveClass("opacity-0");
-  });
-
-  it("resets an inspected aircraft to its authored view", async () => {
-    const { log } = renderPreflight();
-    fireEvent.click(screen.getByRole("button", { name: `Inspect ${view.name} in 3D` }));
-    const reset = await screen.findByRole("button", { name: strings.resetView });
-    fireEvent.click(reset);
-    expect(log.reset).toBe(1);
-  });
-
-  /**
-   * PRD acceptance criterion 8. The art panel is a screen tall on a phone and
-   * the flight profile the cadet came to read is directly beneath it, so
-   * scrolling past a live stage is the normal case, not an edge one - and this
-   * screen used to keep drawing a full-quality WebGL frame throughout.
-   */
-  it("suspends the inspected stage once the panel scrolls out of view", async () => {
-    const observer = stubIntersectionObserver(
-      (target) => target.getAttribute("aria-label") === strings.viewerLabel,
-    );
-    const { log } = renderPreflight();
-    fireEvent.click(screen.getByRole("button", { name: `Inspect ${view.name} in 3D` }));
-    await screen.findByRole("button", { name: strings.resetView });
-    expect(observer.observing()).toBe(true);
-
-    act(() => observer.notify(false));
-    await waitFor(() => expect(log.renderActive.at(-1)).toBe(false));
-
-    act(() => observer.notify(true));
-    await waitFor(() => expect(log.renderActive.at(-1)).toBe(true));
-    observer.restore();
-  });
-
-  it("suspends the inspected stage while the document is hidden", async () => {
-    const hidden = vi.spyOn(document, "hidden", "get").mockReturnValue(true);
-    const { log } = renderPreflight();
-    fireEvent.click(screen.getByRole("button", { name: `Inspect ${view.name} in 3D` }));
-    await screen.findByRole("button", { name: strings.resetView });
-    await waitFor(() => expect(log.renderActive.at(-1)).toBe(false));
-
-    hidden.mockReturnValue(false);
-    act(() => {
-      document.dispatchEvent(new Event("visibilitychange"));
-    });
-    await waitFor(() => expect(log.renderActive.at(-1)).toBe(true));
-    hidden.mockRestore();
-  });
-
-  it("restores artwork and retry when a live WebGL context is lost", async () => {
-    const { log } = renderPreflight();
-    fireEvent.click(screen.getByRole("button", { name: `Inspect ${view.name} in 3D` }));
-    await screen.findByRole("button", { name: strings.resetView });
-
-    log.emit("webglLost");
-
-    await screen.findByText(strings.unavailable3d);
-    expect(screen.getByTestId("preflight-artwork")).toHaveClass("opacity-100");
-    expect(screen.getByRole("button", { name: strings.retry3d })).toBeVisible();
-  });
-
-  it("keeps artwork visible when inspection is reopened until the new material is ready", async () => {
-    const { log } = renderPreflight("webgl", false);
-    const artwork = screen.getByTestId("preflight-artwork");
-    fireEvent.click(screen.getByRole("button", { name: `Inspect ${view.name} in 3D` }));
-    expect(artwork).toHaveClass("opacity-100");
-    log.ready();
-    await screen.findByRole("button", { name: strings.showArtwork });
-
-    fireEvent.click(screen.getByRole("button", { name: strings.showArtwork }));
-    fireEvent.click(screen.getByRole("button", { name: `Inspect ${view.name} in 3D` }));
-    expect(artwork).toHaveClass("opacity-100");
-    log.ready();
-    await waitFor(() => expect(artwork).toHaveClass("opacity-0"));
   });
 
   it("derives the spec table from the fold sequence", () => {

@@ -266,58 +266,109 @@ const SHELL_VIEWPORTS = [
  * measuring a combination nobody will ever hold. The widths are the subject
  * here; the device is not.
  */
-for (const { name, width, height } of SHELL_VIEWPORTS) {
-  test(`the tutorial holds one shape on every fold, on ${name}`, async ({ page }, info) => {
-    test.skip(info.project.name !== "chromium", "this test supplies its own viewports");
-    /*
-     * The heaviest test in the suite, and the default 90s is not a real budget
-     * for it. Fourteen folds of the Hammer are fourteen real WebGL animations
-     * rasterised by SwiftShader - there is no GPU in this loop on CI or on a
-     * laptop - and the bill scales with the viewport: measured alone on a free
-     * machine, 60s at 1440x900, 56s at 1280x800, 32s at 390x844. Sharing three
-     * workers with the rest of the suite roughly doubles that, which is how a
-     * test that passes in isolation fails only in a full run.
-     *
-     * 180s is a ceiling a genuine hang still hits, not a budget anything is
-     * expected to approach.
-     */
-    test.setTimeout(180_000);
-    await page.setViewportSize({ width, height });
-    // The Hammer: the longest sequence in the fleet and the one whose tips are
-    // spread across it, so it varies more than any other plane.
-    await page.goto("/en/plane/hammer/fold/");
-    const next = page.getByRole("button", { name: "Next fold", exact: true });
-    await expect(next).toBeVisible();
+/*
+ * These three run in order, in one worker.
+ *
+ * They are the file's expensive tests and the ones that used to time out on a
+ * two-core runner, so keeping them off each other's backs is cheap insurance -
+ * a few seconds of wall clock now that each walk is seconds rather than
+ * minutes. The thing that made them affordable is inside the test: the stage's
+ * idle loop is suspended for the walk, for the reasons written there.
+ */
+test.describe("the tutorial shell", () => {
+  test.describe.configure({ mode: "default" });
 
-    const tops = new Set<number>();
-    const overflows: string[] = [];
+  for (const { name, width, height } of SHELL_VIEWPORTS) {
+    test(`the tutorial holds one shape on every fold, on ${name}`, async ({ page }, info) => {
+      test.skip(info.project.name !== "chromium", "this test supplies its own viewports");
+      /*
+       * The heaviest test in the suite, and the default 90s is not a real budget
+       * for it. Fourteen folds of the Hammer are fourteen real WebGL animations
+       * rasterised by SwiftShader - there is no GPU in this loop on CI or on a
+       * laptop - and the bill scales with the viewport: measured alone on a free
+       * machine, 60s at 1440x900, 56s at 1280x800, 32s at 390x844. Sharing
+       * workers with the rest of the suite roughly doubles that, which is how a
+       * test that passes in isolation fails only in a full run - and did, on a
+       * two-worker CI runner, at 180s.
+       *
+       * So do not pay for the animations at all. The subject here is where the
+       * rail's controls sit at each settled step, which is a question about
+       * fourteen static layouts; under reduced motion the engine jumps to each
+       * settled state (REDUCED_MOTION_SECONDS is 1ms) and the walk costs
+       * rasterisation alone. The ceiling below is what a genuine hang hits.
+       */
+      test.setTimeout(180_000);
+      await page.emulateMedia({ reducedMotion: "reduce" });
 
-    for (let step = 1; step <= 14; step += 1) {
-      const box = await next.or(page.getByRole("button", { name: "Finish" })).boundingBox();
-      expect(box, `step ${step} has no Next button`).not.toBeNull();
-      tops.add(Math.round(box!.y));
+      /*
+       * Suspend the stage's idle loop for the walk, through the product's own
+       * path rather than a stub.
+       *
+       * `useRenderActivity` pauses a stage while the document is hidden - PRD
+       * acceptance criterion 8 - and a hidden document changes no layout
+       * whatsoever, which is the entire subject here. What it removes is the
+       * loop this test cannot afford: `FoldRenderer.startLoop` has no dirty
+       * check, so an on-screen stage re-rasterises every frame for as long as
+       * the test sits on it, and a page held for three minutes holds a WebGL
+       * surface at 60fps for three minutes.
+       *
+       * Rendering is still exercised per step: `gotoStep` draws a frame
+       * explicitly when the loop is inactive, so every fold still reaches the
+       * canvas, once each, which is all fourteen static layouts need.
+       *
+       * The evidence that this is the cost, rather than slowness in the walk:
+       * on CI the desktop width timed out with Playwright reporting it could
+       * not resolve the Next fold button, while the failure snapshot captured
+       * at that moment shows `button "Next fold" [active]` sitting right there
+       * on step 11 of 14. The element was never missing - the main thread was
+       * too busy to answer the query. The same walk finishes in 13s here at 6x
+       * CPU throttling, because this laptop has a GPU and the runner has none.
+       */
+      await page.addInitScript(() => {
+        Object.defineProperty(document, "hidden", { get: () => true, configurable: true });
+        Object.defineProperty(document, "visibilityState", {
+          get: () => "hidden",
+          configurable: true,
+        });
+      });
 
-      const scroll = await page.evaluate(() => ({
-        page: document.documentElement.scrollHeight,
-        window: window.innerHeight,
-      }));
-      if (scroll.page > scroll.window) {
-        overflows.push(`step ${step}: ${scroll.page - scroll.window}px`);
+      await page.setViewportSize({ width, height });
+      // The Hammer: the longest sequence in the fleet and the one whose tips are
+      // spread across it, so it varies more than any other plane.
+      await page.goto("/en/plane/hammer/fold/");
+      const next = page.getByRole("button", { name: "Next fold", exact: true });
+      await expect(next).toBeVisible();
+
+      const tops = new Set<number>();
+      const overflows: string[] = [];
+
+      for (let step = 1; step <= 14; step += 1) {
+        const box = await next.or(page.getByRole("button", { name: "Finish" })).boundingBox();
+        expect(box, `step ${step} has no Next button`).not.toBeNull();
+        tops.add(Math.round(box!.y));
+
+        const scroll = await page.evaluate(() => ({
+          page: document.documentElement.scrollHeight,
+          window: window.innerHeight,
+        }));
+        if (scroll.page > scroll.window) {
+          overflows.push(`step ${step}: ${scroll.page - scroll.window}px`);
+        }
+        if (step < 14) {
+          await next.click();
+          // The rail re-renders on the step change; the button must be settled
+          // before it is measured or this asserts a frame mid-transition.
+          await expect(page.getByRole("combobox", { name: "Choose a fold" })).toHaveValue(
+            String(step),
+          );
+        }
       }
-      if (step < 14) {
-        await next.click();
-        // The rail re-renders on the step change; the button must be settled
-        // before it is measured or this asserts a frame mid-transition.
-        await expect(page.getByRole("combobox", { name: "Choose a fold" })).toHaveValue(
-          String(step),
-        );
-      }
-    }
 
-    expect(overflows, `the page scrolls on: ${overflows.join(", ")}`).toEqual([]);
-    expect(
-      [...tops],
-      `Next sits at ${tops.size} different heights across the fold sequence`,
-    ).toHaveLength(1);
-  });
-}
+      expect(overflows, `the page scrolls on: ${overflows.join(", ")}`).toEqual([]);
+      expect(
+        [...tops],
+        `Next sits at ${tops.size} different heights across the fold sequence`,
+      ).toHaveLength(1);
+    });
+  }
+});

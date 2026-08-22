@@ -776,7 +776,7 @@ export function displayBounds(bounds: ModelBounds, liftMm: number): ModelBounds 
  *
  * It has to be drawn in GL rather than left to CSS. The canvas is created with
  * `alpha: false`, so nothing behind it is ever visible - the panel gradients in
- * OrbitViewer and FoldStage have never once shown through. Assigning it to
+ * the Hangar bay and FoldStage have never once shown through. Assigning it to
  * `scene.background` is the cheapest surface there is: Three draws a plain
  * texture as a screen-space quad, and an sRGB one is not tone-mapped, so the
  * two stops land on exactly the hexes the design system names.

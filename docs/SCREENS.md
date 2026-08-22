@@ -71,11 +71,8 @@ The primary action is opening the selected aircraft's Preflight screen.
 Preflight answers two questions in order: which aircraft am I making, and is my paper ready?
 
 - Lead with approved hero artwork of the finished aircraft.
-- Provide an explicit Inspect in 3D control that crossfades to the orbit viewer only after activation.
-- Keep beauty artwork visible while the renderer loads.
-- Let the learner orbit and zoom within safe limits, disable pan, and provide a localized Reset view control that restores the authored aircraft camera.
-- Keep or restore beauty artwork, announce that 3D is unavailable, and offer a retry if WebGL is unavailable or fails.
-- Use the canonical SVG only if the beauty artwork also fails.
+- Offer no 3D inspection and mount no renderer. Preflight is a decision - which aircraft, which paper, start - and a viewer on the hero was a second thing to do at the moment the screen exists to make one choice. Live inspection belongs to the Hangar, where browsing is the point.
+- Use the canonical SVG only if the beauty artwork fails.
 - Make paper selection the dominant information block using native radio inputs styled as cards.
 - Explain inline when a paper choice adds preparation folds or resets saved step progress.
 - Show Start folding or Resume as the single red primary action.
