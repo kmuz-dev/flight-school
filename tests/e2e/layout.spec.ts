@@ -266,63 +266,88 @@ const SHELL_VIEWPORTS = [
  * measuring a combination nobody will ever hold. The widths are the subject
  * here; the device is not.
  */
-for (const { name, width, height } of SHELL_VIEWPORTS) {
-  test(`the tutorial holds one shape on every fold, on ${name}`, async ({ page }, info) => {
-    test.skip(info.project.name !== "chromium", "this test supplies its own viewports");
-    /*
-     * The heaviest test in the suite, and the default 90s is not a real budget
-     * for it. Fourteen folds of the Hammer are fourteen real WebGL animations
-     * rasterised by SwiftShader - there is no GPU in this loop on CI or on a
-     * laptop - and the bill scales with the viewport: measured alone on a free
-     * machine, 60s at 1440x900, 56s at 1280x800, 32s at 390x844. Sharing
-     * workers with the rest of the suite roughly doubles that, which is how a
-     * test that passes in isolation fails only in a full run - and did, on a
-     * two-worker CI runner, at 180s.
-     *
-     * So do not pay for the animations at all. The subject here is where the
-     * rail's controls sit at each settled step, which is a question about
-     * fourteen static layouts; under reduced motion the engine jumps to each
-     * settled state (REDUCED_MOTION_SECONDS is 1ms) and the walk costs
-     * rasterisation alone. The ceiling below is what a genuine hang hits.
-     */
-    test.setTimeout(180_000);
-    await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.setViewportSize({ width, height });
-    // The Hammer: the longest sequence in the fleet and the one whose tips are
-    // spread across it, so it varies more than any other plane.
-    await page.goto("/en/plane/hammer/fold/");
-    const next = page.getByRole("button", { name: "Next fold", exact: true });
-    await expect(next).toBeVisible();
+/*
+ * These three run one at a time, in one worker, rather than racing each other.
+ *
+ * The stage's render loop has no dirty check: it re-rasterises every frame for
+ * as long as it is on screen, whether or not anything has moved, so a test that
+ * sits on the tutorial for two minutes holds a WebGL surface at 60fps for two
+ * minutes. On a GPU that is free. Under SwiftShader - and there is no GPU in
+ * this loop on CI or on a laptop - it is a core, continuously.
+ *
+ * `fullyParallel` then put the two most expensive widths on a two-core runner
+ * at the same time, and the desktop one lost: not to a hang, but to a pegged
+ * main thread, failing its retries at three different lines including a bare
+ * `page.evaluate`. Serialising costs wall-clock in the file and takes the
+ * contention out, which is the difference between a slow test and an
+ * unreliable one.
+ *
+ * The loop is worth fixing at the source - a still aeroplane should not cost a
+ * core on anyone's laptop either - and that is recorded in docs/KNOWN-ISSUES.md
+ * rather than done here, because it is a renderer change and this is a layout
+ * test.
+ */
+test.describe("the tutorial shell", () => {
+  test.describe.configure({ mode: "default" });
 
-    const tops = new Set<number>();
-    const overflows: string[] = [];
+  for (const { name, width, height } of SHELL_VIEWPORTS) {
+    test(`the tutorial holds one shape on every fold, on ${name}`, async ({ page }, info) => {
+      test.skip(info.project.name !== "chromium", "this test supplies its own viewports");
+      /*
+       * The heaviest test in the suite, and the default 90s is not a real budget
+       * for it. Fourteen folds of the Hammer are fourteen real WebGL animations
+       * rasterised by SwiftShader - there is no GPU in this loop on CI or on a
+       * laptop - and the bill scales with the viewport: measured alone on a free
+       * machine, 60s at 1440x900, 56s at 1280x800, 32s at 390x844. Sharing
+       * workers with the rest of the suite roughly doubles that, which is how a
+       * test that passes in isolation fails only in a full run - and did, on a
+       * two-worker CI runner, at 180s.
+       *
+       * So do not pay for the animations at all. The subject here is where the
+       * rail's controls sit at each settled step, which is a question about
+       * fourteen static layouts; under reduced motion the engine jumps to each
+       * settled state (REDUCED_MOTION_SECONDS is 1ms) and the walk costs
+       * rasterisation alone. The ceiling below is what a genuine hang hits.
+       */
+      test.setTimeout(180_000);
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await page.setViewportSize({ width, height });
+      // The Hammer: the longest sequence in the fleet and the one whose tips are
+      // spread across it, so it varies more than any other plane.
+      await page.goto("/en/plane/hammer/fold/");
+      const next = page.getByRole("button", { name: "Next fold", exact: true });
+      await expect(next).toBeVisible();
 
-    for (let step = 1; step <= 14; step += 1) {
-      const box = await next.or(page.getByRole("button", { name: "Finish" })).boundingBox();
-      expect(box, `step ${step} has no Next button`).not.toBeNull();
-      tops.add(Math.round(box!.y));
+      const tops = new Set<number>();
+      const overflows: string[] = [];
 
-      const scroll = await page.evaluate(() => ({
-        page: document.documentElement.scrollHeight,
-        window: window.innerHeight,
-      }));
-      if (scroll.page > scroll.window) {
-        overflows.push(`step ${step}: ${scroll.page - scroll.window}px`);
+      for (let step = 1; step <= 14; step += 1) {
+        const box = await next.or(page.getByRole("button", { name: "Finish" })).boundingBox();
+        expect(box, `step ${step} has no Next button`).not.toBeNull();
+        tops.add(Math.round(box!.y));
+
+        const scroll = await page.evaluate(() => ({
+          page: document.documentElement.scrollHeight,
+          window: window.innerHeight,
+        }));
+        if (scroll.page > scroll.window) {
+          overflows.push(`step ${step}: ${scroll.page - scroll.window}px`);
+        }
+        if (step < 14) {
+          await next.click();
+          // The rail re-renders on the step change; the button must be settled
+          // before it is measured or this asserts a frame mid-transition.
+          await expect(page.getByRole("combobox", { name: "Choose a fold" })).toHaveValue(
+            String(step),
+          );
+        }
       }
-      if (step < 14) {
-        await next.click();
-        // The rail re-renders on the step change; the button must be settled
-        // before it is measured or this asserts a frame mid-transition.
-        await expect(page.getByRole("combobox", { name: "Choose a fold" })).toHaveValue(
-          String(step),
-        );
-      }
-    }
 
-    expect(overflows, `the page scrolls on: ${overflows.join(", ")}`).toEqual([]);
-    expect(
-      [...tops],
-      `Next sits at ${tops.size} different heights across the fold sequence`,
-    ).toHaveLength(1);
-  });
-}
+      expect(overflows, `the page scrolls on: ${overflows.join(", ")}`).toEqual([]);
+      expect(
+        [...tops],
+        `Next sits at ${tops.size} different heights across the fold sequence`,
+      ).toHaveLength(1);
+    });
+  }
+});

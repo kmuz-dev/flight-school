@@ -3,6 +3,22 @@
 Defects found and confirmed, with the evidence gathered, so the next session starts from what is known rather than from the symptom.
 Fixed issues are removed from this file; the commit that fixes one says so.
 
+## The stage rasterises a motionless aeroplane at 60fps
+
+**Where.** `FoldRenderer.startLoop` in `app/engine/render/renderer.ts`, so every live stage: the Tutorial, and the Hangar bay while inspecting.
+
+**What.** The loop has no dirty check.
+It calls `renderFrame` and re-arms unconditionally for as long as `renderActive` is true, whether or not anything has moved - a settled fold under `prefers-reduced-motion`, with no orbit in progress and no breathing, is redrawn sixty times a second until the stage goes offscreen or the document is hidden.
+
+**Evidence.** `tests/e2e/layout.spec.ts` sits on the tutorial for up to three minutes, and on a two-core CI runner under SwiftShader the page stopped answering: the desktop width failed all three attempts at three different lines, including a bare `page.evaluate`, which is a pegged main thread rather than a hang.
+Serialising the three viewport walks takes the contention out and is what makes that spec reliable today, so this is mitigated in the suite and unfixed at the source.
+
+**Why it matters beyond CI.** There is no GPU in this loop on a CI runner, and there is one on a cadet's laptop - but a still aeroplane redrawn continuously is still a fan, a warm palm and a shortened battery, on the screen a beginner spends the longest on.
+PRD acceptance criterion 8 asks the renderer to pause offscreen and when hidden, which it does; this is the same argument one step further in.
+
+**The fix, when someone takes it.** Render on demand: mark dirty on pose change, camera change, resize, material load and control damping, and let the loop idle otherwise.
+The care is in the things that must keep it alive - OrbitControls damping, the display stage's breathing and lift, and any in-flight GSAP timeline - so it is a renderer change with real edges, not a one-liner, which is why it is written down rather than squeezed into a layout fix.
+
 ## The Hammer's keel and fin render as a stippled hatch (mitigated, residual)
 
 **Where.** Any surface showing the finished Hammer, worst on the preflight hero at the default three-quarter angle: a fine regular diagonal hatch along the keel and across the outward face of the fin, roughly where the plane's six-layer nose is.
