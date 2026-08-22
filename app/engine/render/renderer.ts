@@ -67,7 +67,7 @@ import {
   loadPaperTextures,
   type PaperTextureSet,
 } from "./paperMaterial";
-import { reportPaperMaterialUnavailable } from "@/engine/report";
+import { reportPaperMaterialUnavailable, reportRendererRuntimeFault } from "@/engine/report";
 import { createStepTimeline, type StepTimeline } from "./timeline";
 
 // Keep the established renderer import surface while the values themselves
@@ -263,6 +263,37 @@ const QUALITY: Record<StageQuality, { antialias: boolean; shadows: boolean; maxP
     preview: { antialias: false, shadows: false, maxPixelRatio: 1 },
   };
 
+/**
+ * Extra samples per axis on a full-quality DISPLAY stage, and the ceiling on
+ * the result.
+ *
+ * A finished aircraft is a stack of laminations seen nearly edge-on, and every
+ * slab rim in the fleet draws narrower than one device pixel: 0.60px to 0.90px
+ * for the sheet edge, 0.18px to 0.27px for its chamfer, at the framing every
+ * display stage uses. Four-sample MSAA cannot separate features that size, so
+ * the Hammer's six-layer nose came out as a regular hatch. Rendering above the
+ * device and letting the browser downsample is the only thing that touches it,
+ * because the defect IS undersampling - measured against a 6x reference, this
+ * cuts the error 20%, where reshaping the rim made it 17% WORSE and raising the
+ * old ceiling did precisely nothing (a retina screen sits at DPR 2 and never
+ * reached a ceiling of 2 in the first place).
+ *
+ * A MULTIPLIER of the device rather than a fixed ratio, for that last reason:
+ * the quantity that matters is samples per CSS pixel, which a ceiling does not
+ * express. The ceiling that remains is only a backstop for a DPR-3 phone.
+ *
+ * Deliberately not on the other two stages. Frame time tracks pixel count
+ * almost exactly - measured here at 1.9x to 2.2x for this 1.5x, which is the
+ * 2.25x the arithmetic predicts - so this is a real cost and it is spent where
+ * the defect is: one static object the cadet explicitly asked to inspect, on
+ * the stage that already skips the floor and the shadow pass. The Tutorial is
+ * `full` but never `display`, so the instructional path a phone has to run
+ * pays nothing; the Hangar bay is `display` but `preview`, and multiplying its
+ * ratio would be a ninefold rise on the front door.
+ */
+const DISPLAY_SUPERSAMPLE = 1.5;
+const DISPLAY_MAX_PIXEL_RATIO = 3;
+
 export function createDefaultRenderer(
   canvas: HTMLCanvasElement,
   quality: StageQuality = "full",
@@ -372,9 +403,21 @@ export class FoldEngine implements FoldEngineHandle {
 
   private width = 0;
   private height = 0;
+  /**
+   * The clock reading the last drawn frame used, so a frame painted OUTSIDE the
+   * rAF chain carries on from where the animation was rather than from zero.
+   *
+   * The float is a function of absolute time, so a paint at `nowMs = 0` places
+   * the aircraft at the start of its bob - which on a display stage is up to
+   * 6% of the bounding radius away from where the previous frame left it. Every
+   * out-of-band paint is exactly a moment where a jump would be seen: resuming
+   * a stage that scrolled back into view, or stepping while suspended.
+   */
+  private lastFrameMs = 0;
   private raf = 0;
   private renderActive = true;
   private disposed = false;
+  private rendererFailed = false;
   private lastAnnotation: AnnotationAnchor | null = null;
   private readonly reducedMotion: boolean;
 
@@ -563,12 +606,11 @@ export class FoldEngine implements FoldEngineHandle {
           return;
         }
         if (textures) this.model.applyPaperTextures(textures);
-        if (!this.renderActive) this.renderFrame();
-        opts.onReady?.();
+        if (this.renderFrame()) opts.onReady?.();
       },
       (cause: unknown) => {
         reportPaperMaterialUnavailable(cause);
-        if (!this.disposed) opts.onReady?.();
+        if (!this.disposed && this.renderFrame()) opts.onReady?.();
       },
     );
   }
@@ -576,7 +618,7 @@ export class FoldEngine implements FoldEngineHandle {
   // --- FoldEngineHandle -----------------------------------------------------
 
   setRenderActive(active: boolean): void {
-    if (this.disposed || active === this.renderActive) return;
+    if (this.disposed || this.rendererFailed || active === this.renderActive) return;
     this.renderActive = active;
     if (!active) {
       if (this.raf !== 0) this.view?.cancelAnimationFrame(this.raf);
@@ -642,9 +684,7 @@ export class FoldEngine implements FoldEngineHandle {
     this.height = height;
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
-    this.renderer.setPixelRatio(
-      Math.min(this.view?.devicePixelRatio ?? 1, QUALITY[this.quality].maxPixelRatio),
-    );
+    this.renderer.setPixelRatio(this.pixelRatio());
     this.renderer.setSize(width, height, false);
     this.refit();
   }
@@ -697,6 +737,18 @@ export class FoldEngine implements FoldEngineHandle {
   }
 
   // --- internals ------------------------------------------------------------
+
+  /**
+   * Device pixels per CSS pixel for this stage. See `DISPLAY_SUPERSAMPLE`:
+   * only a full-quality display stage renders above its device, and the
+   * ceiling it is held under is the one that goes with the multiplier.
+   */
+  private pixelRatio(): number {
+    const supersample = this.display && this.quality === "full" ? DISPLAY_SUPERSAMPLE : 1;
+    const ceiling =
+      supersample > 1 ? DISPLAY_MAX_PIXEL_RATIO : QUALITY[this.quality].maxPixelRatio;
+    return Math.min((this.view?.devicePixelRatio ?? 1) * supersample, ceiling);
+  }
 
   /** Fold state after steps `0..n`; `n < 0` is the fresh sheet. Memoised. */
   private stateAfter(n: number): FoldState {
@@ -1048,17 +1100,30 @@ export class FoldEngine implements FoldEngineHandle {
    *
    * `nowMs` is the rAF timestamp. Optional so the existing tests that drive
    * frames by hand still compile, and so a test can hand it exact milliseconds
-   * and assert the float is a function of time rather than of frame count.
+   * and assert the float is a function of time rather than of frame count. It
+   * defaults to the last frame's reading rather than to zero: see `lastFrameMs`.
    */
-  renderFrame(nowMs = 0): void {
-    if (this.disposed) return;
-    this.updatePlacement(nowMs);
-    this.controls.update();
-    this.renderer.render(this.scene, this.camera);
-    const anchor = this.annotations.project(this.camera, this.width, this.height);
-    if (annotationChanged(this.lastAnnotation, anchor)) {
-      this.lastAnnotation = anchor;
-      this.emit("annotation", anchor);
+  renderFrame(nowMs = this.lastFrameMs): boolean {
+    if (this.disposed || this.rendererFailed) return false;
+    try {
+      this.lastFrameMs = nowMs;
+      this.updatePlacement(nowMs);
+      this.controls.update();
+      this.renderer.render(this.scene, this.camera);
+      const anchor = this.annotations.project(this.camera, this.width, this.height);
+      if (annotationChanged(this.lastAnnotation, anchor)) {
+        this.lastAnnotation = anchor;
+        this.emit("annotation", anchor);
+      }
+      return true;
+    } catch (cause) {
+      this.rendererFailed = true;
+      this.renderActive = false;
+      if (this.raf !== 0) this.view?.cancelAnimationFrame(this.raf);
+      this.raf = 0;
+      reportRendererRuntimeFault(cause);
+      this.emit("rendererFailed", cause);
+      return false;
     }
   }
 

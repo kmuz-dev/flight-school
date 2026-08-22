@@ -149,6 +149,47 @@ describe("FoldEngine construction", () => {
     engine.dispose();
   });
 
+  it("does not announce readiness when the first textured frame cannot draw", async () => {
+    const { container } = createFakeDom();
+    const onReady = vi.fn();
+    const rendererFailed = vi.fn();
+    const failure = new Error("shader compilation failed");
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    let resolvePaper!: (value: null) => void;
+    const paperTextures = new Promise<null>((resolve) => {
+      resolvePaper = resolve;
+    });
+    const renderer = {
+      ...createFakeRenderer(container),
+      render: () => {
+        throw failure;
+      },
+    };
+    const engine = new FoldEngine(
+      container as unknown as HTMLElement,
+      makeStructure(2),
+      { onReady },
+      {
+        core: createCoreStub(),
+        paperTextures,
+        rendererFactory: () => renderer,
+        controlsFactory: () => createFakeControls(),
+      },
+    );
+    engine.on("rendererFailed", rendererFailed);
+
+    resolvePaper(null);
+    await vi.waitFor(() => expect(rendererFailed).toHaveBeenCalledWith(failure));
+    expect(onReady).not.toHaveBeenCalled();
+    expect(error).toHaveBeenCalledWith(
+      "[fold-engine] 3D stage failed while drawing:",
+      failure.message,
+    );
+
+    error.mockRestore();
+    engine.dispose();
+  });
+
   it("reports failed material assets, keeps WebGL truthful, and readies the fallback", async () => {
     const { container } = createFakeDom();
     const onReady = vi.fn();
@@ -235,6 +276,55 @@ describe("FoldEngine construction", () => {
     // One device pixel per CSS pixel: on a 3x phone that is a ninth of the fill.
     expect(preview.renderer.setPixelRatio).toHaveBeenCalledWith(1);
     expect(preview.engine["keyLight"].castShadow).toBe(false);
+  });
+
+  /**
+   * Supersampling is spent on exactly one stage, and the boundaries matter more
+   * than the number does.
+   *
+   * The Preflight hero is a finished aircraft whose slab rims all draw narrower
+   * than a device pixel, which is the hatch in docs/KNOWN-ISSUES.md; rendering
+   * above the device is the only measure that reduced it. Frame time tracks
+   * pixel count almost exactly, so the other two stages must not inherit it:
+   * the Tutorial is the instructional path a phone has to run, and the Hangar
+   * bay is `display` too but `preview`, where a 1.5x multiplier over a DPR-2
+   * screen would be nine times the fill on the front door of the site.
+   */
+  it("supersamples the display hero, and neither the tutorial nor a hangar preview", () => {
+    // The fake window reports devicePixelRatio 2, as a retina screen does.
+    const hero = mount({ engine: { display: true } });
+    expect(hero.renderer.setPixelRatio).toHaveBeenCalledWith(3);
+
+    const tutorial = mount();
+    expect(tutorial.renderer.setPixelRatio).toHaveBeenCalledWith(2);
+
+    const bay = mount({ engine: { display: true, quality: "preview", transparent: true } });
+    expect(bay.renderer.setPixelRatio).toHaveBeenCalledWith(1);
+  });
+
+  it("holds a supersampled hero under a ceiling a 3x phone cannot pass", () => {
+    const { container, view } = createFakeDom(800, 600);
+    view.devicePixelRatio = 3;
+    const core = createCoreStub();
+    const structure = makeStructure(4);
+    let renderer: ReturnType<typeof createFakeRenderer> | null = null;
+    const engine = new FoldEngine(
+      container as unknown as HTMLElement,
+      structure,
+      { display: true },
+      {
+        core,
+        rendererFactory: (canvas) => {
+          renderer = createFakeRenderer(canvas as unknown as FakeNode);
+          return renderer;
+        },
+        controlsFactory: () => createFakeControls(),
+        paperTextures: Promise.resolve(null),
+      },
+    );
+    // 3 x 1.5 is 4.5, which is where the ceiling earns its keep.
+    expect(renderer!.setPixelRatio).toHaveBeenCalledWith(3);
+    engine.dispose();
   });
 
   it("lands on step 0 paused at progress 0, not mid-fold", () => {
@@ -511,6 +601,32 @@ describe("FoldEngine float", () => {
     expect(b.height).toBeCloseTo(a.height, 12);
     expect(b.drift).toBeCloseTo(a.drift, 12);
     expect(b.bankRad).toBeCloseTo(a.bankRad, 12);
+  });
+
+  /**
+   * A frame painted outside the rAF chain carries the animation clock forward
+   * rather than restarting it.
+   *
+   * Every out-of-band paint is a moment where a jump would be seen: resuming a
+   * stage that scrolled back into view paints synchronously before scheduling
+   * the loop, and stepping while suspended paints once. Defaulted to zero, all
+   * of them put the aircraft back at the start of its bob first - up to 6% of
+   * the bounding radius from where the previous frame left it - and the next
+   * real frame snapped it back.
+   */
+  it("paints an out-of-band frame on the clock the last one left, not on zero", () => {
+    const m = mount({ engine: { display: true } });
+    const settled = placementOf(m, 1500);
+    expect(settled.height).not.toBeCloseTo(placementOf(m, 0).height, 6);
+
+    // Back to 1500, then paint the way `setRenderActive` and `gotoStep` do.
+    placementOf(m, 1500);
+    m.engine.renderFrame();
+
+    const pivot = m.engine["target"] as Vector3;
+    const moved = pivot.clone().applyMatrix4(m.engine["model"].root.matrix);
+    expect(moved.z - pivot.z).toBeCloseTo(settled.height, 12);
+    expect(moved.x - pivot.x).toBeCloseTo(settled.drift, 12);
   });
 
   it("repeats the bob every 4 seconds and the sway every 6.5", () => {
