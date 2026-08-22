@@ -30,7 +30,7 @@ In QA mode, flag any code that doesn't match DESIGN.md.
 ```
 npm run dev              # Next dev server on :3000
 npm run build            # static export into out/
-npm run typecheck        # tsc --noEmit
+npm run typecheck        # next typegen && tsc --noEmit
 npm run lint             # eslint
 npm run test             # vitest, both projects (unit = node, components = jsdom)
 npm run test:e2e         # Playwright against the export; run `npm run build` first
@@ -38,6 +38,14 @@ npm run validate:content # content rules only
 npm run i18n:audit -- --strict   # key parity across all 12 locales; --strict is what CI runs
 npx wrangler deploy      # ships out/ to Cloudflare; needs `wrangler login` or CLOUDFLARE_API_TOKEN
 ```
+
+`typecheck` runs `next typegen` first, and must keep doing so. `next-env.d.ts`
+and `.next/types/` are generated, gitignored, and are what declare the module
+types for `import hero from "@/assets/..."`. A clean checkout has neither, so a
+bare `tsc --noEmit` fails on every image import - which is exactly what CI did,
+silently, from the day the first photographic asset landed: the run went red,
+the deploy step is gated on a green run, and the live site quietly stopped
+receiving releases.
 
 Single test: `npx vitest run tests/engine/fold.test.ts -t "name of the case"`.
 Single E2E: `npx playwright test --project=chromium tests/e2e/journey.spec.ts -g "bulldog"`.
