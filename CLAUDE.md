@@ -16,7 +16,7 @@ The active approved follow-on brief is [docs/plans/hyperreal-paper-tutorial.md](
 - Structure and prose never mix: geometry/ids/ratings in content files, all human-readable text in i18n dictionaries.
 - Generated photographic assets may be used only when the user explicitly approves them and their provenance is documented.
 - The procedural fold engine remains authoritative for Tutorial geometry and interactive 3D inspection.
-- Deploys to Vercel as a static export; keep all asset paths basePath-safe for the GitHub Pages fallback. `.github/workflows/deploy.yml` ships it on a green CI run and stays inert until the repository carries a `VERCEL_TOKEN` secret. A Cloudflare Workers Builds git integration is also still connected and builds on push - `wrangler.jsonc` is what keeps that build honest about being a static site, so do not delete it while that integration is connected.
+- Deploys to Vercel as a static export; keep all asset paths basePath-safe for the GitHub Pages fallback. `.github/workflows/deploy.yml` ships it on a green CI run; the `VERCEL_TOKEN` secret is in place, so a push to `main` that passes CI publishes and is then smoked against the live URL. Without that secret the job skips with a notice rather than failing, which is what a fork or a fresh clone gets. A Cloudflare Workers Builds git integration is also still connected and builds on push - `wrangler.jsonc` is what keeps that build honest about being a static site, so do not delete it while that integration is connected.
 
 ## Design System
 
