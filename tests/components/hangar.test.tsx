@@ -9,7 +9,7 @@
  * first and capped at two for the second; a carousel that flies aircraft in and
  * out cannot.
  */
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { PLANES } from "@/content";
 import planesDict from "@/i18n/planes/en";
@@ -19,6 +19,7 @@ import { firstUnfinishedIndex, hangarUiFromDictionary } from "@/components/hanga
 import { buildHangarPlanes } from "@/components/hangar/viewModel";
 import { __resetProgressCache } from "@/lib/progress";
 import { createFakeEngineFactory } from "./fakeEngine";
+import { stubIntersectionObserver } from "./intersection";
 
 const planes = buildHangarPlanes("en", PLANES, planesDict);
 const strings = hangarUiFromDictionary(ui);
@@ -36,8 +37,12 @@ function seed(stored: { progress?: object; completed?: string[] }): void {
   __resetProgressCache();
 }
 
-function renderHangar(renderMode: "webgl" | "svg" = "webgl", locale: "en" | "ar" = "en") {
-  const { factory, log } = createFakeEngineFactory(renderMode);
+function renderHangar(
+  renderMode: "webgl" | "svg" = "webgl",
+  locale: "en" | "ar" = "en",
+  autoReady = true,
+) {
+  const { factory, log } = createFakeEngineFactory(renderMode, autoReady);
   const utils = render(
     <Hangar ui={strings} planes={planes} locale={locale} createEngine={factory} />,
   );
@@ -326,6 +331,53 @@ describe("the Hangar bay", () => {
     expect(log.disposed).toBe(log.created.length);
   });
 
+  /**
+   * PRD acceptance criterion 8. The bay is the top of the home page and the
+   * marker strip sits below it, so on a phone the aircraft can be scrolled most
+   * of the way off screen while its stage keeps drawing an idle float.
+   */
+  it("suspends a live scene once the bay scrolls out of view", async () => {
+    const observer = stubIntersectionObserver(
+      (target) => target.getAttribute("data-testid") === "hangar-bay",
+    );
+    const { log } = renderHangar();
+    fireEvent.click(screen.getByTestId("hangar-inspect"));
+    expect(observer.observing()).toBe(true);
+
+    act(() => observer.notify(false));
+    await waitFor(() => expect(log.renderActive.at(-1)).toBe(false));
+
+    act(() => observer.notify(true));
+    await waitFor(() => expect(log.renderActive.at(-1)).toBe(true));
+    observer.restore();
+  });
+
+  it("suspends a live scene while the document is hidden", async () => {
+    const hidden = vi.spyOn(document, "hidden", "get").mockReturnValue(true);
+    const { log } = renderHangar();
+    fireEvent.click(screen.getByTestId("hangar-inspect"));
+    await waitFor(() => expect(log.renderActive.at(-1)).toBe(false));
+
+    hidden.mockReturnValue(false);
+    act(() => {
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    await waitFor(() => expect(log.renderActive.at(-1)).toBe(true));
+    hidden.mockRestore();
+  });
+
+  it("does not revive inspection when the cadet returns to an aircraft", () => {
+    const { log } = renderHangar();
+    fireEvent.click(screen.getByTestId("hangar-inspect"));
+    expect(log.created).toHaveLength(1);
+    fireEvent.click(screen.getByTestId("hangar-next"));
+    fireEvent.click(screen.getByTestId("hangar-prev"));
+
+    expect(screen.getByTestId("hangar-inspect")).toHaveAttribute("aria-pressed", "false");
+    expect(screen.queryByTestId("hangar-stage")).not.toBeInTheDocument();
+    expect(log.created).toHaveLength(1);
+  });
+
   it("keeps the beauty art visible until the stage is actually drawing", () => {
     const { container } = renderHangar();
     fireEvent.click(screen.getByTestId("hangar-inspect"));
@@ -351,6 +403,32 @@ describe("the Hangar bay", () => {
     const reset = await screen.findByRole("button", { name: strings.resetView });
     fireEvent.click(reset);
     expect(log.reset).toBe(1);
+  });
+
+  it("restores beauty art and retry when a live WebGL context is lost", async () => {
+    const { container, log } = renderHangar();
+    fireEvent.click(screen.getByTestId("hangar-inspect"));
+    await screen.findByRole("button", { name: strings.resetView });
+
+    log.emit("webglLost");
+
+    await screen.findByText(strings.unavailable3d);
+    expect(container.querySelector(".hangar-layer")).not.toHaveClass("is-hidden");
+    expect(screen.getByRole("button", { name: strings.retry3d })).toBeVisible();
+  });
+
+  it("keeps beauty art visible when inspection is reopened until the new material is ready", async () => {
+    const { container, log } = renderHangar("webgl", "en", false);
+    fireEvent.click(screen.getByTestId("hangar-inspect"));
+    expect(container.querySelector(".hangar-layer")).not.toHaveClass("is-hidden");
+    log.ready();
+    await screen.findByRole("button", { name: strings.showArtwork });
+
+    fireEvent.click(screen.getByRole("button", { name: strings.showArtwork }));
+    fireEvent.click(screen.getByTestId("hangar-inspect"));
+    expect(container.querySelector(".hangar-layer")).not.toHaveClass("is-hidden");
+    log.ready();
+    await waitFor(() => expect(container.querySelector(".hangar-layer")).toHaveClass("is-hidden"));
   });
 
   // --- what the card grid took with it -------------------------------------

@@ -29,6 +29,7 @@ import type { FoldEngineHandle } from "@/engine/core/types";
 import type { PlaneId } from "@/content/types";
 import { EngineSvg } from "@/components/ui/EngineSvg";
 import { FOCUS_RING } from "@/components/ui/focus";
+import { useRenderActivity } from "@/components/ui/renderActivity";
 import { format } from "@/components/ui/format";
 import hangarInterior from "@/assets/hangar/hangar-interior.jpg";
 import { beginSwap, frame, pruneFlights, type Flight } from "./flight";
@@ -43,6 +44,8 @@ export type HangarBayProps = {
   ui: HangarUiStrings;
   planes: readonly HangarPlaneView[];
   index: number;
+  /** Changes for every distinct selection, including a return to the same plane. */
+  selectionKey: number | "initial" | "hydrated";
   reducedMotion: boolean;
   /** Reading direction, so a swipe and the arrow keys agree with the page. */
   rtl: boolean;
@@ -54,6 +57,7 @@ export function HangarBay({
   ui,
   planes,
   index,
+  selectionKey,
   reducedMotion,
   rtl,
   onSelect,
@@ -76,6 +80,13 @@ export function HangarBay({
   const handedOverRef = useRef(false);
 
   /*
+   * The bay is the top of the home page and the marker strip sits below it, so
+   * a phone scrolling to the strip can push a live stage most of the way off
+   * screen while it keeps drawing.
+   */
+  const syncRenderActivity = useRenderActivity(bayRef, engineRef);
+
+  /*
    * WHICH aircraft is being inspected, not whether one is.
    *
    * A boolean looked equivalent and was not. Selection and `inspecting` update
@@ -87,7 +98,10 @@ export function HangarBay({
    * the site. Holding the id makes `inspecting` false the instant the aircraft
    * changes, so the effect cleans up and builds nothing.
    */
-  const [inspectId, setInspectId] = useState<string | null>(null);
+  const [inspection, setInspection] = useState<{
+    readonly planeId: string;
+    readonly selectionKey: HangarBayProps["selectionKey"];
+  } | null>(null);
   const [attempt, setAttempt] = useState(0);
   /*
    * The stage that is actually drawing, tagged with WHOSE it is.
@@ -101,12 +115,14 @@ export function HangarBay({
    */
   const [stage, setStage] = useState<{
     readonly planeId: string;
+    readonly selectionKey: HangarBayProps["selectionKey"];
     readonly mode: FoldEngineHandle["renderMode"];
   } | null>(null);
   const [artFailed, setArtFailed] = useState<ReadonlySet<string>>(new Set());
 
   const selected = planes[index]!;
-  const inspecting = inspectId === selected.id;
+  const inspecting =
+    inspection?.planeId === selected.id && inspection.selectionKey === selectionKey;
 
   /*
    * The swap is started here rather than in an effect on `index`, because the
@@ -117,6 +133,8 @@ export function HangarBay({
   const goTo = useCallback(
     (next: number, dir: 1 | -1) => {
       if (next === indexRef.current) return;
+      setInspection(null);
+      setStage(null);
       const from = planes[indexRef.current]!;
       const to = planes[next]!;
       flightsRef.current = beginSwap({
@@ -218,6 +236,8 @@ export function HangarBay({
 
     let handle: FoldEngineHandle | null = null;
     let stopped = false;
+    let stopWebglLost = (): void => {};
+    let stopRendererFailed = (): void => {};
     const onResize = (): void => handle?.resize();
 
     const start = (create: FoldEngineFactory): void => {
@@ -239,11 +259,21 @@ export function HangarBay({
           // than coupling the bay to engine-owned DOM.
           queueMicrotask(() => {
             if (stopped || !handle) return;
-            setStage({ planeId: selected.id, mode: handle.renderMode });
+            setStage({ planeId: selected.id, selectionKey, mode: handle.renderMode });
           });
         },
       });
       engineRef.current = handle;
+      syncRenderActivity();
+      const markUnavailable = (): void => {
+        if (stopped || !handle) return;
+        const failed = handle;
+        setStage({ planeId: selected.id, selectionKey, mode: "svg" });
+        failed.dispose();
+        if (engineRef.current === failed) engineRef.current = null;
+      };
+      stopWebglLost = handle.on("webglLost", markUnavailable);
+      stopRendererFailed = handle.on("rendererFailed", markUnavailable);
       handle.gotoStep(selected.stepCount - 1, { animate: false });
       window.addEventListener("resize", onResize);
     };
@@ -254,6 +284,8 @@ export function HangarBay({
     return () => {
       stopped = true;
       window.removeEventListener("resize", onResize);
+      stopWebglLost();
+      stopRendererFailed();
       handle?.dispose();
       if (engineRef.current === handle) engineRef.current = null;
       handle = null;
@@ -265,7 +297,9 @@ export function HangarBay({
     selected.structure,
     selected.stepCount,
     selected.presentation.displayView,
+    selectionKey,
     attempt,
+    syncRenderActivity,
   ]);
 
   /*
@@ -316,7 +350,8 @@ export function HangarBay({
       const dir: 1 | -1 = forward ? 1 : -1;
       goTo((index + dir + planes.length) % planes.length, dir);
     } else if (drag.moved) {
-      setInspectId(selected.id);
+      setStage(null);
+      setInspection({ planeId: selected.id, selectionKey });
     }
   };
 
@@ -325,7 +360,12 @@ export function HangarBay({
    * requested: swapping on the click would leave a hole where the aircraft was
    * for as long as a 644 KB chunk takes to arrive.
    */
-  const live = inspecting && stage?.planeId === selected.id ? stage.mode : null;
+  const live =
+    inspecting &&
+    stage?.planeId === selected.id &&
+    stage.selectionKey === selectionKey
+      ? stage.mode
+      : null;
   const showStage = live === "webgl";
   const unavailable = live === "svg";
 
@@ -456,7 +496,10 @@ export function HangarBay({
               setAttempt((value) => value + 1);
               return;
             }
-            setInspectId(inspecting ? null : selected.id);
+            setStage(null);
+            setInspection(
+              inspecting ? null : { planeId: selected.id, selectionKey },
+            );
           }}
           className={`hangar-inspect ${FOCUS_RING}`}
         >
