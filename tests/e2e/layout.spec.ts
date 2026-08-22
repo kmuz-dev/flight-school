@@ -274,14 +274,19 @@ for (const { name, width, height } of SHELL_VIEWPORTS) {
      * for it. Fourteen folds of the Hammer are fourteen real WebGL animations
      * rasterised by SwiftShader - there is no GPU in this loop on CI or on a
      * laptop - and the bill scales with the viewport: measured alone on a free
-     * machine, 60s at 1440x900, 56s at 1280x800, 32s at 390x844. Sharing three
+     * machine, 60s at 1440x900, 56s at 1280x800, 32s at 390x844. Sharing
      * workers with the rest of the suite roughly doubles that, which is how a
-     * test that passes in isolation fails only in a full run.
+     * test that passes in isolation fails only in a full run - and did, on a
+     * two-worker CI runner, at 180s.
      *
-     * 180s is a ceiling a genuine hang still hits, not a budget anything is
-     * expected to approach.
+     * So do not pay for the animations at all. The subject here is where the
+     * rail's controls sit at each settled step, which is a question about
+     * fourteen static layouts; under reduced motion the engine jumps to each
+     * settled state (REDUCED_MOTION_SECONDS is 1ms) and the walk costs
+     * rasterisation alone. The ceiling below is what a genuine hang hits.
      */
     test.setTimeout(180_000);
+    await page.emulateMedia({ reducedMotion: "reduce" });
     await page.setViewportSize({ width, height });
     // The Hammer: the longest sequence in the fleet and the one whose tips are
     // spread across it, so it varies more than any other plane.
