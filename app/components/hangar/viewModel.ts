@@ -9,7 +9,7 @@
  * degrades quietly while the build still tells the truth about it.
  */
 import { computeFoldState, renderStateToSvg } from "@/engine";
-import { preflightHref } from "@/lib/paths";
+import { flightHref, preflightHref } from "@/lib/paths";
 import type { PlaneStructure } from "@/content/types";
 import type { PlaneId } from "@/content/types";
 import type { PlanesDictionary } from "@/i18n/types";
@@ -59,6 +59,7 @@ export function buildHangarPlanes(
         svg: finishedPlaneSvg(structure),
         presentation: getAircraftPresentation(structure.id),
         href: preflightHref(locale, structure.id),
+        flightHref: flightHref(locale, structure.id),
         structure,
       },
     ];

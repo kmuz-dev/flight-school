@@ -29,6 +29,10 @@ export function completionHref(locale: string, planeId: string): string {
   return href(`/${locale}/plane/${planeId}/wings/`);
 }
 
+export function flightHref(locale: string, planeId: string): string {
+  return href(`/${locale}/plane/${planeId}/fly/`);
+}
+
 /**
  * The same page in another language: swap the locale segment, keep the rest.
  *

@@ -6,6 +6,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   completionHref,
+  flightHref,
   hangarHref,
   href,
   localeHref,
@@ -17,6 +18,7 @@ describe("route builders", () => {
   it("keeps the trailing slash the static export resolves on", () => {
     expect(hangarHref("en")).toBe("/en/");
     expect(preflightHref("es", "dart")).toBe("/es/plane/dart/");
+    expect(flightHref("es", "dart")).toBe("/es/plane/dart/fly/");
     expect(tutorialHref("ja", "hammer")).toBe("/ja/plane/hammer/fold/");
     expect(completionHref("ar", "sea-glider")).toBe("/ar/plane/sea-glider/wings/");
   });

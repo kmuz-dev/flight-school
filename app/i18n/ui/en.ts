@@ -3,8 +3,10 @@
  * Academy voice: warm, precise, lightly playful, kid-clear.
  */
 import type { UiDictionary } from "../types";
+import { flightUi } from "./flight";
 
 const ui: UiDictionary = {
+  ...flightUi.en,
   "brand.name": "Flight School",
   "nav.wings": "Wings: {count}",
   "nav.backToHangar": "Back to the hangar",

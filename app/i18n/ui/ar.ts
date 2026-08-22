@@ -10,8 +10,10 @@
  * mirrored. The geometry does not mirror either (SPEC.md §5).
  */
 import type { UiDictionary } from "../types";
+import { flightUi } from "./flight";
 
 const ui: UiDictionary = {
+  ...flightUi.ar,
   "brand.name": "مدرسة الطيران",
   "nav.wings": "الأجنحة: {count}",
   "nav.backToHangar": "العودة إلى الحظيرة",

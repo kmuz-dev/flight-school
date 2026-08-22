@@ -100,10 +100,12 @@ export function Hangar({ ui, planes, locale, createEngine }: HangarProps) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [index, planes.length, rtl, select]);
 
-  const primaryLabel =
-    progress && progress.step > 0
+  const primaryLabel = earned
+    ? ui.flyAgain
+    : progress && progress.step > 0
       ? format(ui.resume, { step: progress.step + 1 })
       : ui.startFolding;
+  const primaryHref = earned ? selected.flightHref : selected.href;
 
   return (
     <div className="hangar-shell">
@@ -180,9 +182,14 @@ export function Hangar({ ui, planes, locale, createEngine }: HangarProps) {
             ) : null}
           </div>
           <p className="hangar-blurb">{ui.subtitle}</p>
-          <a href={selected.href} data-testid="hangar-primary" className={`hangar-primary ${FOCUS_RING}`}>
+          <a href={primaryHref} data-testid="hangar-primary" className={`hangar-primary ${FOCUS_RING}`}>
             {primaryLabel}
           </a>
+          {hydrated && earned ? (
+            <a href={selected.href} className={`mt-sm self-start font-mono text-micro font-semibold tracking-[0.1em] uppercase underline-offset-4 hover:underline ${FOCUS_RING}`}>
+              {ui.reviewPlane}
+            </a>
+          ) : null}
         </div>
       </main>
     </div>

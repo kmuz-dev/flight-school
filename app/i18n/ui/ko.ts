@@ -5,8 +5,10 @@
  * Plain 해요체 throughout: friendly to a ten-year-old, still respectful.
  */
 import type { UiDictionary } from "../types";
+import { flightUi } from "./flight";
 
 const ui: UiDictionary = {
+  ...flightUi.ko,
   "brand.name": "비행 학교",
   "nav.wings": "윙: {count}",
   "nav.backToHangar": "격납고로 돌아가기",

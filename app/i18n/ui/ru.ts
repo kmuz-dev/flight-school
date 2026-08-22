@@ -7,8 +7,10 @@
  * three plural forms.
  */
 import type { UiDictionary } from "../types";
+import { flightUi } from "./flight";
 
 const ui: UiDictionary = {
+  ...flightUi.ru,
   "brand.name": "Лётная школа",
   "nav.wings": "Крылья: {count}",
   "nav.backToHangar": "Вернуться в ангар",

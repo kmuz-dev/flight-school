@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { LOCALES, isLocale } from "@/i18n/config";
 import { PLANES, PLANE_IDS, getPlane } from "@/content";
 import { getPlanes, getUi } from "@/i18n/dictionary";
-import { hangarHref, preflightHref, tutorialHref } from "@/lib/paths";
+import { flightHref, hangarHref, preflightHref, tutorialHref } from "@/lib/paths";
 import { finishedPlaneSvg } from "@/components/hangar/viewModel";
 import { CompletionScreen } from "@/components/completion/CompletionScreen";
 import { buildFleet, completionUiFromDictionary } from "@/components/completion/types";
@@ -42,6 +42,7 @@ export default async function WingsPage({
       locale={locale}
       hangarHref={hangarHref(locale)}
       tutorialHref={tutorialHref(locale, planeId)}
+      flightHref={flightHref(locale, planeId)}
     />
   );
 }

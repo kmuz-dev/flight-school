@@ -3,8 +3,10 @@
  * slots must survive translation or format() leaves a gap in the sentence.
  */
 import type { UiDictionary } from "../types";
+import { flightUi } from "./flight";
 
 const ui: UiDictionary = {
+  ...flightUi.de,
   "brand.name": "Flugschule",
   "nav.wings": "Schwingen: {count}",
   "nav.backToHangar": "Zurück zum Hangar",

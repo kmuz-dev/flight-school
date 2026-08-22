@@ -37,6 +37,7 @@ export type CompletionScreenProps = {
   locale: string;
   hangarHref: string;
   tutorialHref: string;
+  flightHref: string;
 };
 
 export function CompletionScreen({
@@ -45,6 +46,7 @@ export function CompletionScreen({
   locale,
   hangarHref,
   tutorialHref,
+  flightHref,
 }: CompletionScreenProps) {
   const planeId = view.id as PlaneId;
   const hydrated = useProgressHydrated();
@@ -150,13 +152,6 @@ export function CompletionScreen({
   }
 
   const issueDate = formatIssueDate(earnedAt, locale);
-  /*
-   * With the whole floor folded there is no next aircraft to offer, so the way
-   * back to the hangar becomes the primary action rather than staying a muted
-   * secondary next to a sentence saying there is nothing left to do.
-   */
-  const returnIsPrimary = next === null;
-
   return (
     <main className="mx-auto w-full max-w-[1100px] px-lg py-2xl">
       <section
@@ -247,13 +242,16 @@ export function CompletionScreen({
 
             <div className="mt-lg flex flex-wrap gap-sm">
               <a
+                href={flightHref}
+                data-testid="wings-fly-now"
+                className={`rounded-input bg-red-ink px-lg py-sm font-semibold text-on-red ${FOCUS_RING}`}
+              >
+                {ui.flyNow}
+              </a>
+              <a
                 href={hangarHref}
                 data-testid="wings-return"
-                className={
-                  returnIsPrimary
-                    ? `rounded-input bg-red-ink px-lg py-sm font-semibold text-on-red ${FOCUS_RING}`
-                    : `rounded-input bg-ink px-lg py-sm font-mono text-micro font-semibold tracking-[0.12em] text-paper uppercase ${FOCUS_RING}`
-                }
+                className={`rounded-input bg-ink px-lg py-sm font-mono text-micro font-semibold tracking-[0.12em] text-paper uppercase ${FOCUS_RING}`}
               >
                 {ui.returnToHangar}
               </a>

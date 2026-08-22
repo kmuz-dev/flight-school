@@ -21,6 +21,8 @@ export type HangarPlaneView = {
   readonly presentation: AircraftPresentation;
   /** Preflight, which is where the bay's primary action goes. */
   readonly href: string;
+  /** The earned-plane flight route. */
+  readonly flightHref: string;
   /** Kept so the bay can mount a live engine without a second lookup. */
   readonly structure: PlaneStructure;
 };
@@ -40,6 +42,8 @@ export type HangarUiStrings = {
   readonly startFolding: string;
   /** "Resume at step {step}". */
   readonly resume: string;
+  readonly flyAgain: string;
+  readonly reviewPlane: string;
   readonly tier: Readonly<Record<Tier, string>>;
   readonly bayHint: string;
   readonly chooseAircraft: string;
@@ -81,6 +85,8 @@ export const HANGAR_UI_KEYS = [
   "hangar.retry3d",
   "preflight.startFolding",
   "preflight.resume",
+  "flight.flyAgain",
+  "flight.reviewPlane",
   "tier.easy",
   "tier.medium",
   "tier.advanced",
@@ -100,6 +106,8 @@ export function hangarUiFromDictionary(ui: UiDictionary): HangarUiStrings {
     wingsEarned: t("hangar.wingsEarned"),
     startFolding: t("preflight.startFolding"),
     resume: t("preflight.resume"),
+    flyAgain: t("flight.flyAgain"),
+    reviewPlane: t("flight.reviewPlane"),
     tier: {
       easy: t("tier.easy"),
       medium: t("tier.medium"),

@@ -11,8 +11,10 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   __resetProgressCache,
   clearProgress,
+  flightRecord,
   planeProgress,
   recordCompletion,
+  recordFlightResult,
   recordStep,
   usePlaneProgress,
   useProgressSnapshot,
@@ -47,6 +49,10 @@ describe("selectors", () => {
   it("counts one wing per completed plane", () => {
     expect(wingsEarned({ progress: {}, completed: { dart: { at: "x" }, hammer: { at: "y" } } })).toBe(2);
   });
+
+  it("reports no flight record before the first finished run", () => {
+    expect(flightRecord({ progress: {}, completed: {} }, "dart")).toBeNull();
+  });
 });
 
 describe("mutations", () => {
@@ -75,6 +81,21 @@ describe("mutations", () => {
     const stored = readStored();
     expect(stored.progress.dart).toBeUndefined();
     expect(stored.completed.dart).toBeDefined();
+  });
+
+  it("records personal best dimensions independently", () => {
+    recordFlightResult("dart", { elapsedMs: 70_000, closePasses: 4, bestChain: 4 });
+    recordFlightResult("dart", { elapsedMs: 72_000, closePasses: 7, bestChain: 2 });
+    expect(readStored().flights?.dart).toMatchObject({
+      bestTimeMs: 70_000,
+      bestClosePasses: 7,
+      bestChain: 4,
+    });
+  });
+
+  it("rejects invalid run results", () => {
+    recordFlightResult("dart", { elapsedMs: Number.NaN, closePasses: -1, bestChain: 0 });
+    expect(readStored().flights?.dart).toBeUndefined();
   });
 });
 

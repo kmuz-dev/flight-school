@@ -87,6 +87,14 @@ describe("the Hangar bay", () => {
     expect(screen.getByTestId("hangar-primary")).toHaveTextContent("Resume at step 6");
   });
 
+  it("offers Fly again on an earned aircraft without changing its folding route", () => {
+    seed({ completed: planes.map((plane) => plane.id) });
+    renderHangar();
+    expect(screen.getByTestId("hangar-primary")).toHaveTextContent(strings.flyAgain);
+    expect(screen.getByTestId("hangar-primary")).toHaveAttribute("href", planes[0]!.flightHref);
+    expect(screen.getByRole("link", { name: strings.reviewPlane })).toHaveAttribute("href", planes[0]!.href);
+  });
+
   // --- selection -----------------------------------------------------------
 
   it("changes aircraft from the arrows, the dots and the keyboard alike", () => {

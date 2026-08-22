@@ -3,8 +3,10 @@
  * `{placeholder}` slots must survive translation or format() leaves a gap.
  */
 import type { UiDictionary } from "../types";
+import { flightUi } from "./flight";
 
 const ui: UiDictionary = {
+  ...flightUi.id,
   "brand.name": "Sekolah Terbang",
   "nav.wings": "Sayap: {count}",
   "nav.backToHangar": "Kembali ke hanggar",

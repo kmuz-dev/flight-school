@@ -29,6 +29,31 @@ describe("storage", () => {
     expect(read.completed.dart?.at).toBe("2026-01-01T00:05:00Z");
   });
 
+  it("round-trips flight records without changing the storage version", () => {
+    writeStored((prev) => ({
+      ...prev,
+      flights: {
+        dart: {
+          bestTimeMs: 61_200,
+          bestClosePasses: 5,
+          bestChain: 3,
+          updatedAt: "2026-08-22T10:00:00Z",
+        },
+      },
+    }));
+    expect(readStored().flights?.dart?.bestTimeMs).toBe(61_200);
+  });
+
+  it("drops malformed flight records without disturbing folding progress", () => {
+    store.set("flightschool.v1", JSON.stringify({
+      progress: { dart: { step: 3, updatedAt: "2026-08-22T10:00:00.000Z" } },
+      completed: {},
+      flights: { dart: { bestTimeMs: "fast", bestClosePasses: -2, bestChain: 1, updatedAt: 4 } },
+    }));
+    expect(readStored().progress.dart?.step).toBe(3);
+    expect(readStored().flights).toBeUndefined();
+  });
+
   it("discards corrupt data instead of throwing", () => {
     store.set("flightschool.v1", "{not json");
     expect(readStored()).toEqual({ progress: {}, completed: {} });

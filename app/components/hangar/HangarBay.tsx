@@ -31,7 +31,7 @@ import { EngineSvg } from "@/components/ui/EngineSvg";
 import { FOCUS_RING } from "@/components/ui/focus";
 import { useRenderActivity } from "@/components/ui/renderActivity";
 import { format } from "@/components/ui/format";
-import hangarInterior from "@/assets/hangar/hangar-interior.jpg";
+import hangarInterior from "@/assets/flight/hangar/hangar-cinematic-schoolbook.webp";
 import { beginSwap, frame, pruneFlights, type Flight } from "./flight";
 import type { HangarPlaneView, HangarUiStrings } from "./types";
 

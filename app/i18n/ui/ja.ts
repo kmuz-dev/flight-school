@@ -6,8 +6,10 @@
  * です・ます, no honorific stacking, no 漢語 where a everyday word will do.
  */
 import type { UiDictionary } from "../types";
+import { flightUi } from "./flight";
 
 const ui: UiDictionary = {
+  ...flightUi.ja,
   "brand.name": "フライトスクール",
   "nav.wings": "ウイング: {count}",
   "nav.backToHangar": "ハンガーにもどる",

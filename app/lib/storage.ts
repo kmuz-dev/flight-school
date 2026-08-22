@@ -11,6 +11,7 @@
  */
 import type { PlaneId } from "@/content/types";
 import type { PaperFormat } from "@/engine/core/types";
+import type { FlightRecord } from "@/engine/flight/types";
 
 const KEY = "flightschool.v1";
 
@@ -19,6 +20,7 @@ export type Stored = {
   completed: Partial<Record<PlaneId, { at: string }>>;
   locale?: string;
   paperChoice?: Partial<Record<PlaneId, PaperFormat>>;
+  flights?: Partial<Record<PlaneId, FlightRecord>>;
 };
 
 const EMPTY: Stored = { progress: {}, completed: {} };
@@ -37,11 +39,33 @@ export function readStored(): Stored {
       locale: typeof p.locale === "string" ? p.locale : undefined,
       paperChoice:
         typeof p.paperChoice === "object" && p.paperChoice !== null ? p.paperChoice : undefined,
+      flights: readFlights(p.flights),
     };
   } catch {
     return EMPTY;
   }
 }
+
+function readFlights(value: unknown): Stored["flights"] {
+  if (typeof value !== "object" || value === null) return undefined;
+  const records: Partial<Record<PlaneId, FlightRecord>> = {};
+  for (const [id, candidate] of Object.entries(value)) {
+    if (typeof candidate !== "object" || candidate === null) continue;
+    const record = candidate as Partial<FlightRecord>;
+    if (
+      !Number.isFinite(record.bestTimeMs) ||
+      record.bestTimeMs! <= 0 ||
+      !Number.isInteger(record.bestClosePasses) ||
+      record.bestClosePasses! < 0 ||
+      !Number.isInteger(record.bestChain) ||
+      record.bestChain! < 0 ||
+      typeof record.updatedAt !== "string"
+    ) continue;
+    records[id as PlaneId] = record as FlightRecord;
+  }
+  return Object.keys(records).length > 0 ? records : undefined;
+}
+
 
 export function writeStored(update: (prev: Stored) => Stored): void {
   if (typeof window === "undefined") return;

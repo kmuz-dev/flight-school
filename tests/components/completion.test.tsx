@@ -45,6 +45,7 @@ function renderCompletion() {
       locale="en"
       hangarHref="/en/"
       tutorialHref={`/en/plane/${view.id}/fold/`}
+      flightHref={`/en/plane/${view.id}/fly/`}
     />,
   );
 }
@@ -102,6 +103,7 @@ describe("Wings earned", () => {
     expect(screen.getByText(`${strings.tier[view.tier]} wings`)).toBeInTheDocument();
     expect(screen.getByText(String(view.stepCount).padStart(2, "0"))).toBeInTheDocument();
     expect(screen.getByText("01")).toBeInTheDocument();
+    expect(screen.getByTestId("wings-fly-now")).toHaveAttribute("href", `/en/plane/${view.id}/fly/`);
   });
 
   it("keeps the date the wings were first issued when the screen is revisited", () => {
@@ -137,13 +139,14 @@ describe("Wings earned", () => {
     expect(screen.getByTestId("wings-return").className).not.toContain("bg-red-ink");
   });
 
-  it("makes Return to hangar the primary action once the floor is clear", () => {
+  it("keeps Fly now as the primary action once the floor is clear", () => {
     for (const id of fleetIds) recordCompletion(id);
     renderCompletion();
 
     expect(screen.queryByTestId("wings-next")).not.toBeInTheDocument();
     expect(screen.getByText(strings.allComplete)).toBeInTheDocument();
-    expect(screen.getByTestId("wings-return").className).toContain("bg-red-ink");
+    expect(screen.getByTestId("wings-return").className).not.toContain("bg-red-ink");
+    expect(screen.getByTestId("wings-fly-now").className).toContain("bg-red-ink");
   });
 
   /*
@@ -165,6 +168,7 @@ describe("Wings earned", () => {
         locale="en"
         hangarHref="/en/"
         tutorialHref={`/en/plane/${view.id}/fold/`}
+        flightHref={`/en/plane/${view.id}/fly/`}
       />,
     );
 

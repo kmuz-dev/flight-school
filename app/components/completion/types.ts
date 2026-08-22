@@ -47,6 +47,7 @@ export type CompletionUiStrings = {
   readonly tier: Readonly<Record<Tier, string>>;
   readonly returnToHangar: string;
   readonly foldAgain: string;
+  readonly flyNow: string;
   readonly statsLabel: string;
   readonly statFolds: string;
   readonly statEarned: string;
@@ -77,6 +78,7 @@ export const COMPLETION_UI_KEYS = [
   "completion.wingsBadge",
   "completion.returnToHangar",
   "completion.foldAgain",
+  "flight.flyNow",
   "completion.statsLabel",
   "completion.statFolds",
   "completion.statEarned",
@@ -113,6 +115,7 @@ export function completionUiFromDictionary(ui: UiDictionary): CompletionUiString
     },
     returnToHangar: t("completion.returnToHangar"),
     foldAgain: t("completion.foldAgain"),
+    flyNow: t("flight.flyNow"),
     statsLabel: t("completion.statsLabel"),
     statFolds: t("completion.statFolds"),
     statEarned: t("completion.statEarned"),
