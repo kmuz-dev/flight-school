@@ -1,91 +1,154 @@
+<p align="center">
+  <img src="app/assets/brand/flight-school-looping-glider.webp" width="180" alt="Flight School looping paper glider logo">
+</p>
+
 # Flight School
 
-A flight academy for paper.
-Six paper airplanes, each taught as an animated 3D fold: the sheet on screen is folded by the same engine that decides where every crease lands, so a step is never a drawing of a fold, it is the fold.
+[![CI](https://github.com/kmuz-dev/flight-school/actions/workflows/ci.yml/badge.svg)](https://github.com/kmuz-dev/flight-school/actions/workflows/ci.yml)
+[![MIT License](https://img.shields.io/badge/license-MIT-1a2b4a.svg)](LICENSE)
 
-Live at **https://flight-school.kudakw-mutasa.workers.dev/**
+Flight School is an interactive academy for paper aircraft.
+Fold six planes with a procedural 3D engine, earn their wings, then fly the finished geometry through a cinematic school hallway.
 
-Twelve languages, progress that survives a reload, and a pair of wings at the end that you can only get by folding the plane.
-No backend, no accounts, no tracking: the whole product is a static export and a little localStorage.
+**[Play Flight School](https://flight-school-chi.vercel.app)**
+
+The application is a static Next.js export with no accounts, analytics, backend, or server-side state.
+Progress and personal flight records stay in the browser through `localStorage`.
+
+## What is here
+
+- Six authored paper aircraft with deterministic, reversible fold sequences.
+- A Three.js and GSAP folding renderer with an SVG fallback when WebGL is unavailable.
+- A fixed-step arcade flight engine with keyboard, pointer, touch, and optional device-tilt controls.
+- A continuously changing hallway course spanning the 1950s, 1980s, and today.
+- Twelve locales, including Arabic right-to-left presentation.
+- Accessibility, reduced-motion, layout, resilience, performance, and visual-regression coverage.
+- A fully static deployment that can run on Vercel, Cloudflare Workers, or another static host.
 
 ## Getting started
 
-```
+Flight School requires Node.js 22 or newer.
+
+```bash
+git clone https://github.com/kmuz-dev/flight-school.git
+cd flight-school
 npm ci
-npm run dev            # http://localhost:3000
+npm run dev
 ```
 
-Node 22 or newer.
-The 3D stage needs WebGL, but the site does not: with WebGL unavailable every tutorial falls back to flat SVG drawings of the same fold states and stays completable, which `tests/e2e/resilience.spec.ts` proves by walking a plane end to end in a browser where `getContext("webgl")` returns null.
+Open [http://localhost:3000/en/](http://localhost:3000/en/).
+
+The 3D stages use WebGL, but WebGL is not required to complete the folding experience.
+When it is unavailable, every tutorial falls back to flat SVG drawings built from the same fold states.
 
 ## Commands
 
+```bash
+npm run dev                      # Next.js development server
+npm run build                    # Static export into out/
+npm start                        # Serve the exported site
+npm run typecheck                # Generate route types and run TypeScript
+npm run lint                     # ESLint
+npm test                         # Vitest unit and component suites
+npm run test:watch               # Vitest in watch mode
+npm run validate:content         # Plane and content rules
+npm run i18n:audit -- --strict   # Locale key parity
+npm run test:e2e                 # Playwright against out/
 ```
-npm run dev                      # Next dev server on :3000
-npm run build                    # static export into out/
-npm start                        # serve the export on :3000
-npm run typecheck                # tsc --noEmit
-npm run lint                     # eslint
-npm run test                     # vitest: unit (node) and component (jsdom)
-npm run test:watch               # the same, watching
-npm run validate:content         # content rules only
-npm run i18n:audit -- --strict   # key parity across all 12 locales, as CI runs it
-npm run test:e2e                 # Playwright against out/; run `npm run build` first
+
+Build the static export before running Playwright locally:
+
+```bash
+npm run build
+npm run test:e2e
 ```
 
-A single unit test: `npx vitest run tests/engine/fold.test.ts -t "name of the case"`.
-A single E2E test: `npx playwright test --project=chromium tests/e2e/journey.spec.ts -g "bulldog"`.
-The same suite against the deployed site: `E2E_BASE_URL=https://flight-school.kudakw-mutasa.workers.dev npx playwright test tests/e2e`.
+Run one unit test with `npx vitest run tests/engine/fold.test.ts -t "case name"`.
+Run one browser test with `npx playwright test --project=chromium tests/e2e/journey.spec.ts -g "bulldog"`.
 
-E2E specs are `*.spec.ts`, vitest owns `*.test.ts`; Playwright's default match would otherwise pull the vitest files in and fail on Vitest's internal state.
+## Architecture map
 
-## How it is put together
+```text
+plane data + locale copy
+          |
+          v
+  fold engine core  --->  Three.js / SVG presentation
+          |
+          v
+ finished geometry  --->  flight profile + flight runtime
+                                  |
+                                  v
+                         hallway course + results
+```
 
-- `app/engine/core/` - the fold mathematics, pure TypeScript with no Three.js and no DOM. Paper is a list of convex facets in original-sheet coordinates, and the state at step *n* is a replay of steps 0..*n* from a fresh sheet rather than an accumulation, which is what makes scrubbing, stepping back and resuming exactly agree.
-- `app/engine/render/` - the Three.js stage, the GSAP timeline, and the flat-SVG fallback. Reached only through `loadFoldEngine()`, so the renderer is fetched when something needs to draw rather than shipped in the first paint of every page.
-- `app/content/planes/` - each plane's fold sequence as data: creases, sides, layers, camera hints. No prose.
-- `app/i18n/` - every human-readable string, in twelve dictionaries. No geometry.
-- `app/components/` - the five screens: hangar, preflight, tutorial, wings earned, and the error boundary.
-- `/dev/fold-editor` - the authoring instrument: the 3D stage, the SVG the geometry tests compare against, a true-scale table-space plan with the crease drawn on it, a facet and layer inspector, and the validation panel.
+- `app/engine/core/` contains pure TypeScript fold mathematics with no React, DOM, or Three.js dependency.
+- `app/engine/render/` owns the lazy Three.js stage, GSAP timelines, paper presentation, and flat-SVG fallback.
+- `app/engine/flight/` is a walled flight module containing fixed-step simulation, controls, course data, camera behavior, audio, autopilot diagnostics, and result comparison.
+- `app/content/planes/` stores each aircraft as geometry and fold instructions, without presentation prose.
+- `app/i18n/` contains every user-facing string across all twelve locales.
+- `app/components/` composes the Hangar, Preflight, Tutorial, Wings earned, and Flight experiences.
+- `app/assets/flight/` contains the Cinematic Schoolbook environment, character, prop, and material artwork.
+- `/dev/fold-editor` is the built-in authoring and geometry-inspection instrument.
 
-The two boundaries that hold the design together: the engine never imports React, and structure never mixes with prose.
-A plane is geometry in a content file and words in a dictionary, which is why a new language is a dictionary and nothing else.
+Two boundaries carry most of the design:
+
+1. The fold engine never imports React.
+2. The fold engine may provide finished geometry to flight, but it never imports flight code.
+
+A plane is geometry in a content module and language in a locale dictionary.
+That separation keeps new aircraft, rendering changes, and translations independently testable.
+
+## Suggested learning paths
+
+- Start with [the fold-engine ADR](docs/adr/0001-procedural-3d-fold-engine.md) and `app/engine/core/` to understand the paper model.
+- Read [the hallway flight plan](docs/plans/hallway-flight.md) and `app/engine/flight/` to follow the real-time simulation.
+- Read [DESIGN.md](DESIGN.md) before changing visual language or interaction patterns.
+- Use `tests/e2e/resilience.spec.ts` to see how WebGL failure, keyboard operation, and reduced motion are exercised.
+- Use `tests/e2e/paper-visual.spec.ts` to understand the approved visual baselines.
 
 ## Testing
 
 | Layer | Tool |
-|---|---|
-| Fold mathematics, golden sequences | vitest |
-| Content rules, geometry per plane | vitest |
-| Components | vitest + testing-library |
-| Palette contrast against DESIGN.md | vitest, reading `app/globals.css` |
-| Key parity across 12 locales | `scripts/i18n-audit.ts --strict` |
-| User journeys, locales, resilience, accessibility, layout stability | Playwright against the export |
+| --- | --- |
+| Fold mathematics and golden sequences | Vitest |
+| Plane content and geometry rules | Vitest |
+| Components and browser storage | Vitest and Testing Library |
+| Locale parity | `scripts/i18n-audit.ts --strict` |
+| Accessibility, journeys, layout, resilience, and visual stability | Playwright |
 
-CI runs all of it on every push, plus the build.
+CI runs type checking, linting, all Vitest projects, the strict locale audit, the static build, and the Playwright suite on every push and pull request.
 
-## Deploying
+## Contributing
 
-The site is a static export served by Vercel, live at `https://flight-school-chi.vercel.app`. A Cloudflare Workers Builds git integration also still builds the repo on push and serves it at `https://flight-school.kudakw-mutasa.workers.dev`; `wrangler.jsonc` is what keeps that build serving `out/` as static assets rather than trying to run a Next server.
+Contributions, bug reports, and learning-focused questions are welcome.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) for setup, architecture boundaries, and the pull-request checklist.
+Please follow the [Code of Conduct](CODE_OF_CONDUCT.md) and report security concerns through the process in [SECURITY.md](SECURITY.md).
 
+## Deployment
+
+The primary deployment is [Vercel](https://flight-school-chi.vercel.app).
+The same export is also served through [Cloudflare Workers](https://flight-school.kudakw-mutasa.workers.dev).
+
+```bash
+npx vercel pull --yes --environment=production
+npx vercel build --prod
+npx vercel deploy --prebuilt --prod --archive=tgz
 ```
-npm run build
-npx vercel deploy --prod
-```
 
-`vercel deploy` needs credentials - either `vercel login` once, or a `VERCEL_TOKEN` in the environment.
-`.github/workflows/deploy.yml` does the same thing on a push to `main` and stays inert until the repository carries that token as a secret.
+The compressed upload is important because the localized static export contains more than 5,000 files.
+Automated deployment also requires a `VERCEL_TOKEN` that can access the configured Vercel team and project.
+GitHub Pages is also supported by setting `BASE_PATH` to the repository subpath before building.
 
-GitHub Pages is the documented fallback for the same output; set `BASE_PATH` to the project subpath and every asset reference follows it.
+## Project documents
 
-## The documents
+- [Product requirements](docs/PRD.md)
+- [Technical specification](docs/SPEC.md)
+- [Design system](DESIGN.md)
+- [Screen specifications](docs/SCREENS.md)
+- [Domain context](CONTEXT.md)
+- [Architecture decisions](docs/adr/)
+- [Known issues](docs/KNOWN-ISSUES.md)
 
-The build was specified before it was written, and the specifications are still the source of truth.
+## License
 
-- [docs/PRD.md](docs/PRD.md) - what the product is and what "done" means.
-- [docs/SPEC.md](docs/SPEC.md) - the technical spec: stack, boundaries, milestones.
-- [DESIGN.md](DESIGN.md) - the design system, and the decisions log behind it. Read before changing anything visual.
-- [docs/SCREENS.md](docs/SCREENS.md) - each screen, resolved against the mockups.
-- [CONTEXT.md](CONTEXT.md) - the domain glossary and the decisions already settled.
-- [docs/adr/](docs/adr/) - architecture decision records. 0001, the fold engine, is the load-bearing one.
-- [docs/KNOWN-ISSUES.md](docs/KNOWN-ISSUES.md) - open defects with their evidence.
+Flight School is available under the [MIT License](LICENSE).

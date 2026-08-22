@@ -101,7 +101,9 @@ jobs:
 
       - name: Deploy to Vercel
         if: steps.gate.outputs.ship == 'true'
-        run: npx vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+        # The localized static export is more than 5,000 files. Uploading one
+        # archive avoids Vercel's free-plan per-file API limit.
+        run: npx vercel deploy --prebuilt --prod --archive=tgz --token="$VERCEL_TOKEN"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 

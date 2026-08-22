@@ -44,11 +44,8 @@ Copy these generated production assets into `app/assets/materials/`:
 - `paper-craft-normal.webp`: 512px linear, 166,372 bytes after the final semantic re-encode.
 - `paper-craft-roughness.webp`: 512px linear, 2,214 bytes with retained spatial variation.
 
-The source package is retained outside the repository at:
-
-```text
-/Users/kuda/.codex/generated_images/01a00110-bcb5-79b1-97e5-6a3e458e9667/
-```
+The original generation package is intentionally retained outside the repository.
+The reviewed production maps and their generation record are the portable project sources.
 
 The three production files total 249,226 bytes, below the approved 257,906-byte ceiling.
 They must remain behind the lazy renderer boundary.

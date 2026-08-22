@@ -21,11 +21,8 @@ The normal and roughness maps were then derived deterministically from that appr
 The initial 530-byte roughness export had collapsed to one constant value during lossy compression.
 The final roughness map preserves a measured 246 to 254 green-channel range, and the normal map was re-encoded at quality 93 so the corrected set remains below the original byte budget.
 
-The retained source package is outside the repository at:
-
-```text
-/Users/kuda/.codex/generated_images/01a00110-bcb5-79b1-97e5-6a3e458e9667/
-```
+The original generation package is intentionally kept outside the repository.
+The reviewed production maps and their generation record are the portable project sources.
 
 The reviewed visual baselines live beside `tests/e2e/paper-visual.spec.ts`.
 They cover all six finished aircraft at their authored inspection views and the Dart at representative early, middle, and final Tutorial folds.

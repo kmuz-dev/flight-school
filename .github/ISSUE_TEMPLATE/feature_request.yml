@@ -1,0 +1,24 @@
+name: Feature request
+description: Suggest a focused improvement to Flight School.
+title: "[Idea]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or opportunity
+      description: Explain the user need before proposing an implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed experience
+      description: Describe how the change should behave from a cadet's perspective.
+    validations:
+      required: true
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Accessibility, localization, or technical considerations

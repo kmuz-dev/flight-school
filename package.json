@@ -1,7 +1,17 @@
 {
   "name": "flight-school",
   "version": "0.1.0",
+  "description": "Fold procedural paper aircraft, earn their wings, and fly them through a cinematic school hallway.",
   "private": true,
+  "license": "MIT",
+  "homepage": "https://flight-school-chi.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kmuz-dev/flight-school.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kmuz-dev/flight-school/issues"
+  },
   "type": "module",
   "engines": {
     "node": ">=22"
