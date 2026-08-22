@@ -53,8 +53,8 @@ This sets the complexity ceiling (no design ships if a 10-year-old cannot comple
 - **Stack:** Next.js 16 App Router, TypeScript, Tailwind 4, Three.js, and GSAP run in `output: 'export'` mode.
 - **Backend:** There is no database, API route, or authentication layer.
   TypeScript content compiles into the static build.
-- **Deployment:** Cloudflare Workers static assets is primary.
-  `wrangler.jsonc` serves `out/` directly without a Worker script at `https://flight-school.kudakw-mutasa.workers.dev/`.
+- **Deployment:** Vercel is primary, at `https://flight-school-chi.vercel.app`.
+  A Cloudflare Workers Builds git integration is also still connected and builds on push, serving `out/` as static assets at `https://flight-school.kudakw-mutasa.workers.dev/`; `wrangler.jsonc` is what keeps that build from trying to run a Next server.
   GitHub Pages remains the base-path-safe fallback.
 - **Design system:** The current Blueprint-led release system lives in [DESIGN.md](DESIGN.md), [SCREENS.md](docs/SCREENS.md), and [UI-RELEASE-SPEC.md](docs/UI-RELEASE-SPEC.md).
   Older Stitch, Claude Design, and mockup-brief artifacts are retained only as exploration history.

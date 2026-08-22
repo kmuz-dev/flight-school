@@ -120,7 +120,7 @@ V1 is done when:
 3. Paper Prep produces correct paper from all three supported source formats wherever a conversion is defined.
 4. Resume state and Wings earned marks survive a browser restart.
 5. All 12 locales build, pass the translation audit, and render correctly including RTL Arabic.
-6. The site deploys as a purely static build through Cloudflare Workers static assets on the free tier with no Worker script or server component.
+6. The site deploys as a purely static build with no server component, on a free tier. Vercel is the primary host.
 7. An initial Hangar visit does not download the 3D renderer until the user explicitly requests inspection, and Preflight never downloads it at all.
 8. The renderer pauses while its stage is offscreen or the document is hidden and resumes without creating duplicate animation loops.
 9. Lighthouse performance is respectable on a mid-range phone; Tutorial degrades to a clearly identified static render, while Hangar inspection retains beauty artwork and offers Retry 3D when WebGL is unavailable. Preflight is artwork throughout and has nothing to degrade.

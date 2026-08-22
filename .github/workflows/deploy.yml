@@ -13,21 +13,30 @@ on:
 permissions:
   contents: read
 
+# Vercel identifies the project by these two ids. They are identifiers rather
+# than credentials - nothing can be done with them without VERCEL_TOKEN - so
+# they live in the file where a reader can see which project this ships to,
+# and the token alone is a secret.
+env:
+  VERCEL_ORG_ID: team_MrsWPit06RPujLAxxJca8Y7n
+  VERCEL_PROJECT_ID: prj_wFrBpPCcjYbUIOhnF639foeFYa6s
+  LIVE_URL: https://flight-school-chi.vercel.app
+
 jobs:
   deploy:
     # `branches: [main]` above is a filter on the *head branch name* of the run
     # that triggered this one, and CI also runs on `pull_request`. A fork whose
     # own branch happens to be called `main` therefore produces a run that
     # passes that filter, and checking out its head_sha here would execute a
-    # stranger's code inside a job holding the Cloudflare token. The event and
+    # stranger's code inside a job holding the deployment token. The event and
     # repository checks are what actually pin this to our own pushes to main.
     if: >-
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'push' &&
       github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-latest
-    # One deploy at a time. Without this, two runs can be inside `wrangler
-    # deploy` at once and the site ends up serving whichever finished last.
+    # One deploy at a time. Without this, two runs can be inside the deploy at
+    # once and the site ends up serving whichever finished last.
     concurrency:
       group: deploy-production
       cancel-in-progress: false
@@ -45,31 +54,29 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run build
 
       # Two things have to hold before anything reaches the live site, and this
-      # is the last moment either can be judged: the repository carries
-      # Cloudflare credentials, and the commit CI verified is still the tip of
-      # main.
+      # is the last moment either can be judged: the repository carries a Vercel
+      # token, and the commit CI verified is still the tip of main.
       #
-      # The first keeps a fork, or a repo whose owner has not connected
-      # Cloudflare, from failing every push with a credentials error that says
-      # nothing about what to do. The second stops a rollback: CI runs finish in
-      # whatever order they finish, so an older commit's run can land after a
-      # newer one has already shipped, and without this it would happily publish
-      # itself over the newer release - with the live smoke suite, running the
-      # older commit's own specs, reporting success.
+      # The first keeps a fork, or a clone whose owner has not connected Vercel,
+      # from failing every push with a credentials error that says nothing about
+      # what to do. The second stops a rollback: CI runs finish in whatever
+      # order they finish, so an older commit's run can land after a newer one
+      # has already shipped, and without this it would happily publish itself
+      # over the newer release - with the live smoke suite, running the older
+      # commit's own specs, reporting success.
       - name: Decide whether to ship
         id: gate
         env:
-          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          TOKEN: ${{ secrets.VERCEL_TOKEN }}
           HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           if [ -z "$TOKEN" ]; then
             echo "ship=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::No CLOUDFLARE_API_TOKEN secret; skipping deploy. Add one with Workers Scripts:Edit to ship on push."
+            echo "::notice::No VERCEL_TOKEN secret; skipping deploy. Create one at vercel.com/account/tokens and add it to ship on push."
             exit 0
           fi
           tip="$(gh api "repos/${GITHUB_REPOSITORY}/commits/main" --jq .sha)"
@@ -80,12 +87,23 @@ jobs:
           fi
           echo "ship=true" >> "$GITHUB_OUTPUT"
 
-      - name: Deploy to Cloudflare
+      # `vercel build` here rather than letting Vercel build on its side, so the
+      # artefact that ships is produced from the exact commit CI verified, by
+      # the same Node and the same lockfile. `--prebuilt` then uploads it
+      # instead of rebuilding it.
+      - name: Build for production
         if: steps.gate.outputs.ship == 'true'
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+          npx vercel build --prod --token="$VERCEL_TOKEN"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Vercel
+        if: steps.gate.outputs.ship == 'true'
+        run: npx vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
       # The deployed site, walked by the same specs CI just ran against the
       # local export. A deploy that serves a broken build should not be
@@ -97,4 +115,4 @@ jobs:
         if: steps.gate.outputs.ship == 'true'
         run: npx playwright test tests/e2e --project=chromium --reporter=github
         env:
-          E2E_BASE_URL: https://flight-school.kudakw-mutasa.workers.dev
+          E2E_BASE_URL: ${{ env.LIVE_URL }}

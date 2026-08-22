@@ -15,9 +15,10 @@ Where this spec references the anatomy repo, it means [thebuggeddev/anatomy](htt
 
 ## 2. Deployment
 
-- **Primary**: Cloudflare, free tier, as Workers static assets rather than Pages. `npm run build` writes the static export to `out/` and `wrangler.jsonc` points a Worker's asset directory at it; there is no Worker script, so requests are served straight from the CDN. Live at `https://flight-school.kudakw-mutasa.workers.dev/`. The choice over Pages is the asset limit: Pages caps a deployment at 25 MiB per file and 20,000 files, and static assets is the surface Cloudflare is still building on.
+- **Primary**: Vercel, free tier. `npm run build` writes the static export to `out/` and Vercel serves it; there is no server component. Live at `https://flight-school-chi.vercel.app`.
+- **Also live**: a Cloudflare Workers Builds git integration remains connected and builds the repo on push, serving the same export as Workers static assets at `https://flight-school.kudakw-mutasa.workers.dev/`. `wrangler.jsonc` is load-bearing for that build alone: without it `wrangler` detects "Next.js", assumes a server-rendered app and reaches for a `.next/standalone` bundle that `output: "export"` never produces. Delete the file only after disconnecting the integration.
 - **Fallback**: GitHub Pages via Actions. Must work with a `basePath` when served from a project subpath; keep all asset references basePath-safe from day one.
-- **CI**: GitHub Actions runs typecheck, lint, unit and component tests, content validation, the translation audit in `--strict` mode, the build, and the full Playwright suite against the export on every push and PR. `.github/workflows/deploy.yml` ships `out/` on a push to `main`, and stays inert until the repository carries a `CLOUDFLARE_API_TOKEN` secret.
+- **CI**: GitHub Actions runs typecheck, lint, unit and component tests, content validation, the translation audit in `--strict` mode, the build, and the full Playwright suite against the export on every push and PR. `.github/workflows/deploy.yml` builds and ships to Vercel on a push to `main`, then smokes the deployed site with the same specs, and stays inert until the repository carries a `VERCEL_TOKEN` secret.
 
 ## 3. Architecture overview
 

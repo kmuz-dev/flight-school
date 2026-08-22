@@ -66,14 +66,14 @@ CI runs all of it on every push, plus the build.
 
 ## Deploying
 
-The site is Cloudflare Workers static assets, not Pages: `wrangler.jsonc` points a Worker's asset directory at `out/` and declares no Worker script, so requests are served straight from the CDN.
+The site is a static export served by Vercel, live at `https://flight-school-chi.vercel.app`. A Cloudflare Workers Builds git integration also still builds the repo on push and serves it at `https://flight-school.kudakw-mutasa.workers.dev`; `wrangler.jsonc` is what keeps that build serving `out/` as static assets rather than trying to run a Next server.
 
 ```
 npm run build
-npx wrangler deploy
+npx vercel deploy --prod
 ```
 
-`wrangler deploy` needs credentials - either `wrangler login` once, or a `CLOUDFLARE_API_TOKEN` in the environment.
+`vercel deploy` needs credentials - either `vercel login` once, or a `VERCEL_TOKEN` in the environment.
 `.github/workflows/deploy.yml` does the same thing on a push to `main` and stays inert until the repository carries that token as a secret.
 
 GitHub Pages is the documented fallback for the same output; set `BASE_PATH` to the project subpath and every asset reference follows it.

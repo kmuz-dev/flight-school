@@ -16,7 +16,7 @@ The active approved follow-on brief is [docs/plans/hyperreal-paper-tutorial.md](
 - Structure and prose never mix: geometry/ids/ratings in content files, all human-readable text in i18n dictionaries.
 - Generated photographic assets may be used only when the user explicitly approves them and their provenance is documented.
 - The procedural fold engine remains authoritative for Tutorial geometry and interactive 3D inspection.
-- Deploys to Cloudflare free tier as Workers static assets (`wrangler.jsonc`, no Worker script), not Pages; keep all asset paths basePath-safe for the GitHub Pages fallback.
+- Deploys to Vercel as a static export; keep all asset paths basePath-safe for the GitHub Pages fallback. `.github/workflows/deploy.yml` ships it on a green CI run and stays inert until the repository carries a `VERCEL_TOKEN` secret. A Cloudflare Workers Builds git integration is also still connected and builds on push - `wrangler.jsonc` is what keeps that build honest about being a static site, so do not delete it while that integration is connected.
 
 ## Design System
 
@@ -36,7 +36,7 @@ npm run test             # vitest, both projects (unit = node, components = jsdo
 npm run test:e2e         # Playwright against the export; run `npm run build` first
 npm run validate:content # content rules only
 npm run i18n:audit -- --strict   # key parity across all 12 locales; --strict is what CI runs
-npx wrangler deploy      # ships out/ to Cloudflare; needs `wrangler login` or CLOUDFLARE_API_TOKEN
+npx vercel deploy --prod # ships out/ to Vercel; needs `vercel login` or VERCEL_TOKEN
 ```
 
 `typecheck` runs `next typegen` first, and must keep doing so. `next-env.d.ts`
