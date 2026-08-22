@@ -85,6 +85,11 @@ jobs:
             echo "::notice::main is now at ${tip}; ${HEAD_SHA} is stale, so this run will not deploy over a newer release."
             exit 0
           fi
+          if ! npx vercel pull --yes --environment=production --token="$TOKEN"; then
+            echo "ship=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::VERCEL_TOKEN cannot access the configured team and project; replace it with a token scoped to builderstation/flight-school."
+            exit 0
+          fi
           echo "ship=true" >> "$GITHUB_OUTPUT"
 
       # `vercel build` here rather than letting Vercel build on its side, so the
@@ -93,9 +98,7 @@ jobs:
       # instead of rebuilding it.
       - name: Build for production
         if: steps.gate.outputs.ship == 'true'
-        run: |
-          npx vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
-          npx vercel build --prod --token="$VERCEL_TOKEN"
+        run: npx vercel build --prod --token="$VERCEL_TOKEN"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
